@@ -6,14 +6,29 @@ layout: default
   {{ content }}
 
   <h2>Posts</h2>
-  <ul class="post-list">
-    {% for post in site.posts %}
-    <li>
-      <span class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</span>
-      <h3>
-        <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
-      </h3>
-    </li>
-    {% endfor %}
-  </ul>
+
+  {% for post in site.posts %}
+  <article class="post">
+    <h3>{{ post.title }}</h3>
+    <span class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</span>
+
+    <div class="post-content">
+      {{ post.content }}
+    </div>
+
+    {% if post.summary_cards %}
+    <div class="card-container">
+      {% for card in post.summary_cards %}
+        <div class="card-3d">
+          <div class="card-content">
+            <p>{{ card }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <hr>
+  </article>
+  {% endfor %}
 </div>

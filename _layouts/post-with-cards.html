@@ -1,0 +1,29 @@
+---
+layout: default
+---
+
+<article class="post">
+  <h1>{{ page.title }}</h1>
+
+  <div class="post-meta">
+    <time datetime="{{ page.date | date_to_xmlschema }}">
+      {{ page.date | date: "%b %-d, %Y" }}
+    </time>
+  </div>
+
+  <div class="post-content">
+    {{ content }}
+  </div>
+
+  {% if page.summary_cards %}
+  <div class="card-container">
+    {% for card in page.summary_cards %}
+      <div class="card-3d">
+        <div class="card-content">
+          <p>{{ card }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>
