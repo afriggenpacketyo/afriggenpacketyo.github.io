@@ -22,27 +22,14 @@ layout: default
     {{ content }}
 
     <div class="cards-grid">
-      {% for card_raw in page.summary_cards %}
-        {% assign card_str = card_raw | strip %}
-        {% assign title_parts = card_str | split: '"title"=>"' %}
-        {% assign title_end = title_parts[1] | split: '",' | first %}
-
-        {% assign summary_parts = card_str | split: '"summary"=>"' %}
-        {% assign summary_end = summary_parts[1] | split: '",' | first %}
-
-        {% assign link_parts = card_str | split: '"link"=>"' %}
-        {% assign link_end = link_parts[1] | split: '",' | first %}
-
-        {% assign optimism_parts = card_str | split: '"optimism"=>' %}
-        {% assign optimism_end = optimism_parts[1] | split: ')' | first %}
-
+      {% for card in page.summary_cards %}
         <div class="card" onclick="this.classList.toggle('expanded')">
-          <div class="title">{{ title_end }}</div>
+          <div class="title">{{ card.title }}</div>
           <div class="details">
-            <div class="summary">{{ summary_end }}</div>
+            <div class="summary">{{ card.summary }}</div>
             <div class="footer">
-              <div class="optimism">Optimism Score: {{ optimism_end }}/100</div>
-              <a href="{{ link_end }}" target="_blank">Read Full Article →</a>
+              <div class="optimism">Optimism Score: {{ card.optimism }}/100</div>
+              <a href="{{ card.link }}" target="_blank">Read Full Article →</a>
             </div>
           </div>
         </div>
@@ -52,6 +39,7 @@ layout: default
 </article>
 
 <style>
+  /* Your CSS remains the same - I've included it for completeness */
   .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
