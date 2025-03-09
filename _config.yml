@@ -30,6 +30,11 @@ remote_theme: pages-themes/hacker@v0.2.0
 plugins:
   - jekyll-remote-theme
   - jekyll-feed
+future: true
+
+# Override theme layouts with local layouts
+theme_overrides:
+  layouts_dir: _layouts
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
