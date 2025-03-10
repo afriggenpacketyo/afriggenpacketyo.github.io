@@ -171,43 +171,67 @@ document.addEventListener('DOMContentLoaded', function() {
       const inner = card.querySelector('.flip-card-inner');
       const back = card.querySelector('.flip-card-back');
       const front = card.querySelector('.flip-card-front');
+      const originalHeight = 400; // Original card height
 
       if (setHeight) {
           // Get content height
           const contentHeight = back.scrollHeight;
-          const newHeight = Math.max(contentHeight, 400); // Min height of 400px
 
-          // Set both card and inner element heights
-          card.style.height = newHeight + 'px';
-          inner.style.height = '100%'; // Always 100% of parent
+          if (contentHeight > originalHeight) {
+              // Calculate how much we need to expand
+              const additionalHeight = contentHeight - originalHeight;
 
-          // Center vertically in new height
-          const frontHeight = front.scrollHeight;
-          const backHeight = back.scrollHeight;
+              // Calculate how much to shift upward (half the additional height)
+              const verticalShift = Math.floor(additionalHeight / 2);
 
-          if (frontHeight < newHeight) {
+              // Set new height
+              card.style.height = contentHeight + 'px';
+              inner.style.height = '100%';
+
+              // Apply negative margin to shift upward for symmetric expansion
+              card.style.marginTop = `-${verticalShift}px`;
+
+              // Store the shift amount for later
+              card.dataset.verticalShift = verticalShift;
+
+              // Ensure content is centered
               front.style.display = 'flex';
               front.style.alignItems = 'center';
               front.style.justifyContent = 'center';
-          }
 
-          if (backHeight < newHeight) {
               back.style.display = 'flex';
               back.style.flexDirection = 'column';
               back.style.justifyContent = 'center';
           }
       } else {
-          // Reset height and positioning
+          // Reset height and positioning with transition
+          const verticalShift = parseInt(card.dataset.verticalShift || 0);
+
+          // Animate back to normal
           setTimeout(() => {
-              card.style.height = '400px';
-              inner.style.height = '100%';
+              // Create a transition for margin and height together
+              card.style.transition = 'height 0.3s ease-out, margin-top 0.3s ease-out';
+
+              // Reset height and margin
+              card.style.height = `${originalHeight}px`;
+              card.style.marginTop = '0px';
+
+              // Reset centering styles
               front.style.display = '';
               front.style.alignItems = '';
               front.style.justifyContent = '';
               back.style.display = '';
               back.style.flexDirection = '';
               back.style.justifyContent = '';
-          }, 300);
+
+              // Clean up after transition
+              setTimeout(() => {
+                  // Remove the transition so it doesn't affect other transforms
+                  card.style.transition = '';
+                  inner.style.height = '100%';
+                  delete card.dataset.verticalShift;
+              }, 300);
+          }, 50);
       }
   }
 
