@@ -10,12 +10,17 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background-color: #f5f5f7;
 }
 
 .container {
   display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x proximity;
   gap: 30px;
   width: 100%;
@@ -24,9 +29,10 @@ body {
   -ms-overflow-style: none;
   padding-left: max(calc(50% - 150px), 40px);
   padding-right: max(calc(50% - 150px), 40px);
-  min-height: 450px;
+  height: 100vh;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  align-items: center;
 }
 
 .container::-webkit-scrollbar {
@@ -44,9 +50,9 @@ body {
   height: 400px;
   scroll-snap-align: center;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease, height 0.3s ease-out, margin-top 0.3s ease-out;
+  transition: transform 0.3s ease, opacity 0.3s ease, height 0.3s ease-out;
   will-change: transform;
-  transform: translateZ(0);
+  transform-origin: center center;
   z-index: 1;
 }
 
@@ -71,9 +77,10 @@ body {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.3s ease-out;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-style: preserve-3d;
   will-change: transform;
+  display: flex;
 }
 
 .flip-card.flipped .flip-card-inner {
@@ -84,19 +91,19 @@ body {
 .flip-card-front, .flip-card-back {
   position: absolute;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .flip-card-front {
   background: linear-gradient(45deg, #2c3e50, #3498db);
   color: white;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
@@ -111,6 +118,8 @@ body {
   padding: 20px;
   text-align: left;
   overflow-y: auto;
+  justify-content: flex-start;
+  max-height: 80vh;
 }
 
 .flip-card-front h2 {
@@ -123,9 +132,15 @@ body {
   margin: 10px 0 5px;
 }
 
+.flip-card-back-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .flip-card-back p {
   margin-bottom: 15px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .flip-card-back a {
@@ -246,24 +261,34 @@ body {
 /* iPod classic style scrolling effect */
 .container.with-coverflow {
   perspective: none;
+  height: 100vh;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .container.with-coverflow .flip-card {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  flex: 0 0 300px;
+  height: auto;
+  min-height: 400px;
+  max-height: 80vh;
+  margin: 0;
 }
 
-/* Remove all the complex transformations */
-.container.with-coverflow .flip-card.left-2,
-.container.with-coverflow .flip-card.left-1,
-.container.with-coverflow .flip-card.right-1,
-.container.with-coverflow .flip-card.right-2 {
-  transform: scale(0.9);
-  opacity: 0.7;
+.container.with-coverflow .flip-card-inner {
+  height: 100%;
+  min-height: 400px;
 }
 
-.container.with-coverflow .flip-card.active {
-  transform: scale(1);
-  opacity: 1;
+.container.with-coverflow .flip-card-front,
+.container.with-coverflow .flip-card-back {
+  min-height: 100%;
+  height: auto;
+}
+
+.container.with-coverflow .flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg) !important;
+  height: auto;
+  min-height: 400px;
 }
 
 /* Simple highlight for active card */
