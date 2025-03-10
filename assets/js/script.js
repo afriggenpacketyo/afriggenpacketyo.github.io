@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function adjustCardHeight(card, setHeight = false) {
       const inner = card.querySelector('.flip-card-inner');
       const back = card.querySelector('.flip-card-back');
-      const front = card.querySelector('.flip-card-front');
       const originalHeight = 400; // Original card height
 
       if (setHeight) {
@@ -178,60 +177,35 @@ document.addEventListener('DOMContentLoaded', function() {
           const contentHeight = back.scrollHeight;
 
           if (contentHeight > originalHeight) {
-              // Calculate how much we need to expand
-              const additionalHeight = contentHeight - originalHeight;
+              // Calculate the height difference
+              const heightDifference = contentHeight - originalHeight;
 
-              // Calculate how much to shift upward (half the additional height)
-              const verticalShift = Math.floor(additionalHeight / 2);
+              // Set half the difference as negative margin-top to shift up
+              const shiftAmount = Math.floor(heightDifference / 2);
 
-              // Set new height
+              // Apply the transformations
               card.style.height = contentHeight + 'px';
+              card.style.marginTop = `-${shiftAmount}px`;
+
+              // Store the shift amount for reverting later
+              card.dataset.shiftAmount = shiftAmount;
+
+              // Ensure inner element fills the card
               inner.style.height = '100%';
-
-              // Apply negative margin to shift upward for symmetric expansion
-              card.style.marginTop = `-${verticalShift}px`;
-
-              // Store the shift amount for later
-              card.dataset.verticalShift = verticalShift;
-
-              // Ensure content is centered
-              front.style.display = 'flex';
-              front.style.alignItems = 'center';
-              front.style.justifyContent = 'center';
-
-              back.style.display = 'flex';
-              back.style.flexDirection = 'column';
-              back.style.justifyContent = 'center';
           }
       } else {
-          // Reset height and positioning with transition
-          const verticalShift = parseInt(card.dataset.verticalShift || 0);
+          // Get the stored shift amount
+          const shiftAmount = card.dataset.shiftAmount || 0;
 
-          // Animate back to normal
-          setTimeout(() => {
-              // Create a transition for margin and height together
-              card.style.transition = 'height 0.3s ease-out, margin-top 0.3s ease-out';
+          // Reset height and margin
+          card.style.height = `${originalHeight}px`;
+          card.style.marginTop = '0px';
 
-              // Reset height and margin
-              card.style.height = `${originalHeight}px`;
-              card.style.marginTop = '0px';
+          // Reset inner element
+          inner.style.height = '100%';
 
-              // Reset centering styles
-              front.style.display = '';
-              front.style.alignItems = '';
-              front.style.justifyContent = '';
-              back.style.display = '';
-              back.style.flexDirection = '';
-              back.style.justifyContent = '';
-
-              // Clean up after transition
-              setTimeout(() => {
-                  // Remove the transition so it doesn't affect other transforms
-                  card.style.transition = '';
-                  inner.style.height = '100%';
-                  delete card.dataset.verticalShift;
-              }, 300);
-          }, 50);
+          // Clear stored data
+          delete card.dataset.shiftAmount;
       }
   }
 
