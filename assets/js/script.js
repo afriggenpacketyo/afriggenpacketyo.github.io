@@ -42,19 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Only add navigation arrows on desktop
   if (!isMobile) {
-      // Add navigation arrows
-      const navLeft = document.createElement('div');
+  // Add navigation arrows
+  const navLeft = document.createElement('div');
       navLeft.className = 'nav-arrow nav-left' + (activeCardIndex === 0 ? ' disabled' : '');
-      navLeft.innerHTML = '&larr;';
+  navLeft.innerHTML = '&larr;';
       navLeft.setAttribute('aria-label', 'Previous card');
 
-      const navRight = document.createElement('div');
+  const navRight = document.createElement('div');
       navRight.className = 'nav-arrow nav-right' + (activeCardIndex === flipCards.length - 1 ? ' disabled' : '');
-      navRight.innerHTML = '&rarr;';
+  navRight.innerHTML = '&rarr;';
       navRight.setAttribute('aria-label', 'Next card');
 
-      document.body.appendChild(navLeft);
-      document.body.appendChild(navRight);
+  document.body.appendChild(navLeft);
+  document.body.appendChild(navRight);
 
       navArrows = [navLeft, navRight];
 
@@ -84,7 +84,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  // Function to scroll to specific card with improved positioning
+  // Use requestAnimationFrame for smoother scrolling
+  let ticking = false;
+  container.addEventListener('scroll', () => {
+      if (!ticking && !isScrolling) {
+          requestAnimationFrame(() => {
+              updateActiveCard();
+              ticking = false;
+          });
+          ticking = true;
+      }
+  });
+
+  // Replace the existing scrollToCard function with this improved version
   function scrollToCard(index) {
       if (isScrolling || index < 0 || index >= flipCards.length) return;
 
@@ -102,28 +114,86 @@ document.addEventListener('DOMContentLoaded', function() {
           navArrows[1].classList.toggle('disabled', index === flipCards.length - 1);
       }
 
-      // Calculate exact scroll position
-      const card = flipCards[index];
-      const containerRect = container.getBoundingClientRect();
-      const cardRect = card.getBoundingClientRect();
+      // Apply coverflow classes immediately for instant visual feedback
+      flipCards.forEach((card, idx) => {
+          // Remove all position classes
+          card.classList.remove('active', 'left-1', 'left-2', 'right-1', 'right-2');
 
-      // Center the card in the container
-      const scrollLeft = container.scrollLeft + (cardRect.left - containerRect.left) -
-                        (containerRect.width / 2 - cardRect.width / 2);
+          // Add appropriate position class
+          const distance = idx - index;
+          if (distance === 0) {
+              card.classList.add('active');
+          } else if (distance === -1) {
+              card.classList.add('left-1');
+          } else if (distance === -2) {
+              card.classList.add('left-2');
+          } else if (distance === 1) {
+              card.classList.add('right-1');
+          } else if (distance === 2) {
+              card.classList.add('right-2');
+          }
+      });
 
-      // Smooth scroll to the card
+      // Get the target card and ensure perfect centering
+      const targetCard = flipCards[index];
+
+      // Calculate the exact center position
+      const containerWidth = container.offsetWidth;
+      const cardWidth = targetCard.offsetWidth;
+      const cardMargin = parseInt(window.getComputedStyle(targetCard).marginRight) * 2;
+
+      // Calculate the exact scroll position to center the card
+      // This formula ensures perfect centering regardless of card width or container size
+      const scrollPosition = targetCard.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
+
+      // Use scrollTo with smooth behavior for a controlled animation
       container.scrollTo({
-          left: scrollLeft,
+          left: scrollPosition,
           behavior: 'smooth'
       });
 
       // Reset scrolling flag after animation completes
       setTimeout(() => {
           isScrolling = false;
-      }, 500);
+
+          // Force a final position check to ensure perfect centering
+          const finalAdjustment = targetCard.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
+          if (Math.abs(container.scrollLeft - finalAdjustment) > 2) {
+              container.scrollTo({
+                  left: finalAdjustment,
+                  behavior: 'auto' // Instant correction if needed
+              });
+          }
+      }, 400); // Match the transition duration
   }
 
-  // Function to determine the current active card based on scroll position
+  // Add a debounced scroll handler to make scrolling less sensitive
+  let scrollTimeout;
+  let lastScrollPosition = 0;
+  const scrollThreshold = 50; // Minimum scroll distance to trigger a card change
+
+  container.addEventListener('scroll', () => {
+      if (isScrolling) return;
+
+      // Clear any existing timeout
+      if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+      }
+
+      // Set a new timeout
+      scrollTimeout = setTimeout(() => {
+          // Only process if we've scrolled a significant amount
+          const currentScrollPosition = container.scrollLeft;
+          const scrollDifference = Math.abs(currentScrollPosition - lastScrollPosition);
+
+          if (scrollDifference > scrollThreshold) {
+              updateActiveCard();
+              lastScrollPosition = currentScrollPosition;
+          }
+      }, 150); // Longer delay makes it less sensitive
+  });
+
+  // Update the updateActiveCard function to ensure perfect centering
   function updateActiveCard() {
       if (isScrolling) return;
 
@@ -133,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let closestDistance = Infinity;
       let newActiveIndex = activeCardIndex;
 
+      // Find the card closest to center
       flipCards.forEach((card, index) => {
           const cardRect = card.getBoundingClientRect();
           const cardCenter = cardRect.left + cardRect.width / 2;
@@ -144,35 +215,39 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
 
-      if (newActiveIndex !== activeCardIndex) {
-          activeCardIndex = newActiveIndex;
-
-          // Update indicator dots
-          document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
-              dot.classList.toggle('active', i === activeCardIndex);
-          });
-
-          // Update arrow states
-          if (!isMobile && navArrows.length === 2) {
-              navArrows[0].classList.toggle('disabled', activeCardIndex === 0);
-              navArrows[1].classList.toggle('disabled', activeCardIndex === flipCards.length - 1);
-          }
+      // If we found a new active card and it's significantly different from current position
+      if (newActiveIndex !== activeCardIndex && closestDistance < 100) {
+          // Scroll to the new card to ensure perfect centering
+          scrollToCard(newActiveIndex);
       }
   }
 
-  // Use a throttled scroll handler to improve performance
-  let scrollTimeout;
-  container.addEventListener('scroll', () => {
-      if (scrollTimeout) {
-          clearTimeout(scrollTimeout);
-      }
+  // Add touch handling to make mobile experience more deliberate
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const minSwipeDistance = 50; // Minimum distance for a swipe
 
-      scrollTimeout = setTimeout(() => {
-          if (!isScrolling) {
-              updateActiveCard();
+  container.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+      if (isScrolling) return;
+
+      touchEndX = e.changedTouches[0].screenX;
+      const distance = touchEndX - touchStartX;
+
+      // Only respond to deliberate swipes
+      if (Math.abs(distance) > minSwipeDistance) {
+          if (distance > 0 && activeCardIndex > 0) {
+              // Swipe right -> go to previous card
+              scrollToCard(activeCardIndex - 1);
+          } else if (distance < 0 && activeCardIndex < flipCards.length - 1) {
+              // Swipe left -> go to next card
+              scrollToCard(activeCardIndex + 1);
           }
-      }, 100);
-  });
+      }
+  }, { passive: true });
 
   // Add keyboard navigation
   document.addEventListener('keydown', (e) => {
@@ -197,12 +272,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Process each card with improved click handling
   flipCards.forEach((card, index) => {
-      const inner = card.querySelector('.flip-card-inner');
-      const front = card.querySelector('.flip-card-front');
-      const back = card.querySelector('.flip-card-back');
+    const inner = card.querySelector('.flip-card-inner');
+    const front = card.querySelector('.flip-card-front');
+    const back = card.querySelector('.flip-card-back');
 
       // Add click event listener to flip the card with improved handling
-      card.addEventListener('click', function(e) {
+    card.addEventListener('click', function(e) {
           // Don't flip if clicking on a link or during scroll
           if (e.target.tagName === 'A' || isScrolling) return;
 
@@ -215,22 +290,22 @@ document.addEventListener('DOMContentLoaded', function() {
           // Toggle flipped class on the card itself to match CSS selector
           this.classList.toggle('flipped');
 
-          // Adjust height for content if needed
-          if (this.classList.contains('flipped')) {
-              // If content is taller than card, adjust height
-              const contentHeight = back.scrollHeight;
-              if (contentHeight > 400) {
-                  this.style.height = contentHeight + 'px';
-                  inner.style.height = contentHeight + 'px';
-              }
-          } else {
-              // Reset height when flipping back
-              setTimeout(() => {
-                  this.style.height = '400px';
-                  inner.style.height = '100%';
-              }, 150);
-          }
-      });
+      // Adjust height for content if needed
+      if (this.classList.contains('flipped')) {
+        // If content is taller than card, adjust height
+        const contentHeight = back.scrollHeight;
+        if (contentHeight > 400) {
+          this.style.height = contentHeight + 'px';
+          inner.style.height = contentHeight + 'px';
+        }
+      } else {
+        // Reset height when flipping back
+        setTimeout(() => {
+          this.style.height = '400px';
+          inner.style.height = '100%';
+        }, 150);
+      }
+    });
 
       // Track mouse down position to differentiate between clicks and drags
       card.addEventListener('mousedown', function(e) {
@@ -243,49 +318,77 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
 
-      // Style optimism scores
-      const scoreText = back.querySelector('p:nth-of-type(2)');
-      if (scoreText && scoreText.textContent.includes('/100')) {
-          const score = parseInt(scoreText.textContent);
-          const scoreSpan = document.createElement('span');
-          scoreSpan.className = 'optimism-score';
-          scoreSpan.textContent = score + '/100';
+    // Style optimism scores
+    const scoreText = back.querySelector('p:nth-of-type(2)');
+    if (scoreText && scoreText.textContent.includes('/100')) {
+      const score = parseInt(scoreText.textContent);
+      const scoreSpan = document.createElement('span');
+      scoreSpan.className = 'optimism-score';
+      scoreSpan.textContent = score + '/100';
 
-          if (score >= 70) {
-              scoreSpan.classList.add('score-high');
-          } else if (score >= 40) {
-              scoreSpan.classList.add('score-medium');
-          } else {
-              scoreSpan.classList.add('score-low');
-          }
-
-          scoreText.innerHTML = 'Optimism Score: ';
-          scoreText.appendChild(scoreSpan);
+      if (score >= 70) {
+        scoreSpan.classList.add('score-high');
+      } else if (score >= 40) {
+        scoreSpan.classList.add('score-medium');
+      } else {
+        scoreSpan.classList.add('score-low');
       }
 
-      // Add section titles to other elements
-      const summaryTitle = document.createElement('div');
-      summaryTitle.className = 'section-title';
-      summaryTitle.textContent = 'Summary';
+      scoreText.innerHTML = 'Optimism Score: ';
+      scoreText.appendChild(scoreSpan);
+    }
 
-      const linkTitle = document.createElement('div');
-      linkTitle.className = 'section-title';
-      linkTitle.textContent = 'Source';
+    // Add section titles to other elements
+    const summaryTitle = document.createElement('div');
+    summaryTitle.className = 'section-title';
+    summaryTitle.textContent = 'Summary';
 
-      // Insert titles before content
-      const summaryText = back.querySelector('p:first-of-type');
-      if (summaryText) {
-          summaryText.parentNode.insertBefore(summaryTitle, summaryText);
-      }
+    const linkTitle = document.createElement('div');
+    linkTitle.className = 'section-title';
+    linkTitle.textContent = 'Source';
 
-      const linkElement = back.querySelector('a');
-      if (linkElement) {
-          linkElement.parentNode.insertBefore(linkTitle, linkElement);
-      }
+    // Insert titles before content
+    const summaryText = back.querySelector('p:first-of-type');
+    if (summaryText) {
+      summaryText.parentNode.insertBefore(summaryTitle, summaryText);
+    }
+
+    const linkElement = back.querySelector('a');
+    if (linkElement) {
+      linkElement.parentNode.insertBefore(linkTitle, linkElement);
+    }
   });
 
-  // Initial scroll to first card to ensure proper positioning
+  // Add this to preload and optimize images
+  const preloadImages = () => {
+      const images = document.querySelectorAll('.flip-card-front img, .flip-card-back img');
+      images.forEach(img => {
+          if (img.dataset.src) {
+              const preloadImg = new Image();
+              preloadImg.src = img.dataset.src;
+              preloadImg.onload = () => {
+                  img.src = img.dataset.src;
+              };
+          }
+      });
+  };
+
+  preloadImages();
+
+  // Initial setup with reduced timeout
   setTimeout(() => {
+      // Apply initial coverflow classes
+      flipCards.forEach((card, index) => {
+          if (index === 0) {
+              card.classList.add('active');
+          } else if (index === 1) {
+              card.classList.add('right-1');
+          } else if (index === 2) {
+              card.classList.add('right-2');
+          }
+      });
+
+      // Initial scroll to first card
       scrollToCard(0);
-  }, 100);
+  }, 50); // Reduced from 100ms to 50ms
 });
