@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
   let activeCardIndex = 0;
   let navArrows = [];
   let isScrolling = false;
-  let scrollTimeout; // Declare scrollTimeout here
+  let scrollTimeout;
 
-  // Add iPod classic coverflow style
+  // --- Coverflow Setup ---
   container.classList.add('with-coverflow');
 
   // --- Card Indicator Setup ---
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   document.body.appendChild(cardIndicator);
 
-  // --- Navigation Arrows (Desktop Only) ---
+  // --- Navigation Arrows (Desktop) ---
   if (!isMobile) {
       const navLeft = document.createElement('div');
       navLeft.className = 'nav-arrow nav-left disabled';
@@ -58,49 +58,43 @@ document.addEventListener('DOMContentLoaded', function() {
       navRight.addEventListener('click', () => handleClick(1));
   }
 
-  // --- Scroll Handling ---
-  container.addEventListener('scroll', () => {
-      if (isScrolling) return;
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        if (!isScrolling) { // Double-check isScrolling within the timeout
-          updateActiveCard();
-        }
-      }, 50); // Reduced timeout for faster response
+  // --- Scroll Handling (Dynamic Activation) ---
+    container.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout); // Clear any pending timeout
+      // No isScrolling check here!  We *want* to update during manual scroll.
+
+      // Use requestAnimationFrame for smoother updates during scroll
+      requestAnimationFrame(updateActiveCardDuringScroll);
   }, { passive: true });
 
-  // --- scrollToCard (Improved) ---
+
+  // --- scrollToCard (Programmatic Scroll) ---
   function scrollToCard(index) {
       if (index < 0 || index >= flipCards.length || index === activeCardIndex || isScrolling) return;
 
-      isScrolling = true;
-      activeCardIndex = index;
+      isScrolling = true; // Set isScrolling *before* the scroll starts
+      activeCardIndex = index; // Update the index *before* the scroll
+      updateUI(); // update UI before scrolling
 
-      // Update UI elements
-      updateUI();
       flipCards[index].scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
           inline: 'center'
       });
 
-      // IMPORTANT: Adjust timeout to match the scrollIntoView animation duration.
-      // This prevents rapid clicks/taps from queuing up multiple scrolls.
-      // A shorter timeout is generally better, as long as it's slightly *longer*
-      // than the scroll animation.
       setTimeout(() => {
-          isScrolling = false;
-        }, 350);
+          isScrolling = false; // Reset isScrolling after scroll
+      }, 350);
   }
 
-  // --- updateActiveCard (Less Aggressive) ---
-  function updateActiveCard() {
-      if (isScrolling) return;
+  // --- updateActiveCardDuringScroll (Dynamic Activation) ---
+   function updateActiveCardDuringScroll() {
+      // No isScrolling check!  We *want* this to run during manual scroll.
 
       const containerRect = container.getBoundingClientRect();
       const containerCenter = containerRect.left + containerRect.width / 2;
       let closestDistance = Infinity;
-      let newActiveIndex = activeCardIndex;
+      let newActiveIndex = -1;
 
       flipCards.forEach((card, index) => {
           const cardRect = card.getBoundingClientRect();
@@ -113,13 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
 
-      if (newActiveIndex !== activeCardIndex) {
-         scrollToCard(newActiveIndex);
+      // Only update if a valid and *different* card is closest
+      if (newActiveIndex !== -1 && newActiveIndex !== activeCardIndex) {
+          activeCardIndex = newActiveIndex;
+          updateUI();  // Update the UI *without* scrolling
       }
   }
 
-
-  // --- updateUI (Centralized UI Updates) ---
+  // --- updateUI (Visual Updates) ---
   function updateUI() {
       flipCards.forEach((card, i) => {
           card.classList.toggle('active', i === activeCardIndex);
@@ -135,7 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
   }
 
-  // --- Touch Handling (for Mobile) ---
+  // --- Touch, Keyboard, Resize, Card Flip, Image Preload ---
+  // (These sections remain the same as in the previous, correct version)
+
+    // --- Touch Handling (for Mobile) ---
+  //(same as before)
   let touchStartX = 0;
   let touchEndX = 0;
   const minSwipeDistance = 50;
@@ -156,12 +155,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       } else {
           // If it wasn't a swipe, treat it like a tap to center the nearest card
-          updateActiveCard();
+          updateActiveCardDuringScroll(); // snapping behavior
       }
   }, { passive: true });
 
+
   // --- Keyboard Navigation ---
-  document.addEventListener('keydown', (e) => {
+  //(same as before)
+   document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' && activeCardIndex > 0) {
           scrollToCard(activeCardIndex - 1);
       } else if (e.key === 'ArrowRight' && activeCardIndex < flipCards.length - 1) {
@@ -170,15 +171,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // --- Window Resize Handling ---
-  window.addEventListener('resize', () => {
+  //(same as before)
+   window.addEventListener('resize', () => {
       const wasMobile = isMobile;
       isMobile = window.innerWidth <= 768;
       if (wasMobile !== isMobile) {
           location.reload(); // Simple solution for mobile/desktop switch
       }
   });
-
   // --- Card Flip and Content Handling ---
+  // ... (Card flip logic, optimism score, section titles - all remain the same) ...
   flipCards.forEach((card, index) => {
       const inner = card.querySelector('.flip-card-inner');
       const front = card.querySelector('.flip-card-front');
@@ -269,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // --- Image Preloading ---
-  const preloadImages = () => {
+   const preloadImages = () => {
       const images = document.querySelectorAll('.flip-card-front img, .flip-card-back img');
       images.forEach(img => {
           if (img.dataset.src) {
@@ -285,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- Initial Setup ---
   setTimeout(() => {
-      updateUI();
-      scrollToCard(0);
+      updateUI(); // Set initial active card
+      scrollToCard(0); // Scroll to the first card
   }, 50);
 });
