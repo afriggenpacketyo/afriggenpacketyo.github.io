@@ -96,75 +96,39 @@ document.addEventListener('DOMContentLoaded', function() {
       }
   });
 
-  // Replace the existing scrollToCard function with this improved version
+  // Replace the existing scrollToCard function with this focused version
   function scrollToCard(index) {
       if (isScrolling || index < 0 || index >= flipCards.length) return;
 
       isScrolling = true;
       activeCardIndex = index;
 
-      // Update indicator dots
+      // Update classes
+      flipCards.forEach((card, i) => {
+          card.classList.toggle('active', i === index);
+      });
+
+      // Update dots
       document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
           dot.classList.toggle('active', i === index);
       });
 
-      // Update arrow states
+      // Update navigation
       if (!isMobile && navArrows.length === 2) {
           navArrows[0].classList.toggle('disabled', index === 0);
           navArrows[1].classList.toggle('disabled', index === flipCards.length - 1);
       }
 
-      // Apply coverflow classes immediately for instant visual feedback
-      flipCards.forEach((card, idx) => {
-          // Remove all position classes
-          card.classList.remove('active', 'left-1', 'left-2', 'right-1', 'right-2');
-
-          // Add appropriate position class
-          const distance = idx - index;
-          if (distance === 0) {
-              card.classList.add('active');
-          } else if (distance === -1) {
-              card.classList.add('left-1');
-          } else if (distance === -2) {
-              card.classList.add('left-2');
-          } else if (distance === 1) {
-              card.classList.add('right-1');
-          } else if (distance === 2) {
-              card.classList.add('right-2');
-          }
-      });
-
-      // Get the target card and ensure perfect centering
-      const targetCard = flipCards[index];
-
-      // Calculate the exact center position
-      const containerWidth = container.offsetWidth;
-      const cardWidth = targetCard.offsetWidth;
-      const cardMargin = parseInt(window.getComputedStyle(targetCard).marginRight) * 2;
-
-      // Calculate the exact scroll position to center the card
-      // This formula ensures perfect centering regardless of card width or container size
-      const scrollPosition = targetCard.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
-
-      // Use scrollTo with smooth behavior for a controlled animation
-      container.scrollTo({
-          left: scrollPosition,
+      // Simply use scrollIntoView with inline: center - this is the most reliable method
+      flipCards[index].scrollIntoView({
+          inline: 'center',
           behavior: 'smooth'
       });
 
-      // Reset scrolling flag after animation completes
+      // Reset flag after animation
       setTimeout(() => {
           isScrolling = false;
-
-          // Force a final position check to ensure perfect centering
-          const finalAdjustment = targetCard.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
-          if (Math.abs(container.scrollLeft - finalAdjustment) > 2) {
-              container.scrollTo({
-                  left: finalAdjustment,
-                  behavior: 'auto' // Instant correction if needed
-              });
-          }
-      }, 400); // Match the transition duration
+      }, 300);
   }
 
   // Add a debounced scroll handler to make scrolling less sensitive
@@ -203,7 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let closestDistance = Infinity;
       let newActiveIndex = activeCardIndex;
 
-      // Find the card closest to center
       flipCards.forEach((card, index) => {
           const cardRect = card.getBoundingClientRect();
           const cardCenter = cardRect.left + cardRect.width / 2;
@@ -215,9 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
 
-      // If we found a new active card and it's significantly different from current position
-      if (newActiveIndex !== activeCardIndex && closestDistance < 100) {
-          // Scroll to the new card to ensure perfect centering
+      if (newActiveIndex !== activeCardIndex) {
           scrollToCard(newActiveIndex);
       }
   }
