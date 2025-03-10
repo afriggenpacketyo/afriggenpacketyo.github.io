@@ -1,4 +1,3 @@
-// script.js
 document.addEventListener('DOMContentLoaded', function() {
   const flipCards = document.querySelectorAll('.flip-card');
   const container = document.querySelector('.container');
@@ -7,11 +6,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let navArrows = [];
   let isScrolling = false;
   let scrollTimeout;
+  let currentlyFlippedCard = null; // Track the currently flipped card
 
   // --- Coverflow Setup ---
   container.classList.add('with-coverflow');
 
   // --- Card Indicator Setup ---
+  // ... (Card indicator setup remains the same) ...
   const cardIndicator = document.createElement('div');
   cardIndicator.className = 'card-indicator';
   flipCards.forEach((_, index) => {
@@ -26,8 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   document.body.appendChild(cardIndicator);
 
+
   // --- Navigation Arrows (Desktop) ---
-  if (!isMobile) {
+  // ... (Navigation arrow setup remains the same) ...
+      if (!isMobile) {
       const navLeft = document.createElement('div');
       navLeft.className = 'nav-arrow nav-left disabled';
       navLeft.innerHTML = '←';
@@ -46,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let lastClickTime = 0;
       const handleClick = (direction) => {
           const now = Date.now();
-          if (now - lastClickTime < 500) return;
+          if (now - lastClickTime < 500) return; // Debounce
           lastClickTime = now;
 
           let newIndex = activeCardIndex + direction;
@@ -59,22 +62,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --- Scroll Handling (Dynamic Activation) ---
-    container.addEventListener('scroll', () => {
-      clearTimeout(scrollTimeout); // Clear any pending timeout
-      // No isScrolling check here!  We *want* to update during manual scroll.
-
-      // Use requestAnimationFrame for smoother updates during scroll
+  container.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
       requestAnimationFrame(updateActiveCardDuringScroll);
+      resetFlippedCard(); // Reset any flipped card on scroll
   }, { passive: true });
-
 
   // --- scrollToCard (Programmatic Scroll) ---
   function scrollToCard(index) {
       if (index < 0 || index >= flipCards.length || index === activeCardIndex || isScrolling) return;
 
-      isScrolling = true; // Set isScrolling *before* the scroll starts
-      activeCardIndex = index; // Update the index *before* the scroll
-      updateUI(); // update UI before scrolling
+      isScrolling = true;
+      activeCardIndex = index;
+      updateUI();
 
       flipCards[index].scrollIntoView({
           behavior: 'smooth',
@@ -83,14 +83,12 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       setTimeout(() => {
-          isScrolling = false; // Reset isScrolling after scroll
+          isScrolling = false;
       }, 350);
   }
 
   // --- updateActiveCardDuringScroll (Dynamic Activation) ---
-   function updateActiveCardDuringScroll() {
-      // No isScrolling check!  We *want* this to run during manual scroll.
-
+  function updateActiveCardDuringScroll() {
       const containerRect = container.getBoundingClientRect();
       const containerCenter = containerRect.left + containerRect.width / 2;
       let closestDistance = Infinity;
@@ -107,10 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
 
-      // Only update if a valid and *different* card is closest
       if (newActiveIndex !== -1 && newActiveIndex !== activeCardIndex) {
           activeCardIndex = newActiveIndex;
-          updateUI();  // Update the UI *without* scrolling
+          updateUI();
       }
   }
 
@@ -130,9 +127,20 @@ document.addEventListener('DOMContentLoaded', function() {
       }
   }
 
-  // --- Touch, Keyboard, Resize, Card Flip, Image Preload ---
-  // (These sections remain the same as in the previous, correct version)
+  // --- resetFlippedCard (NEW) ---
+  function resetFlippedCard() {
+      if (currentlyFlippedCard && currentlyFlippedCard.classList.contains('flipped')) {
+          currentlyFlippedCard.classList.remove('flipped');
+          // Reset height if needed
+          const inner = currentlyFlippedCard.querySelector('.flip-card-inner');
+          currentlyFlippedCard.style.height = '400px';
+          inner.style.height = '100%';
+          currentlyFlippedCard = null; // Clear the reference
+      }
+  }
 
+  // --- Touch, Keyboard, Resize ---
+  // (These sections remain the same)
     // --- Touch Handling (for Mobile) ---
   //(same as before)
   let touchStartX = 0;
@@ -179,32 +187,37 @@ document.addEventListener('DOMContentLoaded', function() {
           location.reload(); // Simple solution for mobile/desktop switch
       }
   });
+
   // --- Card Flip and Content Handling ---
-  // ... (Card flip logic, optimism score, section titles - all remain the same) ...
   flipCards.forEach((card, index) => {
       const inner = card.querySelector('.flip-card-inner');
       const front = card.querySelector('.flip-card-front');
       const back = card.querySelector('.flip-card-back');
 
-      // --- Click to Focus Card ---
+      // --- Click to Flip (Modified) ---
       card.addEventListener('click', function(e) {
-          // Prevent flipping if clicking a link or if already scrolling
           if (e.target.tagName === 'A' || isScrolling) return;
 
-          // Check for drag (prevent flip on accidental drag)
-            if (e.clientX && this.dataset.mouseDownX) {
-                const dragDistance = Math.abs(e.clientX - parseInt(this.dataset.mouseDownX));
-                if (dragDistance > 5) return; // User was trying to scroll
-            }
+          // Check for drag
+          if (e.clientX && this.dataset.mouseDownX) {
+              const dragDistance = Math.abs(e.clientX - parseInt(this.dataset.mouseDownX));
+              if (dragDistance > 5) return;
+          }
 
-          // --- Focus the card if it's not already active ---
-            if (!this.classList.contains('active')) {
-                scrollToCard(index);
-          } else {
-                // Toggle flipped class ONLY if already active
-                this.classList.toggle('flipped');
-            }
+          // Reset any other flipped card
+          if (currentlyFlippedCard && currentlyFlippedCard !== this) {
+              resetFlippedCard();
+          }
 
+          // Flip the card
+          this.classList.toggle('flipped');
+          currentlyFlippedCard = this.classList.contains('flipped') ? this : null;
+
+
+          // Scroll to card if not active
+          if (!this.classList.contains('active')) {
+              scrollToCard(index);
+          }
           //Adjust Height
           if (this.classList.contains('flipped')) {
             const contentHeight = back.scrollHeight;
@@ -219,16 +232,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 inner.style.height = '100%';
               }, 600); // Match the CSS .flip-card.flipped .flip-card-inner transition
           }
-      });
 
-       // Track mouse/touch start position to differentiate clicks and drags
+      });
+        // Track mouse/touch start position to differentiate clicks and drags
       card.addEventListener('mousedown', function(e) { this.dataset.mouseDownX = e.clientX; });
       card.addEventListener('touchstart', function(e) {
           if (e.touches && e.touches[0]) { this.dataset.mouseDownX = e.touches[0].clientX; }
       }, {passive: true});
 
       // Style optimism scores
-      const scoreText = back.querySelector('p:nth-of-type(2)');
+      // ... (Optimism score logic remains the same) ...
+       const scoreText = back.querySelector('p:nth-of-type(2)');
       if (scoreText) {
         const scoreMatch = scoreText.textContent.match(/(\d+)\/100/);
           if (scoreMatch) {
@@ -249,9 +263,9 @@ document.addEventListener('DOMContentLoaded', function() {
             scoreText.appendChild(scoreSpan);
           }
       }
-
       // Add section titles
-      const summaryTitle = document.createElement('div');
+      // ... (Section title logic remains the same) ...
+       const summaryTitle = document.createElement('div');
       summaryTitle.className = 'section-title';
       summaryTitle.textContent = 'Summary';
 
@@ -271,7 +285,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // --- Image Preloading ---
-   const preloadImages = () => {
+  // ... (Image preloading remains the same) ...
+  const preloadImages = () => {
       const images = document.querySelectorAll('.flip-card-front img, .flip-card-back img');
       images.forEach(img => {
           if (img.dataset.src) {
@@ -287,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- Initial Setup ---
   setTimeout(() => {
-      updateUI(); // Set initial active card
-      scrollToCard(0); // Scroll to the first card
+      updateUI();
+      scrollToCard(0);
   }, 50);
 });
