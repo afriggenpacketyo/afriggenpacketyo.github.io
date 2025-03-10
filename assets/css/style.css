@@ -1,3 +1,4 @@
+/* style.css */
 * {
   margin: 0;
   padding: 0;
@@ -16,15 +17,17 @@ body {
 .container {
   display: flex;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  gap: 20px;
-  padding: 20px 0;
+  scroll-snap-type: x mandatory; /* Use mandatory for consistent snapping */
+  gap: 30px;
   width: 100%;
   max-width: 100vw;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding-left: calc(50% - 150px);
-  padding-right: calc(50% - 150px);
+  padding-left: max(calc(50% - 150px), 40px);
+  padding-right: max(calc(50% - 150px), 40px);
+  min-height: 450px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .container::-webkit-scrollbar {
@@ -42,9 +45,11 @@ body {
   height: 400px;
   scroll-snap-align: center;
   cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Simplified transition */
+  will-change: transform; /* For performance */
 }
 
+/* Active card styles */
 .flip-card.active {
   opacity: 1;
   transform: scale(1);
@@ -52,7 +57,7 @@ body {
 }
 
 .flip-card:not(.active) {
-  opacity: 0.7;
+  opacity: 0.65;
   transform: scale(0.9);
   z-index: 1;
 }
@@ -62,14 +67,12 @@ body {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smoother flip */
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg) !important;
-  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: rotateY(180deg);
 }
 
 .flip-card-front, .flip-card-back {
@@ -80,7 +83,7 @@ body {
   backface-visibility: hidden;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: hidden; /* Ensure content doesn't overflow */
 }
 
 .flip-card-front {
@@ -92,7 +95,6 @@ body {
   align-items: center;
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  filter: saturate(1.1);
 }
 
 .flip-card-back {
@@ -101,14 +103,16 @@ body {
   transform: rotateY(180deg);
   padding: 20px;
   text-align: left;
-  overflow-y: auto;
+  overflow-y: auto; /* Allow scrolling for long content */
 }
 
+/* Front of card */
 .flip-card-front h2 {
   font-size: 1.5rem;
   margin-bottom: 10px;
 }
 
+/* Back of card */
 .flip-card-back h3 {
   color: #3498db;
   margin: 10px 0 5px;
@@ -130,11 +134,12 @@ body {
 }
 
 .optimism-score {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: white;
+    display: inline-block;
+    padding: 4px 8px; /* Reduced padding */
+    border-radius: 12px; /* Smaller radius */
+    font-size: 0.9em; /* Slightly smaller font */
+    font-weight: bold;
+    color: white;
 }
 
 .score-high {
@@ -149,14 +154,14 @@ body {
   background-color: #e74c3c;
 }
 
-/* Add card counter/indicator */
+/* Card Indicator */
 .card-indicator {
   display: flex;
   justify-content: center;
   gap: 8px;
   margin-top: 20px;
   position: absolute;
-  bottom: -30px;
+  bottom: -30px; /* Position below the cards */
   left: 0;
   right: 0;
   z-index: 50;
@@ -168,46 +173,42 @@ body {
   border-radius: 50%;
   background-color: #ccc;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
 .indicator-dot.active {
   background-color: #3498db;
-  transform: scale(1.3);
 }
 
-/* Improved navigation arrows with better visibility and device targeting */
+/* Navigation Arrows */
 .nav-arrow {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
-  background-color: rgba(52, 152, 219, 0.9);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 100;
-  font-size: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  user-select: none;
-  opacity: 1;
-  pointer-events: auto;
-}
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px; /* Smaller size */
+    height: 40px;
+    background-color: rgba(52, 152, 219, 0.8); /* Slightly less opaque */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 20px; /* Smaller font */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Softer shadow */
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
 
 .nav-arrow:hover {
   background-color: rgba(52, 152, 219, 1);
-  transform: translateY(-50%) scale(1.1);
 }
 
 .nav-arrow.disabled {
   opacity: 0.3;
   cursor: default;
-  pointer-events: none;
+  pointer-events: none; /* Prevent clicks */
 }
 
 .nav-left {
@@ -218,11 +219,12 @@ body {
   right: 20px;
 }
 
-/* Hide arrows on mobile */
+/* Mobile Styles */
 @media (max-width: 768px) {
   .container {
     padding: 10px;
     gap: 10px;
+    scroll-snap-type: x mandatory;  /* for mobile */
   }
 
   .flip-card {
@@ -230,34 +232,39 @@ body {
   }
 
   .nav-arrow {
-    display: none;
+    display: none; /* Hide arrows on mobile */
   }
 }
 
-/* iPod classic style scrolling effect */
+/* iPod Classic Coverflow */
 .container.with-coverflow {
-  perspective: none;
+  perspective: none; /* Remove perspective for a flatter look */
 }
 
 .container.with-coverflow .flip-card {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Smooth transitions */
 }
-
-/* Remove all the complex transformations */
+/* No more complex transformations */
 .container.with-coverflow .flip-card.left-2,
 .container.with-coverflow .flip-card.left-1,
 .container.with-coverflow .flip-card.right-1,
 .container.with-coverflow .flip-card.right-2 {
-  transform: scale(0.9);
-  opacity: 0.7;
+    transform: scale(0.9);
+    opacity: .7;
 }
-
 .container.with-coverflow .flip-card.active {
   transform: scale(1);
   opacity: 1;
 }
+.container.with-coverflow .flip-card.active .flip-card-front{
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.2);
+}
 
-/* Simple highlight for active card */
-.container.with-coverflow .flip-card.active .flip-card-front {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.section-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: #3498db; /* Or any color you prefer */
+    text-align: left;
 }
