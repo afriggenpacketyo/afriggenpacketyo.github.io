@@ -49,14 +49,11 @@ body {
   flex: 0 0 300px;
   height: 400px;
   scroll-snap-align: center;
-  scroll-snap-stop: always;
   cursor: pointer;
   transition: transform 0.3s ease, opacity 0.3s ease, height 0.3s ease-out;
   will-change: transform;
   transform-origin: center center;
   z-index: 1;
-  margin-right: 15px;
-  margin-left: 15px;
 }
 
 .flip-card.active {
@@ -298,14 +295,4 @@ body {
 .container.with-coverflow .flip-card.active .flip-card-front {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Add margin to the first card */
-.container .flip-card:first-child {
-  margin-left: 10px;
-}
-
-/* Add margin to the last card */
-.container .flip-card:last-child {
-  margin-right: 10px;
 }
