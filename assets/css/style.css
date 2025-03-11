@@ -21,18 +21,17 @@ body {
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  gap: 30px;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 20px;
   width: 100%;
   max-width: 100vw;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-left: max(calc(50% - 150px), 40px);
-  padding-right: max(calc(50% - 150px), 40px);
   height: 100vh;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
   align-items: center;
+  padding-left: calc(50vw - 150px);
+  padding-right: calc(50vw - 150px);
+  -webkit-overflow-scrolling: touch;
+  gap: 30px;
+  padding-top: 80px;
 }
 
 .container::-webkit-scrollbar {
@@ -49,6 +48,7 @@ body {
   flex: 0 0 300px;
   height: 400px;
   scroll-snap-align: center;
+  margin: 0 15px;
   cursor: pointer;
   transition: transform 0.3s ease, opacity 0.3s ease, height 0.3s ease-out;
   will-change: transform;
@@ -245,16 +245,25 @@ body {
 /* Hide arrows on mobile */
 @media (max-width: 768px) {
   .container {
-    padding: 10px;
-    gap: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 70px;
   }
 
-  .flip-card {
-    flex: 0 0 280px;
+  .flip-card:first-child {
+    margin-left: calc(50vw - 160px);
+  }
+
+  .flip-card:last-child {
+    margin-right: calc(50vw - 160px);
   }
 
   .nav-arrow {
     display: none;
+  }
+
+  .page-header h1 {
+    font-size: 1.2rem;
   }
 }
 
@@ -295,4 +304,37 @@ body {
 .container.with-coverflow .flip-card.active .flip-card-front {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure first and last cards are fully visible */
+.flip-card:first-child {
+  margin-left: calc(50vw - 165px);
+}
+
+.flip-card:last-child {
+  margin-right: calc(50vw - 165px);
+}
+
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 5px;
 }
