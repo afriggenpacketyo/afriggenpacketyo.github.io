@@ -95,12 +95,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- scrollToCard updated ---
     function scrollToCard(index, andFlip = false) {
-        if (index < 0 || index >= flipCards.length || (index === activeCardIndex && !andFlip)) return;
+        if (index < 0 || index >= flipCards.length) return;
 
-        isScrolling = true;
         const cardToScrollTo = flipCards[index];
 
-        // Reset any flipped card if we're not planning to flip this one
+        // Reset any flipped card
         if (currentlyFlippedCard && (!andFlip || currentlyFlippedCard !== cardToScrollTo)) {
             resetFlippedCard();
         }
@@ -109,34 +108,20 @@ document.addEventListener('DOMContentLoaded', function() {
         activeCardIndex = index;
         updateUI();
 
-        // If we're going to flip, prepare card height
-        if (andFlip) {
-            isManuallyFlipping = true;
-            adjustCardHeight(cardToScrollTo, true);
-        }
-
-        // Scroll to center the card
+        // Scroll to the card
         cardToScrollTo.scrollIntoView({
             behavior: 'smooth',
             block: 'nearest',
             inline: 'center'
         });
 
-        // After scroll animation completes
-        setTimeout(() => {
-            isScrolling = false;
-
-            // If we need to flip, do it now
-            if (andFlip) {
+        // Handle flipping if needed
+        if (andFlip) {
+            setTimeout(() => {
                 cardToScrollTo.classList.add('flipped');
                 currentlyFlippedCard = cardToScrollTo;
-
-                // Reset manual flipping flag after a delay
-                setTimeout(() => {
-                    isManuallyFlipping = false;
-                }, 100);
-            }
-        }, 400); // Match scroll animation duration
+            }, 300);
+        }
     }
 
     // --- updateActiveCardDuringScroll (Dynamic Activation) ---
@@ -362,26 +347,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Scroll handling ---
     let scrollEndTimeout;
     container.addEventListener('scroll', () => {
-        // Don't interfere with manual flipping
-        if (isManuallyFlipping) return;
-
-        // Clear any previous timeout
-        clearTimeout(scrollEndTimeout);
-
-        // Update active card during scroll
-        if (!isScrolling) {
-            requestAnimationFrame(updateActiveCardDuringScroll);
-        }
-
-        // Detect when scrolling stops
-        scrollEndTimeout = setTimeout(() => {
-            isScrolling = false;
-
-            // One final update when scrolling ends
-            if (!isManuallyFlipping) {
+        if (!isManuallyFlipping) {
+            clearTimeout(scrollEndTimeout);
+            scrollEndTimeout = setTimeout(() => {
                 updateActiveCardDuringScroll();
-            }
-        }, 150);
+            }, 150);
+        }
     }, { passive: true });
 
     // --- Window Resize Handling ---
@@ -495,51 +466,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call this function after your existing initialization
     ensureProperScroll();
 
-    // Add to your existing JavaScript
-    function handleMobileScroll() {
-        if (window.innerWidth <= 768) {
-            const container = document.querySelector('.container');
-            let touchStartX = 0;
-            let scrollLeft = 0;
+    // Replace the complex mobile scroll handling with this simpler version
+    function handleMobileScrolling() {
+        const container = document.querySelector('.container');
+        let startX;
+        let scrollLeft;
+        let isScrolling = false;
 
-            container.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].pageX;
-                scrollLeft = container.scrollLeft;
-            }, { passive: true });
+        container.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].pageX;
+            scrollLeft = container.scrollLeft;
+        }, { passive: true });
 
-            container.addEventListener('touchend', (e) => {
-                const touchEndX = e.changedTouches[0].pageX;
-                const diff = touchStartX - touchEndX;
+        container.addEventListener('touchend', (e) => {
+            if (!isScrolling) {
+                const endX = e.changedTouches[0].pageX;
+                const diff = startX - endX;
 
-                // Find the nearest card center
-                const cards = document.querySelectorAll('.flip-card');
-                const containerCenter = container.offsetWidth / 2;
+                // Only handle significant swipes
+                if (Math.abs(diff) > 50) {
+                    const direction = diff > 0 ? 1 : -1;
+                    const currentIndex = Array.from(flipCards).indexOf(document.querySelector('.flip-card.active'));
+                    const newIndex = Math.max(0, Math.min(flipCards.length - 1, currentIndex + direction));
 
-                let nearestCard = null;
-                let minDistance = Infinity;
-
-                cards.forEach(card => {
-                    const cardBounds = card.getBoundingClientRect();
-                    const cardCenter = cardBounds.left + (cardBounds.width / 2);
-                    const distance = Math.abs(containerCenter - cardCenter);
-
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        nearestCard = card;
+                    if (newIndex !== currentIndex) {
+                        scrollToCard(newIndex);
                     }
-                });
-
-                if (nearestCard) {
-                    nearestCard.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'center'
-                    });
                 }
-            }, { passive: true });
-        }
+            }
+        }, { passive: true });
     }
 
     // Call this function after initialization
-    handleMobileScroll();
+    handleMobileScrolling();
 });
