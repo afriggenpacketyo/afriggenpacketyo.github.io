@@ -338,3 +338,8 @@ body {
   color: #7f8c8d;
   margin-top: 5px;
 }
+.section-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
