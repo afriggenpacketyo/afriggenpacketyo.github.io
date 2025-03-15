@@ -343,3 +343,9 @@ body {
   font-weight: bold;
   margin-bottom: 10px;
 }
+
+.source-text {
+  font-size: 0.9em;  /* 90% of the parent element's font size */
+  margin-top: 5px;
+  color: #666;
+}
