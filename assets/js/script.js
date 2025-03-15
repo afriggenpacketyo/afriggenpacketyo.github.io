@@ -420,10 +420,48 @@ document.addEventListener('DOMContentLoaded', function() {
   
     // --- Keyboard Navigation ---
     document.addEventListener('keydown', (e) => {
+        // Skip if on mobile
+        if (isMobile) return;
+        
         if (e.key === 'ArrowLeft' && activeCardIndex > 0) {
             scrollToCard(activeCardIndex - 1);
         } else if (e.key === 'ArrowRight' && activeCardIndex < flipCards.length - 1) {
             scrollToCard(activeCardIndex + 1);
+        } else if ((e.key === 'Enter' || e.key === ' ') && !isScrolling) {
+            // Simulate a click on the active card when Enter or Space is pressed
+            const activeCard = flipCards[activeCardIndex];
+            if (activeCard) {
+                // Prevent default space scrolling behavior
+                e.preventDefault();
+                
+                // CRITICAL: Set manual flipping flag
+                isManuallyFlipping = true;
+                
+                // Clear any scroll timeouts
+                clearTimeout(scrollEndTimeout);
+                
+                const shouldFlip = !activeCard.classList.contains('flipped');
+                
+                if (shouldFlip) {
+                    // Expand and flip
+                    adjustCardHeight(activeCard, true);
+                    activeCard.classList.add('flipped');
+                    currentlyFlippedCard = activeCard;
+                } else {
+                    // Unflip
+                    activeCard.classList.remove('flipped');
+                    adjustCardHeight(activeCard, false);
+                    currentlyFlippedCard = null;
+                }
+                
+                // Reset manual flipping flag after a delay
+                setTimeout(() => {
+                    isManuallyFlipping = false;
+                }, 500);
+                
+                // Restore animations with a slight delay
+                setTimeout(restoreAnimations, 50);
+            }
         }
     });
   
