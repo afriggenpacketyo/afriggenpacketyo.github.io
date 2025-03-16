@@ -247,15 +247,15 @@ body {
   .container {
     padding-left: 20px;
     padding-right: 20px;
-    padding-top: 70px;
+    padding-top: 30px;
   }
 
   .flip-card:first-child {
-    margin-left: calc(50vw - 160px);
+    margin-left: calc(50vw - 130px);
   }
 
   .flip-card:last-child {
-    margin-right: calc(50vw - 160px);
+    margin-right: calc(50vw - 130px);
   }
 
   .nav-arrow {
