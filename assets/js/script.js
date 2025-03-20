@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
       let rapidKeyPressThreshold = 300; // ms
       let isRapidScrolling = false;
 
+    // Update the touch handling for mobile to be more forgiving with slow scrolls
+    // Add these variables near the top where you define your other variables
+    let touchScrollStartTime = 0;
+    let lastTouchX = 0;
+    let touchVelocity = 0;
+    let isSlowTouchScroll = false;
+    const slowScrollThreshold = 0.5; // pixels per millisecond 
+
     // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
     container.classList.add('with-coverflow');
 
@@ -451,22 +459,111 @@ document.addEventListener('DOMContentLoaded', function() {
 
     container.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].screenX;
+        lastTouchX = touchStartX;
+        touchScrollStartTime = Date.now();
+        isSlowTouchScroll = false; // Reset slow scroll flag
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!isMobile) return;
+        
+        // Calculate scroll velocity to determine if it's a slow scroll
+        const now = Date.now();
+        const currentX = e.changedTouches[0].screenX;
+        const timeDelta = now - touchScrollStartTime;
+        
+        if (timeDelta > 0) {
+            // Calculate velocity in pixels per millisecond
+            touchVelocity = Math.abs(currentX - lastTouchX) / timeDelta;
+            isSlowTouchScroll = touchVelocity < slowScrollThreshold;
+        }
+        
+        lastTouchX = currentX;
+        touchScrollStartTime = now;
     }, { passive: true });
 
     container.addEventListener('touchend', (e) => {
+        if (!isMobile) return;
+        
         touchEndX = e.changedTouches[0].screenX;
         const distance = touchEndX - touchStartX;
-
-        if (Math.abs(distance) > minSwipeDistance) {
+        const absDist = Math.abs(distance);
+        
+        // For definite swipes, always change the card
+        if (absDist > minSwipeDistance) {
             if (distance > 0 && activeCardIndex > 0) {
                 scrollToCard(activeCardIndex - 1);
             } else if (distance < 0 && activeCardIndex < flipCards.length - 1) {
                 scrollToCard(activeCardIndex + 1);
             }
         } else {
-            // Snap to nearest card
-            updateActiveCardDuringScroll();
+            // For small movements or slow scrolls, use a more forgiving approach
+            if (isSlowTouchScroll) {
+                // Find the closest card with a wider acceptance region
+                const containerRect = container.getBoundingClientRect();
+                const containerCenter = containerRect.left + containerRect.width / 2;
+                
+                // For slow scrolls, we'll use a more forgiving algorithm
+                // that gives preference to cards that are almost centered
+                let closestCard = null;
+                let closestDistance = Infinity;
+                let secondClosestDistance = Infinity;
+                let closestIndex = -1;
+                
+                flipCards.forEach((card, index) => {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCenter = cardRect.left + cardRect.width / 2;
+                    const distance = Math.abs(containerCenter - cardCenter);
+                    
+                    if (distance < closestDistance) {
+                        secondClosestDistance = closestDistance;
+                        closestDistance = distance;
+                        closestCard = card;
+                        closestIndex = index;
+                    } else if (distance < secondClosestDistance) {
+                        secondClosestDistance = distance;
+                    }
+                });
+                
+                // If we're in a "gray area" - the user has slowly scrolled past the halfway point
+                // but not fully committed to the next card, we'll be more forgiving
+                const isInGrayArea = secondClosestDistance - closestDistance < 20; // 20px threshold
+                
+                if (closestIndex !== -1) {
+                    // For slow scrolls in the gray area, be more permissive
+                    if (isInGrayArea) {
+                        // Determine which direction the user was scrolling
+                        const wasScrollingRight = touchEndX < touchStartX;
+                        
+                        // If they were scrolling right (toward next card) and current card is left of center
+                        // we should select the current card, not the next one
+                        const closestCardRect = closestCard.getBoundingClientRect();
+                        const closestCardCenter = closestCardRect.left + closestCardRect.width / 2;
+                        
+                        if (wasScrollingRight && closestCardCenter < containerCenter && activeCardIndex < closestIndex) {
+                            // Stay on current card instead of jumping to next
+                            scrollToCard(activeCardIndex);
+                        } else if (!wasScrollingRight && closestCardCenter > containerCenter && activeCardIndex > closestIndex) {
+                            // Stay on current card instead of jumping to previous
+                            scrollToCard(activeCardIndex);
+                        } else {
+                            // Otherwise, go with the closest card
+                            scrollToCard(closestIndex);
+                        }
+                    } else {
+                        // For non-gray areas, just use the closest card
+                        scrollToCard(closestIndex);
+                    }
+                }
+            } else {
+                // For regular/fast scrolls, use the existing logic
+                updateActiveCardDuringScroll();
+            }
         }
+        
+        // Reset variables
+        isSlowTouchScroll = false;
+        touchVelocity = 0;
     }, { passive: true });
 
     // --- Keyboard Navigation ---
