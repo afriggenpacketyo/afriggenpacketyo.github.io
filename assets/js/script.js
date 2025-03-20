@@ -1,19 +1,8 @@
 (function() {
-  // Automatic cache-busting code - no version number needed
-  const currentTimestamp = new Date().getTime();
-  const lastVisit = localStorage.getItem('lastVisit');
-  
-  // Force refresh if it's been more than 30 minutes since last visit
-  if (lastVisit && (currentTimestamp - parseInt(lastVisit) > 900000)) {
-    localStorage.setItem('lastVisit', currentTimestamp);
-    
-    // Only reload if this isn't already a fresh page load
-    if (!performance.getEntriesByType('navigation')[0].type.includes('reload')) {
-      window.location.reload(true);
-    }
-  } else {
-    localStorage.setItem('lastVisit', currentTimestamp);
-  }
+  // Simple auto-refresh after 16 minutes
+  setTimeout(() => {
+    window.location.reload();
+  }, 16 * 60 * 1000); // 16 minutes in milliseconds
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
