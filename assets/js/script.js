@@ -1,3 +1,21 @@
+(function() {
+  // Automatic cache-busting code - no version number needed
+  const currentTimestamp = new Date().getTime();
+  const lastVisit = localStorage.getItem('lastVisit');
+  
+  // Force refresh if it's been more than 30 minutes since last visit
+  if (lastVisit && (currentTimestamp - parseInt(lastVisit) > 900000)) {
+    localStorage.setItem('lastVisit', currentTimestamp);
+    
+    // Only reload if this isn't already a fresh page load
+    if (!performance.getEntriesByType('navigation')[0].type.includes('reload')) {
+      window.location.reload(true);
+    }
+  } else {
+    localStorage.setItem('lastVisit', currentTimestamp);
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
     const flipCards = document.querySelectorAll('.flip-card');
     const container = document.querySelector('.container');
