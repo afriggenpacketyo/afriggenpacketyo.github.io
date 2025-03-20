@@ -15,6 +15,9 @@
       let isManuallyFlipping = false;
       let currentlyFlippedCard = null;
       let isUserClicking = false;
+      let lastKeyPressTime = 0;
+      let rapidKeyPressThreshold = 300; // ms
+      let isRapidScrolling = false;
   
       // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
       container.classList.add('with-coverflow');
@@ -147,12 +150,24 @@
               adjustCardHeight(cardToScrollTo, true);
           }
   
-          // Scroll to center the card
-          cardToScrollTo.scrollIntoView({
-              behavior: 'smooth',
-              block: 'nearest',
-              inline: 'center'
-          });
+          // If not in rapid scrolling mode, use a nicer easing
+          if (!isRapidScrolling) {
+              // Set smooth behavior for nice animation
+              container.style.scrollBehavior = 'smooth';
+              
+              // Scroll to center the card
+              cardToScrollTo.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'nearest',
+                  inline: 'center'
+              });
+          } else {
+              // In rapid mode, immediate scroll
+              container.style.scrollBehavior = 'auto';
+              const containerCenter = container.offsetWidth / 2;
+              const cardCenter = cardToScrollTo.offsetWidth / 2;
+              container.scrollLeft = cardToScrollTo.offsetLeft - containerCenter + cardCenter;
+          }
   
           // After scroll animation completes
           setTimeout(() => {
@@ -168,7 +183,7 @@
                       isManuallyFlipping = false;
                   }, 100);
               }
-          }, 400); // Match scroll animation duration
+          }, isRapidScrolling ? 50 : 400); // Shorter duration for rapid scrolling
       }
   
       // --- updateActiveCardDuringScroll (Dynamic Activation) ---
@@ -455,12 +470,11 @@
           // Skip if on mobile
           if (isMobile) return;
   
+          const now = Date.now();
+          const isRapidKeyPress = (now - lastKeyPressTime) < rapidKeyPressThreshold;
+          lastKeyPressTime = now;
+          
           if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-              // Immediately cancel any ongoing scrolling
-              container.style.scrollBehavior = 'auto';
-              isScrolling = false;
-              clearTimeout(scrollEndTimeout);
-              
               // Calculate new index based on key pressed
               let newIndex = activeCardIndex;
               if (e.key === 'ArrowLeft' && activeCardIndex > 0) {
@@ -468,45 +482,62 @@
               } else if (e.key === 'ArrowRight' && activeCardIndex < flipCards.length - 1) {
                   newIndex = activeCardIndex + 1;
               } else {
-                  // No valid movement possible, restore settings and exit
-                  setTimeout(() => { container.style.scrollBehavior = 'smooth'; }, 10);
-                  return;
+                  return; // No valid movement possible
               }
               
-              // Update active index directly
-              activeCardIndex = newIndex;
-              updateUI();
-              
-              // Force immediate scroll to the correct card
-              const targetCard = flipCards[activeCardIndex];
-              const containerCenter = container.offsetWidth / 2;
-              const cardCenter = targetCard.offsetWidth / 2;
-              container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
-              
-              // Restore smooth scrolling after a short delay
-              setTimeout(() => {
+              // If rapid key press detected, use the immediate scrolling method
+              if (isRapidKeyPress || isRapidScrolling) {
+                  // We're in rapid scrolling mode now
+                  isRapidScrolling = true;
+                  
+                  // Cancel ongoing animations
+                  container.style.scrollBehavior = 'auto';
+                  isScrolling = false;
+                  clearTimeout(scrollEndTimeout);
+                  
+                  // Update index immediately
+                  activeCardIndex = newIndex;
+                  updateUI();
+                  
+                  // Direct scrolling to target
+                  const targetCard = flipCards[activeCardIndex];
+                  const containerCenter = container.offsetWidth / 2;
+                  const cardCenter = targetCard.offsetWidth / 2;
+                  container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
+                  
+                  // Reset rapid scrolling mode after a delay
+                  clearTimeout(window.rapidScrollResetTimeout);
+                  window.rapidScrollResetTimeout = setTimeout(() => {
+                      isRapidScrolling = false;
+                      container.style.scrollBehavior = 'smooth';
+                  }, 500);
+              } else {
+                  // For casual scrolling, use the smooth animation approach
+                  // Still make sure to clear any previous scrolling
+                  clearTimeout(scrollEndTimeout);
+                  
+                  // Use scrollToCard with a custom easing function for smooth animation
                   container.style.scrollBehavior = 'smooth';
-              }, 50);
+                  scrollToCard(newIndex);
+              }
           } else if ((e.key === 'Enter' || e.key === ' ')) {
               // Prevent default space scrolling behavior
               e.preventDefault();
   
-              // The goal is to make sure the activeCardIndex card is centered and then flipped
-  
-              // 1. Forcefully and immediately center the active card
+              // 1. Force center the active card (regardless of scrolling mode)
               const targetCard = flipCards[activeCardIndex];
               
-              // Immediately stop any ongoing scrolling
+              // Make centering immediate
               container.style.scrollBehavior = 'auto';
               isScrolling = false;
               clearTimeout(scrollEndTimeout);
               
-              // Force position to center the intended card immediately
+              // Force correct position
               const containerCenter = container.offsetWidth / 2;
               const cardCenter = targetCard.offsetWidth / 2;
               container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
               
-              // 2. Now flip the intended card (which is now visually centered)
+              // 2. Flip the card (same as before)
               isManuallyFlipping = true;
               
               const shouldFlip = !targetCard.classList.contains('flipped');
@@ -533,7 +564,7 @@
                   isManuallyFlipping = false;
               }, 500);
   
-              // Restore smooth scrolling after a short delay
+              // Restore smooth scrolling
               setTimeout(() => {
                   container.style.scrollBehavior = 'smooth';
               }, 50);

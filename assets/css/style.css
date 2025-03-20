@@ -125,6 +125,13 @@ body {
 .flip-card-front h2 {
   font-size: 1.5rem;
   margin-bottom: 10px;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  max-width: 260px;
+  width: 260px;
+  overflow-wrap: normal;
+  hyphens: none;
+  contain: layout;
 }
 
 .flip-card-back h3 {
