@@ -461,6 +461,11 @@ document.addEventListener('DOMContentLoaded', function() {
         touchStartX = e.changedTouches[0].screenX;
         lastTouchX = touchStartX;
         touchScrollStartTime = Date.now();
+        
+        // Important: Record which card is active when touch starts
+        // This will be the card we'll prioritize keeping active for small movements
+        container.dataset.touchStartActiveCard = activeCardIndex;
+        
         isSlowTouchScroll = false; // Reset slow scroll flag
     }, { passive: true });
 
@@ -486,79 +491,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isMobile) return;
         
         touchEndX = e.changedTouches[0].screenX;
-        const distance = touchEndX - touchStartX;
-        const absDist = Math.abs(distance);
+        const touchDistance = touchEndX - touchStartX;
+        const absTouchDistance = Math.abs(touchDistance);
         
-        // For definite swipes, always change the card
-        if (absDist > minSwipeDistance) {
-            if (distance > 0 && activeCardIndex > 0) {
+        // For definite swipes (large movements), use standard swipe logic
+        if (absTouchDistance > minSwipeDistance) {
+            if (touchDistance > 0 && activeCardIndex > 0) {
                 scrollToCard(activeCardIndex - 1);
-            } else if (distance < 0 && activeCardIndex < flipCards.length - 1) {
+            } else if (touchDistance < 0 && activeCardIndex < flipCards.length - 1) {
                 scrollToCard(activeCardIndex + 1);
+            } else {
+                // If we can't move in the direction of the swipe, make sure 
+                // the active card is centered
+                scrollToCard(activeCardIndex);
             }
         } else {
-            // For small movements or slow scrolls, use a more forgiving approach
-            if (isSlowTouchScroll) {
-                // Find the closest card with a wider acceptance region
-                const containerRect = container.getBoundingClientRect();
-                const containerCenter = containerRect.left + containerRect.width / 2;
-                
-                // For slow scrolls, we'll use a more forgiving algorithm
-                // that gives preference to cards that are almost centered
-                let closestCard = null;
-                let closestDistance = Infinity;
-                let secondClosestDistance = Infinity;
-                let closestIndex = -1;
-                
-                flipCards.forEach((card, index) => {
-                    const cardRect = card.getBoundingClientRect();
-                    const cardCenter = cardRect.left + cardRect.width / 2;
-                    const distance = Math.abs(containerCenter - cardCenter);
-                    
-                    if (distance < closestDistance) {
-                        secondClosestDistance = closestDistance;
-                        closestDistance = distance;
-                        closestCard = card;
-                        closestIndex = index;
-                    } else if (distance < secondClosestDistance) {
-                        secondClosestDistance = distance;
-                    }
-                });
-                
-                // If we're in a "gray area" - the user has slowly scrolled past the halfway point
-                // but not fully committed to the next card, we'll be more forgiving
-                const isInGrayArea = secondClosestDistance - closestDistance < 20; // 20px threshold
-                
-                if (closestIndex !== -1) {
-                    // For slow scrolls in the gray area, be more permissive
-                    if (isInGrayArea) {
-                        // Determine which direction the user was scrolling
-                        const wasScrollingRight = touchEndX < touchStartX;
-                        
-                        // If they were scrolling right (toward next card) and current card is left of center
-                        // we should select the current card, not the next one
-                        const closestCardRect = closestCard.getBoundingClientRect();
-                        const closestCardCenter = closestCardRect.left + closestCardRect.width / 2;
-                        
-                        if (wasScrollingRight && closestCardCenter < containerCenter && activeCardIndex < closestIndex) {
-                            // Stay on current card instead of jumping to next
-                            scrollToCard(activeCardIndex);
-                        } else if (!wasScrollingRight && closestCardCenter > containerCenter && activeCardIndex > closestIndex) {
-                            // Stay on current card instead of jumping to previous
-                            scrollToCard(activeCardIndex);
-                        } else {
-                            // Otherwise, go with the closest card
-                            scrollToCard(closestIndex);
-                        }
-                    } else {
-                        // For non-gray areas, just use the closest card
-                        scrollToCard(closestIndex);
-                    }
-                }
-            } else {
-                // For regular/fast scrolls, use the existing logic
-                updateActiveCardDuringScroll();
-            }
+            // For smaller movements, JUST CENTER THE ACTIVE CARD
+            // This is the key change - we don't change which card is active
+            // We simply ensure it's properly centered
+            scrollToCard(activeCardIndex);
         }
         
         // Reset variables
