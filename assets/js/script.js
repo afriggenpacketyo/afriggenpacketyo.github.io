@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let isSlowTouchScroll = false;
     const slowScrollThreshold = 0.5; // pixels per millisecond
 
+    // Update these variables at the top
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let touchStartTime = 0;
+    const SWIPE_THRESHOLD = 30; // Reduced from 50 for easier card switching
+    const VELOCITY_THRESHOLD = 0.3; // Velocity threshold for swipe (pixels/ms)
+
     // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
     container.classList.add('with-coverflow');
 
@@ -458,51 +465,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Touch Handling (for Mobile) ---
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const minSwipeDistance = 50;
-
     container.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-        lastTouchX = touchStartX;
-        touchScrollStartTime = Date.now();
+        if (!isMobile) return;
 
-        // Important: Record which card is active when touch starts
-        // This will be the card we'll prioritize keeping active for small movements
-        container.dataset.touchStartActiveCard = activeCardIndex;
+        touchStartX = e.touches[0].clientX;
+        touchStartTime = Date.now();
 
-        isSlowTouchScroll = false; // Reset slow scroll flag
+        // Immediately stop any ongoing animations
+        forceStopAllAnimations();
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
         if (!isMobile) return;
 
-        // Calculate scroll velocity to determine if it's a slow scroll
-        const now = Date.now();
-        const currentX = e.changedTouches[0].screenX;
-        const timeDelta = now - touchScrollStartTime;
+        const currentX = e.touches[0].clientX;
+        const deltaX = currentX - touchStartX;
 
-        if (timeDelta > 0) {
-            // Calculate velocity in pixels per millisecond
-            touchVelocity = Math.abs(currentX - lastTouchX) / timeDelta;
-            isSlowTouchScroll = touchVelocity < slowScrollThreshold;
-        }
-
-        lastTouchX = currentX;
-        touchScrollStartTime = now;
+        // Allow the natural scroll to happen, but update active card
+        requestAnimationFrame(() => updateActiveCardDuringScroll());
     }, { passive: true });
 
     container.addEventListener('touchend', (e) => {
         if (!isMobile) return;
 
-        // Use your existing scrollToCard function which already has smooth scrolling
-        // and is well-tested with the rest of your code
-        container.style.scrollBehavior = 'smooth';
-        scrollToCard(activeCardIndex);
+        const touchEndTime = Date.now();
+        const touchDuration = touchEndTime - touchStartTime;
+        touchEndX = e.changedTouches[0].clientX;
 
-        // Reset touch variables
-        isSlowTouchScroll = false;
-        touchVelocity = 0;
+        const deltaX = touchEndX - touchStartX;
+        const velocity = Math.abs(deltaX) / touchDuration;
+
+        // Determine direction and if we should switch cards
+        if (Math.abs(deltaX) > SWIPE_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
+            const direction = deltaX > 0 ? -1 : 1;
+            const newIndex = Math.max(0, Math.min(flipCards.length - 1, activeCardIndex + direction));
+
+            // Immediate card switch with quick animation
+            container.style.scrollBehavior = 'auto';
+            scrollToCard(newIndex);
+
+            // Brief smooth animation to settle
+            setTimeout(() => {
+                container.style.scrollBehavior = 'smooth';
+                scrollToCard(newIndex);
+            }, 50);
+        } else {
+            // Small movement - return to active card
+            container.style.scrollBehavior = 'smooth';
+            scrollToCard(activeCardIndex);
+        }
     }, { passive: true });
 
     // --- Keyboard Navigation ---
