@@ -490,29 +490,12 @@ document.addEventListener('DOMContentLoaded', function() {
     container.addEventListener('touchend', (e) => {
         if (!isMobile) return;
         
-        touchEndX = e.changedTouches[0].screenX;
-        const touchDistance = touchEndX - touchStartX;
-        const absTouchDistance = Math.abs(touchDistance);
+        // When the touch ends, ALWAYS center the currently active card
+        // No calculations, no overrides, no checking for closest card
+        // Just center whatever card is active right now
+        scrollToCard(activeCardIndex);
         
-        // For definite swipes (large movements), use standard swipe logic
-        if (absTouchDistance > minSwipeDistance) {
-            if (touchDistance > 0 && activeCardIndex > 0) {
-                scrollToCard(activeCardIndex - 1);
-            } else if (touchDistance < 0 && activeCardIndex < flipCards.length - 1) {
-                scrollToCard(activeCardIndex + 1);
-            } else {
-                // If we can't move in the direction of the swipe, make sure 
-                // the active card is centered
-                scrollToCard(activeCardIndex);
-            }
-        } else {
-            // For smaller movements, JUST CENTER THE ACTIVE CARD
-            // This is the key change - we don't change which card is active
-            // We simply ensure it's properly centered
-            scrollToCard(activeCardIndex);
-        }
-        
-        // Reset variables
+        // Reset touch variables
         isSlowTouchScroll = false;
         touchVelocity = 0;
     }, { passive: true });
