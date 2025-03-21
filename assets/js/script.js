@@ -202,26 +202,31 @@ document.addEventListener('DOMContentLoaded', function() {
         // Don't update if manually flipping
         if (isManuallyFlipping) return;
 
+        // Simple, practical approach: Find which cards are at least 30% visible
         const containerRect = container.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-        let closestDistance = Infinity;
-        let newActiveIndex = -1;
-
+        
+        // For each card, calculate how much is visible
         flipCards.forEach((card, index) => {
             const cardRect = card.getBoundingClientRect();
-            const cardCenter = cardRect.left + cardRect.width / 2;
-            const distance = Math.abs(containerCenter - cardCenter);
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                newActiveIndex = index;
+            
+            // Calculate intersection/overlap with container
+            const overlapLeft = Math.max(containerRect.left, cardRect.left);
+            const overlapRight = Math.min(containerRect.right, cardRect.right);
+            const visibleWidth = Math.max(0, overlapRight - overlapLeft);
+            
+            // If 30% or more is visible AND it's closer to center than current active card
+            if (visibleWidth / cardRect.width >= 0.3) {
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const containerCenter = containerRect.left + containerRect.width / 2;
+                const currentActiveCenter = flipCards[activeCardIndex].getBoundingClientRect().left + 
+                                          flipCards[activeCardIndex].getBoundingClientRect().width / 2;
+                
+                if (Math.abs(cardCenter - containerCenter) < Math.abs(currentActiveCenter - containerCenter)) {
+                    activeCardIndex = index;
+                    updateUI();
+                }
             }
         });
-
-        if (newActiveIndex !== -1 && newActiveIndex !== activeCardIndex) {
-            activeCardIndex = newActiveIndex;
-            updateUI();
-        }
     }
 
     // --- adjustCardHeight ---
@@ -490,9 +495,9 @@ document.addEventListener('DOMContentLoaded', function() {
     container.addEventListener('touchend', (e) => {
         if (!isMobile) return;
         
-        // When the touch ends, ALWAYS center the currently active card
-        // No calculations, no overrides, no checking for closest card
-        // Just center whatever card is active right now
+        // Use your existing scrollToCard function which already has smooth scrolling 
+        // and is well-tested with the rest of your code
+        container.style.scrollBehavior = 'smooth';
         scrollToCard(activeCardIndex);
         
         // Reset touch variables
