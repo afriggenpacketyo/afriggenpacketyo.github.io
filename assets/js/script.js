@@ -140,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function scrollToCard(index, andFlip = false) {
         if (index < 0 || index >= flipCards.length || (index === activeCardIndex && !andFlip)) return;
 
-        isScrolling = true;
         const cardToScrollTo = flipCards[index];
 
         // Reset any flipped card if we're not planning to flip this one
@@ -148,53 +147,27 @@ document.addEventListener('DOMContentLoaded', function() {
             resetFlippedCard();
         }
 
-        // Update active card
+        // Update active card immediately
         activeCardIndex = index;
         updateUI();
 
         // If we're going to flip, prepare card height
         if (andFlip) {
-            isManuallyFlipping = true;
             adjustCardHeight(cardToScrollTo, true);
         }
 
-          // If not in rapid scrolling mode, use a nicer easing
-          if (!isRapidScrolling) {
-              // Set smooth behavior for nice animation
-              container.style.scrollBehavior = 'smooth';
-
-        // Scroll to center the card
+        // Smooth scroll to center
         cardToScrollTo.scrollIntoView({
             behavior: 'smooth',
             block: 'nearest',
             inline: 'center'
         });
-          } else {
-              // In rapid mode, immediate scroll
-              container.style.scrollBehavior = 'auto';
-              const containerCenter = container.offsetWidth / 2;
-              const cardCenter = cardToScrollTo.offsetWidth / 2;
-              container.scrollLeft = cardToScrollTo.offsetLeft - containerCenter + cardCenter;
-          }
 
-        // After scroll animation completes
-        setTimeout(() => {
-            isScrolling = false;
-
-            // If we need to flip, do it now
-            if (andFlip) {
-                cardToScrollTo.classList.add('flipped');
-                currentlyFlippedCard = cardToScrollTo;
-
-                // Reset manual flipping flag after a delay
-                setTimeout(() => {
-                    isManuallyFlipping = false;
-                }, 100);
-            }
-
-              // Make sure all cards are in proper state
-              ensureProperCardStates();
-          }, isRapidScrolling ? 50 : 400); // Shorter duration for rapid scrolling
+        // Handle flipping immediately if requested
+        if (andFlip) {
+            cardToScrollTo.classList.add('flipped');
+            currentlyFlippedCard = cardToScrollTo;
+        }
     }
 
     // --- updateActiveCardDuringScroll (Dynamic Activation) ---
@@ -290,9 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Card click handler updated ---
     flipCards.forEach((card, index) => {
-        const inner = card.querySelector('.flip-card-inner');
-        const back = card.querySelector('.flip-card-back');
-
         card.addEventListener('click', function(e) {
             // Skip link clicks
             if (e.target.tagName === 'A') return;
@@ -303,20 +273,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (dragDistance > 5) return;
             }
 
-            // CRITICAL: Set manual flipping flag
-            isManuallyFlipping = true;
-
-            // Clear any scroll timeouts
+            // Clear any pending scroll timeouts
             clearTimeout(scrollEndTimeout);
+
+            // Set manual flipping flag
+            isManuallyFlipping = true;
 
             const shouldFlip = !this.classList.contains('flipped');
 
             if (!this.classList.contains('active')) {
                 // If not active, scroll to it AND flip
+                container.style.scrollBehavior = 'smooth';
                 scrollToCard(index, shouldFlip);
             } else {
                 // Already active, just handle flipping
-
                 // Reset any previously flipped card
                 if (currentlyFlippedCard && currentlyFlippedCard !== this) {
                     resetFlippedCard();
@@ -333,15 +303,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     adjustCardHeight(this, false);
                     currentlyFlippedCard = null;
                 }
-
-                // Reset manual flipping flag after a delay
-                setTimeout(() => {
-                    isManuallyFlipping = false;
-                }, 500);
             }
 
-            // Restore animations with a slight delay
-            setTimeout(restoreAnimations, 50);
+            // Reset manual flipping flag after a delay
+            setTimeout(() => {
+                isManuallyFlipping = false;
+            }, 100);
         });
 
         // Improved mouse/touch handlers to be more reliable
