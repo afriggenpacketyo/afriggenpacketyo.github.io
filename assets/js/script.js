@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isMobile) {
             // Enable smooth scrolling for this action
             container.style.scrollBehavior = 'smooth';
+            container.dataset.isSnappingBack = 'true';
 
             // Scroll to card using the boundary-respecting function
             centerCardProperly(index);
@@ -196,21 +197,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 adjustCardHeight(cardToScrollTo, true);
                 cardToScrollTo.classList.add('flipped');
                 currentlyFlippedCard = cardToScrollTo;
-
-                // Hide indicators when card is flipped
-                document.querySelector('.card-indicator').style.opacity = '0';
-                document.querySelector('.card-indicator').style.pointerEvents = 'none';
             }
 
             // Reset scroll behavior after animation
             setTimeout(() => {
                 container.style.scrollBehavior = 'auto';
+                container.dataset.isSnappingBack = 'false';
+                updateUI(); // Update UI after snap-back is complete
             }, 300);
         }
         // Desktop scrolling
         else {
             // Enable smooth scrolling
             container.style.scrollBehavior = 'smooth';
+            container.dataset.isSnappingBack = 'true';
 
             // Use the PC-specific centering function
             centerCardForPC(index);
@@ -221,16 +221,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     adjustCardHeight(cardToScrollTo, true);
                     cardToScrollTo.classList.add('flipped');
                     currentlyFlippedCard = cardToScrollTo;
-
-                    // Hide indicators when card is flipped
-                    document.querySelector('.card-indicator').style.opacity = '0';
-                    document.querySelector('.card-indicator').style.pointerEvents = 'none';
                 }, 400); // Wait for scroll to complete
             }
 
             // Mark scrolling as done after animation completes
             setTimeout(() => {
                 isScrolling = false;
+                container.dataset.isSnappingBack = 'false';
+                updateUI(); // Update UI after snap-back is complete
                 restoreAnimations();
             }, 500);
         }
@@ -241,12 +239,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Don't update if manually flipping
         if (isManuallyFlipping) return;
 
-        // Simple, practical approach: Find which cards are at least 30% visible
         const containerRect = container.getBoundingClientRect();
+        const containerCenter = containerRect.left + containerRect.width / 2;
 
-        // For each card, calculate how much is visible
+        // For each card, calculate how much is visible and its distance from center
         flipCards.forEach((card, index) => {
             const cardRect = card.getBoundingClientRect();
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const distanceFromCenter = Math.abs(cardCenter - containerCenter);
 
             // Calculate intersection/overlap with container
             const overlapLeft = Math.max(containerRect.left, cardRect.left);
@@ -255,14 +255,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // If 30% or more is visible AND it's closer to center than current active card
             if (visibleWidth / cardRect.width >= 0.3) {
-                const cardCenter = cardRect.left + cardRect.width / 2;
-                const containerCenter = containerRect.left + containerRect.width / 2;
-                const currentActiveCenter = flipCards[activeCardIndex].getBoundingClientRect().left +
-                                          flipCards[activeCardIndex].getBoundingClientRect().width / 2;
+                const currentActiveCard = flipCards[activeCardIndex];
+                const currentActiveRect = currentActiveCard.getBoundingClientRect();
+                const currentActiveCenter = currentActiveRect.left + currentActiveRect.width / 2;
+                const currentActiveDistance = Math.abs(currentActiveCenter - containerCenter);
 
-                if (Math.abs(cardCenter - containerCenter) < Math.abs(currentActiveCenter - containerCenter)) {
+                if (distanceFromCenter < currentActiveDistance) {
+                    // Update active card index
                     activeCardIndex = index;
                     updateUI();
+
+                    // If we have a flipped card that's not the new active card,
+                    // keep it flipped but show indicators for the new active card
+                    if (currentlyFlippedCard && currentlyFlippedCard !== card) {
+                        const cardIndicator = document.querySelector('.card-indicator');
+                        cardIndicator.style.opacity = '1';
+                        cardIndicator.style.pointerEvents = 'auto';
+                    }
                 }
             }
         });
@@ -308,9 +317,9 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.classList.toggle('active', i === activeCardIndex);
         });
 
-        // Show indicators if no card is currently flipped
-        const cardIndicator = document.querySelector('.card-indicator');
+        // Only handle indicator visibility if no card is currently being dragged
         if (!currentlyFlippedCard) {
+            const cardIndicator = document.querySelector('.card-indicator');
             cardIndicator.style.opacity = '1';
             cardIndicator.style.pointerEvents = 'auto';
         }
@@ -475,6 +484,22 @@ document.addEventListener('DOMContentLoaded', function() {
             requestAnimationFrame(updateActiveCardDuringScroll);
         }
 
+        // Handle real-time indicator visibility for flipped cards
+        if (currentlyFlippedCard) {
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            const cardRect = currentlyFlippedCard.getBoundingClientRect();
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const distanceFromCenter = Math.abs(cardCenter - containerCenter);
+
+            // Show/hide indicators based on whether the flipped card is centered
+            const cardIndicator = document.querySelector('.card-indicator');
+            const isCentered = distanceFromCenter < 10; // Small threshold for "centered"
+
+            cardIndicator.style.opacity = isCentered ? '0' : '1';
+            cardIndicator.style.pointerEvents = isCentered ? 'none' : 'auto';
+        }
+
         // Detect when scrolling stops
         scrollEndTimeout = setTimeout(() => {
             isScrolling = false;
@@ -482,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // One final update when scrolling ends
             if (!isManuallyFlipping) {
                 updateActiveCardDuringScroll();
-                  ensureProperCardStates();
+                ensureProperCardStates();
             }
         }, 150);
     }, { passive: true });
@@ -783,29 +808,30 @@ document.addEventListener('DOMContentLoaded', function() {
             currentlyFlippedCard.classList.remove('flipped');
             adjustCardHeight(currentlyFlippedCard, false);
             currentlyFlippedCard = null;
-            // Show indicators when resetting a flipped card
-            const cardIndicator = document.querySelector('.card-indicator');
-            cardIndicator.style.opacity = '1';
-            cardIndicator.style.pointerEvents = 'auto';
+
+            // Only show indicators if we're not in the middle of scrolling
+            if (!isScrolling) {
+                const cardIndicator = document.querySelector('.card-indicator');
+                cardIndicator.style.opacity = '1';
+                cardIndicator.style.pointerEvents = 'auto';
+            }
         }
     }
 
       // Ensure all inactive cards are unflipped
       function ensureProperCardStates() {
-          // First, check if we have a flipped card that's not the active card
-          if (currentlyFlippedCard &&
-              flipCards[activeCardIndex] !== currentlyFlippedCard) {
+          // Only reset flipped cards if they're not visible in the viewport
+          if (currentlyFlippedCard) {
+              const containerRect = container.getBoundingClientRect();
+              const cardRect = currentlyFlippedCard.getBoundingClientRect();
 
-            // Reset the incorrectly flipped card
-            resetFlippedCard();
+              // Check if the flipped card is visible in the viewport
+              const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
 
-            // If we're currently looking at a card that should be flipped,
-            // make sure it's properly flipped
-            const activeCard = flipCards[activeCardIndex];
-            if (activeCard.classList.contains('flipped')) {
-              currentlyFlippedCard = activeCard;
-              adjustCardHeight(activeCard, true);
-            }
+              // Only reset if the card is not visible
+              if (!isVisible) {
+                  resetFlippedCard();
+              }
           }
       }
 
