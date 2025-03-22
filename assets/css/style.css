@@ -167,10 +167,20 @@ body {
   color: #3498db;
   text-decoration: none;
   font-weight: bold;
+  display: inline-block;
+  width: fit-content;
+  white-space: nowrap;
+  padding: 5px 10px;
+  line-height: 1;
+  border-radius: 20px;
+  background-color: rgba(52, 152, 219, 0.1);
+  transition: all 0.2s ease;
 }
 
 .flip-card-back a:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background-color: rgba(52, 152, 219, 0.2);
+  transform: scale(1.05);
 }
 
 .optimism-score {
