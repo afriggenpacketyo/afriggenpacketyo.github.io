@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let isSlowTouchScroll = false;
     const slowScrollThreshold = 0.5; // pixels per millisecond
 
+    // Add this variable to your existing variables at the top
+    let isRecentering = false;
+
+    // Add these variables to your existing variables at the top
+    let touchStartTime = 0;
+    let touchEndTime = 0;
+    let swipeVelocity = 0;
+    const velocityThreshold = 0.3; // pixels per millisecond - lower = more sensitive
+
     // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
     container.classList.add('with-coverflow');
 
@@ -36,9 +45,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const dot = document.createElement('div');
         dot.className = 'indicator-dot' + (index === 0 ? ' active' : '');
         dot.dataset.index = index;
+        dot.textContent = (index + 1).toString();
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
-            scrollToCard(index);
+
+            // Use the same smooth scrolling behavior as touch scrolling
+            if (isMobile) {
+                // Update active card
+                activeCardIndex = index;
+                updateUI();
+
+                // Use smooth scrolling for the recentering
+                container.style.scrollBehavior = 'smooth';
+
+                // Use our boundary-respecting function to center the card
+                centerCardProperly(index);
+
+                // Reset scrolling behavior after animation
+                setTimeout(() => {
+                    container.style.scrollBehavior = 'auto';
+                }, 300);
+            } else {
+                scrollToCard(index);
+            }
         });
         cardIndicator.appendChild(dot);
     });
@@ -140,61 +169,71 @@ document.addEventListener('DOMContentLoaded', function() {
     function scrollToCard(index, andFlip = false) {
         if (index < 0 || index >= flipCards.length || (index === activeCardIndex && !andFlip)) return;
 
-        isScrolling = true;
         const cardToScrollTo = flipCards[index];
+
+        // Force stop all animations for immediate response
+        forceStopAllAnimations();
 
         // Reset any flipped card if we're not planning to flip this one
         if (currentlyFlippedCard && (!andFlip || currentlyFlippedCard !== cardToScrollTo)) {
             resetFlippedCard();
         }
 
-        // Update active card
+        // Update active card index
         activeCardIndex = index;
         updateUI();
 
-        // If we're going to flip, prepare card height
-        if (andFlip) {
-            isManuallyFlipping = true;
-            adjustCardHeight(cardToScrollTo, true);
-        }
+        // Mobile scrolling
+        if (isMobile) {
+            // Enable smooth scrolling for this action
+            container.style.scrollBehavior = 'smooth';
 
-          // If not in rapid scrolling mode, use a nicer easing
-          if (!isRapidScrolling) {
-              // Set smooth behavior for nice animation
-              container.style.scrollBehavior = 'smooth';
+            // Scroll to card using the boundary-respecting function
+            centerCardProperly(index);
 
-        // Scroll to center the card
-        cardToScrollTo.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'center'
-        });
-          } else {
-              // In rapid mode, immediate scroll
-              container.style.scrollBehavior = 'auto';
-              const containerCenter = container.offsetWidth / 2;
-              const cardCenter = cardToScrollTo.offsetWidth / 2;
-              container.scrollLeft = cardToScrollTo.offsetLeft - containerCenter + cardCenter;
-          }
-
-        // After scroll animation completes
-        setTimeout(() => {
-            isScrolling = false;
-
-            // If we need to flip, do it now
+            // Handle flipping if needed
             if (andFlip) {
+                adjustCardHeight(cardToScrollTo, true);
                 cardToScrollTo.classList.add('flipped');
                 currentlyFlippedCard = cardToScrollTo;
 
-                // Reset manual flipping flag after a delay
-                setTimeout(() => {
-                    isManuallyFlipping = false;
-                }, 100);
+                // Hide indicators when card is flipped
+                document.querySelector('.card-indicator').style.opacity = '0';
+                document.querySelector('.card-indicator').style.pointerEvents = 'none';
             }
 
-              // Make sure all cards are in proper state
-              ensureProperCardStates();
-          }, isRapidScrolling ? 50 : 400); // Shorter duration for rapid scrolling
+            // Reset scroll behavior after animation
+            setTimeout(() => {
+                container.style.scrollBehavior = 'auto';
+            }, 300);
+        }
+        // Desktop scrolling
+        else {
+            // Enable smooth scrolling
+            container.style.scrollBehavior = 'smooth';
+
+            // Use the PC-specific centering function
+            centerCardForPC(index);
+
+            // Handle flipping if needed
+            if (andFlip) {
+                setTimeout(() => {
+                    adjustCardHeight(cardToScrollTo, true);
+                    cardToScrollTo.classList.add('flipped');
+                    currentlyFlippedCard = cardToScrollTo;
+
+                    // Hide indicators when card is flipped
+                    document.querySelector('.card-indicator').style.opacity = '0';
+                    document.querySelector('.card-indicator').style.pointerEvents = 'none';
+                }, 400); // Wait for scroll to complete
+            }
+
+            // Mark scrolling as done after animation completes
+            setTimeout(() => {
+                isScrolling = false;
+                restoreAnimations();
+            }, 500);
+        }
     }
 
     // --- updateActiveCardDuringScroll (Dynamic Activation) ---
@@ -233,42 +272,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function adjustCardHeight(card, setHeight = false) {
         const inner = card.querySelector('.flip-card-inner');
         const back = card.querySelector('.flip-card-back');
-        const originalHeight = 400; // Original card height
+        const front = card.querySelector('.flip-card-front');
+        const originalHeight = 400; // Original standard card height
 
         if (setHeight) {
-            // Get content height
+            // When flipped, expand to fit content if needed
             const contentHeight = back.scrollHeight;
 
             if (contentHeight > originalHeight) {
-                // Calculate the height difference
-                const heightDifference = contentHeight - originalHeight;
-
-                // Set half the difference as negative margin-top to shift up
-                const shiftAmount = Math.floor(heightDifference / 2);
-
-                // Apply the transformations
-                card.style.height = contentHeight + 'px';
-                card.style.marginTop = `-${shiftAmount}px`;
-
-                // Store the shift amount for reverting later
-                card.dataset.shiftAmount = shiftAmount;
-
-                // Ensure inner element fills the card
+                // Set card height to match content
+                card.style.height = `${contentHeight}px`;
                 inner.style.height = '100%';
+                back.style.minHeight = '100%';
+            } else {
+                // Keep original height if content is smaller
+                card.style.height = `${originalHeight}px`;
+                inner.style.height = '100%';
+                back.style.minHeight = '100%';
             }
         } else {
-            // Get the stored shift amount
-            const shiftAmount = card.dataset.shiftAmount || 0;
-
-            // Reset height and margin
+            // When not flipped, return to standard height
             card.style.height = `${originalHeight}px`;
-            card.style.marginTop = '0px';
-
-            // Reset inner element
             inner.style.height = '100%';
-
-            // Clear stored data
-            delete card.dataset.shiftAmount;
+            back.style.minHeight = '100%';
         }
     }
 
@@ -282,21 +308,77 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.classList.toggle('active', i === activeCardIndex);
         });
 
+        // Show indicators if no card is currently flipped
+        const cardIndicator = document.querySelector('.card-indicator');
+        if (!currentlyFlippedCard) {
+            cardIndicator.style.opacity = '1';
+            cardIndicator.style.pointerEvents = 'auto';
+        }
+
         if (!isMobile && navArrows.length === 2) {
             navArrows[0].classList.toggle('disabled', activeCardIndex === 0);
             navArrows[1].classList.toggle('disabled', activeCardIndex === flipCards.length - 1);
         }
     }
 
-    // --- Card click handler updated ---
+    // --- Card click handler update (find the existing handler and make this change) ---
     flipCards.forEach((card, index) => {
-        const inner = card.querySelector('.flip-card-inner');
-        const back = card.querySelector('.flip-card-back');
-
         card.addEventListener('click', function(e) {
             // Skip link clicks
             if (e.target.tagName === 'A') return;
 
+            // Mobile path remains exactly as it is - no changes at all
+            if (isMobile) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Set flags
+                isManuallyFlipping = true;
+
+                // 1. Center this card with boundary enforcement
+                activeCardIndex = index;
+                updateUI();
+
+                // Enable smooth centering
+                container.style.scrollBehavior = 'smooth';
+
+                // Use our boundary-respecting function
+                centerCardProperly(index);
+
+                // 2. Flip the card
+                const shouldFlip = !this.classList.contains('flipped');
+
+                // Handle any previously flipped card
+                if (currentlyFlippedCard && currentlyFlippedCard !== this) {
+                    resetFlippedCard();
+                }
+
+                if (shouldFlip) {
+                    adjustCardHeight(this, true);
+                    this.classList.add('flipped');
+                    currentlyFlippedCard = this;
+                    // Hide indicators when card is flipped on mobile
+                    document.querySelector('.card-indicator').style.opacity = '0';
+                    document.querySelector('.card-indicator').style.pointerEvents = 'none';
+                } else {
+                    this.classList.remove('flipped');
+                    adjustCardHeight(this, false);
+                    currentlyFlippedCard = null;
+                    // Show indicators when card is unflipped on mobile
+                    document.querySelector('.card-indicator').style.opacity = '1';
+                    document.querySelector('.card-indicator').style.pointerEvents = 'auto';
+                }
+
+                // Reset manual flipping flag after a delay
+                setTimeout(() => {
+                    isManuallyFlipping = false;
+                    container.style.scrollBehavior = 'auto';
+                }, 300);
+
+                return;
+            }
+
+            // Desktop behavior - updated to use our new function
             // Skip if dragging
             if (e.clientX && this.dataset.mouseDownX) {
                 const dragDistance = Math.abs(e.clientX - parseInt(this.dataset.mouseDownX));
@@ -312,12 +394,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const shouldFlip = !this.classList.contains('flipped');
 
             if (!this.classList.contains('active')) {
-                // If not active, scroll to it AND flip
-                scrollToCard(index, shouldFlip);
+                // If not active, center it first, then handle flipping
+                activeCardIndex = index;
+                updateUI();
+
+                // Use our new PC-specific centering function
+                centerCardForPC(index);
+
+                // After scroll animation completes, handle flipping if needed
+                setTimeout(() => {
+                    if (shouldFlip) {
+                        // Handle any previously flipped card
+                        if (currentlyFlippedCard && currentlyFlippedCard !== this) {
+                            resetFlippedCard();
+                        }
+
+                        // Expand and flip
+                        adjustCardHeight(this, true);
+                        this.classList.add('flipped');
+                        currentlyFlippedCard = this;
+                    }
+
+                    isManuallyFlipping = false;
+                }, 400);
             } else {
                 // Already active, just handle flipping
-
-                // Reset any previously flipped card
                 if (currentlyFlippedCard && currentlyFlippedCard !== this) {
                     resetFlippedCard();
                 }
@@ -343,68 +444,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Restore animations with a slight delay
             setTimeout(restoreAnimations, 50);
         });
-
-        // Improved mouse/touch handlers to be more reliable
-        card.addEventListener('mousedown', function(e) {
-            this.dataset.mouseDownX = e.clientX;
-        });
-
-        card.addEventListener('touchstart', function(e) {
-            if (e.touches && e.touches[0]) {
-                this.dataset.mouseDownX = e.touches[0].clientX;
-            }
-        }, { passive: true });
-
-        // Clear dragging data on mouse/touch end
-        card.addEventListener('mouseup mouseleave', function() {
-            delete this.dataset.mouseDownX;
-        });
-
-        card.addEventListener('touchend touchcancel', function() {
-            delete this.dataset.mouseDownX;
-        }, { passive: true });
-
-        // Style optimism scores (same as before)
-        const scoreText = back.querySelector('p:nth-of-type(2)');
-        if (scoreText) {
-            const scoreMatch = scoreText.textContent.match(/(\d+)\/100/);
-            if (scoreMatch) {
-                const score = parseInt(scoreMatch[1]);
-                const scoreSpan = document.createElement('span');
-                scoreSpan.className = 'optimism-score';
-                scoreSpan.textContent = score + '/100';
-
-                if (score >= 70) {
-                    scoreSpan.classList.add('score-high');
-                } else if (score >= 40) {
-                    scoreSpan.classList.add('score-medium');
-                } else {
-                    scoreSpan.classList.add('score-low');
-                }
-
-                scoreText.innerHTML = 'Optimism Score: ';
-                scoreText.appendChild(scoreSpan);
-            }
-        }
-
-        // Add section titles (same as before)
-        const summaryTitle = document.createElement('div');
-        summaryTitle.className = 'section-title';
-        summaryTitle.textContent = 'Summary';
-
-        const linkTitle = document.createElement('div');
-        linkTitle.className = 'section-title';
-        linkTitle.textContent = 'Source';
-
-        const summaryText = back.querySelector('p:first-of-type');
-        if (summaryText) {
-            summaryText.parentNode.insertBefore(summaryTitle, summaryText);
-        }
-
-        const linkElement = back.querySelector('a');
-        if (linkElement) {
-            linkElement.parentNode.insertBefore(linkTitle, linkElement);
-        }
     });
 
     // --- Image Preloading ---
@@ -452,7 +491,11 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', () => {
         const wasMobile = isMobile;
         isMobile = window.innerWidth <= 768;
-        if (wasMobile !== isMobile) {
+
+        if (isMobile === wasMobile) {
+            // Just update the padding without reloading
+            addEdgeCardPadding();
+        } else {
             location.reload(); // Handle mobile/desktop switch
         }
     });
@@ -463,15 +506,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const minSwipeDistance = 50;
 
     container.addEventListener('touchstart', (e) => {
+        if (!isMobile) return;
+
         touchStartX = e.changedTouches[0].screenX;
         lastTouchX = touchStartX;
-        touchScrollStartTime = Date.now();
+        touchStartTime = Date.now();
+        touchScrollStartTime = touchStartTime;
 
-        // Important: Record which card is active when touch starts
-        // This will be the card we'll prioritize keeping active for small movements
+        // Immediately stop any ongoing animations
+        container.style.scrollBehavior = 'auto';
+        isScrolling = false;
+        clearTimeout(scrollEndTimeout);
+
+        // Record starting position
         container.dataset.touchStartActiveCard = activeCardIndex;
-
-        isSlowTouchScroll = false; // Reset slow scroll flag
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
@@ -495,14 +543,82 @@ document.addEventListener('DOMContentLoaded', function() {
     container.addEventListener('touchend', (e) => {
         if (!isMobile) return;
 
-        // Use your existing scrollToCard function which already has smooth scrolling
-        // and is well-tested with the rest of your code
-        container.style.scrollBehavior = 'smooth';
-        scrollToCard(activeCardIndex);
+        const touchEndX = e.changedTouches[0].screenX;
+        const touchDiff = touchEndX - touchStartX;
+        touchEndTime = Date.now();
 
-        // Reset touch variables
-        isSlowTouchScroll = false;
-        touchVelocity = 0;
+        // For very small movements (likely a tap), don't interfere
+        if (Math.abs(touchDiff) < 10) {
+            return;
+        }
+
+        // Calculate swipe velocity
+        const swipeDuration = touchEndTime - touchStartTime;
+        swipeVelocity = touchDiff / swipeDuration;
+
+        requestAnimationFrame(() => {
+            // First, find the current active card (closest to center)
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+
+            // Determine which cards are visible and their positions relative to center
+            const visibleCards = [];
+
+            flipCards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = cardCenter - containerCenter;
+                const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
+
+                if (isVisible) {
+                    visibleCards.push({
+                        card,
+                        index,
+                        distance,
+                        distanceAbs: Math.abs(distance)
+                    });
+                }
+            });
+
+            // Sort by absolute distance to find closest
+            visibleCards.sort((a, b) => a.distanceAbs - b.distanceAbs);
+
+            let targetIndex;
+
+            // If strong swipe velocity, use momentum to determine target card
+            if (Math.abs(swipeVelocity) > velocityThreshold) {
+                // Fast swipe - move in direction of swipe
+                const closestCardIndex = visibleCards.length > 0 ? visibleCards[0].index : activeCardIndex;
+
+                if (swipeVelocity > 0) {
+                    // Rightward swipe - go to previous card (if possible)
+                    targetIndex = Math.max(0, closestCardIndex - 1);
+                } else {
+                    // Leftward swipe - go to next card (if possible)
+                    targetIndex = Math.min(flipCards.length - 1, closestCardIndex + 1);
+                }
+            } else {
+                // Slow swipe or drag - snap to closest card
+                targetIndex = visibleCards.length > 0 ? visibleCards[0].index : activeCardIndex;
+            }
+
+            if (targetIndex !== undefined) {
+                // Update active card
+                activeCardIndex = targetIndex;
+                updateUI();
+
+                // Use smooth scrolling for the recentering
+                container.style.scrollBehavior = 'smooth';
+
+                // Use our boundary-respecting function to center the card
+                centerCardProperly(targetIndex);
+
+                // Reset scrolling behavior after animation
+                setTimeout(() => {
+                    container.style.scrollBehavior = 'auto';
+                }, 300);
+            }
+        });
     }, { passive: true });
 
     // --- Keyboard Navigation ---
@@ -577,11 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                   // This isn't a standard CSS property, but we can use it to signal our intention
                   // The actual scrolling is done with scrollIntoView
-                  targetCard.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'nearest',
-                      inline: 'center'
-                  });
+                  centerCardForPC(activeCardIndex);
 
                   // After animation completes
                   setTimeout(() => {
@@ -657,7 +769,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Initial Setup ---
     setTimeout(() => {
         updateUI();
-        scrollToCard(0);
+        if (isMobile) {
+            fixEdgeScrolling();
+            centerCardProperly(0);
+        } else {
+            scrollToCard(0);
+        }
+        addSectionTitles();
     }, 50);
 
     function resetFlippedCard() {
@@ -665,6 +783,10 @@ document.addEventListener('DOMContentLoaded', function() {
             currentlyFlippedCard.classList.remove('flipped');
             adjustCardHeight(currentlyFlippedCard, false);
             currentlyFlippedCard = null;
+            // Show indicators when resetting a flipped card
+            const cardIndicator = document.querySelector('.card-indicator');
+            cardIndicator.style.opacity = '1';
+            cardIndicator.style.pointerEvents = 'auto';
         }
     }
 
@@ -686,4 +808,152 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
       }
-  });
+
+    // Add this NEW FUNCTION to add section titles
+    function addSectionTitles() {
+        // Loop through all cards
+        flipCards.forEach(card => {
+            const back = card.querySelector('.flip-card-back');
+
+            // Create and add Summary title
+            const summaryTitle = document.createElement('div');
+            summaryTitle.className = 'section-title';
+            summaryTitle.textContent = 'Summary';
+
+            // Create and add Optimism Score title
+            const scoreTitle = document.createElement('div');
+            scoreTitle.className = 'section-title';
+            scoreTitle.textContent = 'Optimism Score';
+
+            // Create and add Source title
+            const linkTitle = document.createElement('div');
+            linkTitle.className = 'section-title';
+            linkTitle.textContent = 'Source';
+
+            // Get elements to insert titles before
+            const summaryText = back.querySelector('p:first-of-type');
+            const scoreText = back.querySelector('p:nth-of-type(2)');
+            const linkElement = back.querySelector('a');
+
+            // Insert titles in the DOM
+            if (summaryText) {
+                back.insertBefore(summaryTitle, summaryText);
+            }
+
+            if (scoreText) {
+                back.insertBefore(scoreTitle, scoreText);
+
+                // Style the score
+                const scoreMatch = scoreText.textContent.match(/(\d+)\/100/);
+                if (scoreMatch) {
+                    const score = parseInt(scoreMatch[1]);
+                    const scoreSpan = document.createElement('span');
+                    scoreSpan.className = 'optimism-score';
+                    scoreSpan.textContent = score + '/100';
+
+                    if (score >= 70) {
+                        scoreSpan.classList.add('score-high');
+                    } else if (score >= 40) {
+                        scoreSpan.classList.add('score-medium');
+                    } else {
+                        scoreSpan.classList.add('score-low');
+                    }
+
+                    scoreText.innerHTML = '';
+                    scoreText.appendChild(scoreSpan);
+                }
+            }
+
+            if (linkElement) {
+                back.insertBefore(linkTitle, linkElement);
+            }
+        });
+    }
+
+    // Simplify centerCardProperly to not interfere with natural bouncing
+    function centerCardProperly(index) {
+        // Don't apply constraints - let the browser handle the bounce naturally
+        const card = flipCards[index];
+        const containerWidth = container.offsetWidth;
+        const containerCenter = containerWidth / 2;
+        const cardCenter = card.offsetWidth / 2;
+
+        // Simple position calculation without constraints
+        container.scrollLeft = card.offsetLeft - containerCenter + cardCenter;
+    }
+
+    // Add this function to ensure first and last cards have proper spacing for bounce
+    function addEdgeCardPadding() {
+        // First, check if the mobile styles are already applied
+        const firstCard = flipCards[0];
+        const lastCard = flipCards[flipCards.length - 1];
+
+        // Add explicit padding for the first and last cards
+        if (isMobile) {
+            // Set explicit left margin for first card to ensure it stays in the center
+            firstCard.style.marginLeft = 'calc(50vw - 150px)';
+
+            // Set explicit right margin for last card to ensure it stays in the center
+            lastCard.style.marginRight = 'calc(50vw - 150px)';
+        }
+    }
+
+    // Add this function to handle boundary scrolling
+    function fixEdgeScrolling() {
+        // We need to modify how the container's scrollable area is defined
+        const container = document.querySelector('.container');
+        const firstCard = document.querySelector('.flip-card:first-child');
+        const lastCard = document.querySelector('.flip-card:last-child');
+
+        if (!container || !firstCard || !lastCard) return;
+
+        // This is critical - we need to create padding elements
+        // to prevent scrolling past the first and last cards
+        let leftPadding = document.querySelector('#left-scroll-padding');
+        let rightPadding = document.querySelector('#right-scroll-padding');
+
+        if (!leftPadding) {
+            leftPadding = document.createElement('div');
+            leftPadding.id = 'left-scroll-padding';
+            leftPadding.style.flex = '0 0 calc(50vw - 150px)';
+            leftPadding.style.minWidth = 'calc(50vw - 150px)';
+            leftPadding.style.height = '1px';
+            container.insertBefore(leftPadding, firstCard);
+        }
+
+        if (!rightPadding) {
+            rightPadding = document.createElement('div');
+            rightPadding.id = 'right-scroll-padding';
+            rightPadding.style.flex = '0 0 calc(50vw - 150px)';
+            rightPadding.style.minWidth = 'calc(50vw - 150px)';
+            rightPadding.style.height = '1px';
+            container.appendChild(rightPadding);
+        }
+
+        // Remove any direct margins on cards that might interfere
+        document.querySelectorAll('.flip-card').forEach(card => {
+            card.style.marginLeft = '15px';
+            card.style.marginRight = '15px';
+        });
+    }
+
+    // Add this function after one of your existing utility functions (like adjustCardHeight)
+    function centerCardForPC(index) {
+        // ONLY for desktop - early return ensures mobile is untouched
+        if (isMobile) return;
+
+        const card = flipCards[index];
+        const containerWidth = container.offsetWidth;
+        const containerCenter = containerWidth / 2;
+        const cardCenter = card.offsetWidth / 2;
+
+        // Enable smooth scrolling for desktop
+        container.style.scrollBehavior = 'smooth';
+
+        // Calculate position to perfectly center the card
+        const scrollPosition = card.offsetLeft - containerCenter + cardCenter;
+
+        // Apply smooth scrolling animation
+        container.scrollLeft = scrollPosition;
+    }
+});
