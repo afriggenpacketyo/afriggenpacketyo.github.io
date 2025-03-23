@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let swipeVelocity = 0;
     const velocityThreshold = 0.3; // pixels per millisecond - lower = more sensitive
 
+    // Add an additional threshold for "very fast" swipes
+    const superFastVelocityThreshold = 0.8; // pixels per millisecond
+
     // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
     container.classList.add('with-coverflow');
 
@@ -607,24 +610,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Sort by absolute distance to find closest
             visibleCards.sort((a, b) => a.distanceAbs - b.distanceAbs);
+            const closestCardIndex = visibleCards.length > 0 ? visibleCards[0].index : activeCardIndex;
+            const swipeDirection = Math.sign(touchDiff); // 1 for right, -1 for left
 
             let targetIndex;
 
-            // If strong swipe velocity, use momentum to determine target card
-            if (Math.abs(swipeVelocity) > velocityThreshold) {
-                // Fast swipe - move in direction of swipe
-                const closestCardIndex = visibleCards.length > 0 ? visibleCards[0].index : activeCardIndex;
-
-                if (swipeVelocity > 0) {
+            // SUPER FAST SWIPE: Use the original +1/-1 behavior for very fast swipes (feels more effortless)
+            if (Math.abs(swipeVelocity) > superFastVelocityThreshold) {
+                // Very fast swipe - go to next/previous card for effortless navigation
+                if (swipeDirection > 0) {
                     // Rightward swipe - go to previous card (if possible)
                     targetIndex = Math.max(0, closestCardIndex - 1);
                 } else {
                     // Leftward swipe - go to next card (if possible)
                     targetIndex = Math.min(flipCards.length - 1, closestCardIndex + 1);
                 }
+            }
+            // REGULAR FAST SWIPE: Find the closest card in the swipe direction
+            else if (Math.abs(swipeVelocity) > velocityThreshold) {
+                // Find cards in the direction of swipe
+                const cardsInSwipeDirection = visibleCards.filter(item =>
+                    item.distance * swipeDirection < 0 // Cards in swipe direction
+                );
+
+                if (cardsInSwipeDirection.length > 0) {
+                    // Sort cards by distance in swipe direction
+                    cardsInSwipeDirection.sort((a, b) => {
+                        return swipeDirection * (a.distance - b.distance);
+                    });
+
+                    // Use the first card in swipe direction
+                    targetIndex = cardsInSwipeDirection[0].index;
+                } else {
+                    // If no cards in swipe direction, try to move to next/previous
+                    // This makes normal swiping feel more effortless even at the edge
+                    if (swipeDirection > 0 && closestCardIndex > 0) {
+                        targetIndex = closestCardIndex - 1;
+                    } else if (swipeDirection < 0 && closestCardIndex < flipCards.length - 1) {
+                        targetIndex = closestCardIndex + 1;
+                    } else {
+                        targetIndex = closestCardIndex;
+                    }
+                }
             } else {
-                // Slow swipe or drag - snap to closest card
-                targetIndex = visibleCards.length > 0 ? visibleCards[0].index : activeCardIndex;
+                // SLOW SWIPE: Simply use the closest card (our fix for the original issue)
+                targetIndex = closestCardIndex;
             }
 
             if (targetIndex !== undefined) {
