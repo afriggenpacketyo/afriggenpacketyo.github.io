@@ -19,3 +19,50 @@ Options -Indexes
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/css
 </IfModule>
+
+# Cache Control Settings
+<IfModule mod_headers.c>
+    # Disable caching for HTML files to ensure latest content
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Set CSS files to expire immediately when changed (using query string)
+    <FilesMatch "\.(css)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Set JavaScript files to expire immediately when changed (using query string)
+    <FilesMatch "\.(js)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Allow caching of image files but require revalidation
+    <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp)$">
+        Header set Cache-Control "public, max-age=86400, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# Disable ETags which can also cause caching issues
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+FileETag None
+
+# Force the latest IE version
+<IfModule mod_headers.c>
+    Header set X-UA-Compatible "IE=edge"
+</IfModule>
+
+# CORS Headers for fonts and other resources
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
