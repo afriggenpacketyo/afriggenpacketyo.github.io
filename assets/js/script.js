@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add an additional threshold for "very fast" swipes
     const superFastVelocityThreshold = 0.8; // pixels per millisecond
 
+    // Add these variables near the top with other variables
+    const maxVisibleIndicators = 4;
+    let minVisibleIndex = 0;
+    let maxVisibleIndex = maxVisibleIndicators - 1;
+
     // --- Coverflow Setup, Card Indicator, Navigation Arrows ---
     container.classList.add('with-coverflow');
 
@@ -46,25 +51,18 @@ document.addEventListener('DOMContentLoaded', function() {
     cardIndicator.className = 'card-indicator';
     flipCards.forEach((_, index) => {
         const dot = document.createElement('div');
-        dot.className = 'indicator-dot' + (index === 0 ? ' active' : '');
+        dot.className = 'indicator-dot';
         dot.dataset.index = index;
         dot.textContent = (index + 1).toString();
+        
+        // Add click handler
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
-
-            // Use the same smooth scrolling behavior as touch scrolling
             if (isMobile) {
-                // Update active card
                 activeCardIndex = index;
                 updateUI();
-
-                // Use smooth scrolling for the recentering
                 container.style.scrollBehavior = 'smooth';
-
-                // Use our boundary-respecting function to center the card
                 centerCardProperly(index);
-
-                // Reset scrolling behavior after animation
                 setTimeout(() => {
                     container.style.scrollBehavior = 'auto';
                 }, 300);
@@ -72,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scrollToCard(index);
             }
         });
+        
         cardIndicator.appendChild(dot);
     });
     document.body.appendChild(cardIndicator);
@@ -331,6 +330,9 @@ document.addEventListener('DOMContentLoaded', function() {
             navArrows[0].classList.toggle('disabled', activeCardIndex === 0);
             navArrows[1].classList.toggle('disabled', activeCardIndex === flipCards.length - 1);
         }
+
+        // Add this line at the end
+        updateDotIndicators();
     }
 
     // --- Card click handler update (find the existing handler and make this change) ---
@@ -1011,5 +1013,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Apply smooth scrolling animation
         container.scrollLeft = scrollPosition;
+    }
+
+    // Add this function to calculate dot visibility and sizes
+    function updateDotIndicators() {
+        const dots = document.querySelectorAll('.indicator-dot');
+        
+        // Calculate min and max visible indices
+        if (activeCardIndex <= 1) {
+            minVisibleIndex = 0;
+            maxVisibleIndex = Math.min(maxVisibleIndicators - 1, dots.length - 1);
+        } else if (activeCardIndex >= dots.length - 2) {
+            maxVisibleIndex = dots.length - 1;
+            minVisibleIndex = Math.max(maxVisibleIndex - (maxVisibleIndicators - 1), 0);
+        } else {
+            minVisibleIndex = activeCardIndex - 2;
+            maxVisibleIndex = activeCardIndex + 2;
+            
+            // Ensure we don't show more than maxVisibleIndicators
+            if (maxVisibleIndex - minVisibleIndex + 1 > maxVisibleIndicators) {
+                if (activeCardIndex - minVisibleIndex < maxVisibleIndex - activeCardIndex) {
+                    maxVisibleIndex--;
+                } else {
+                    minVisibleIndex++;
+                }
+            }
+        }
+
+        // Update dot classes
+        dots.forEach((dot, index) => {
+            dot.className = 'indicator-dot'; // Reset classes
+            
+            if (index === activeCardIndex) {
+                dot.classList.add('active');
+            }
+            
+            if (index < minVisibleIndex || index > maxVisibleIndex) {
+                dot.classList.add('hidden');
+            } else if (index === minVisibleIndex && index > 0) {
+                dot.classList.add('micro');
+            } else if (index === maxVisibleIndex && index < dots.length - 1) {
+                dot.classList.add('micro');
+            } else if (index === minVisibleIndex + 1 && index > 1) {
+                dot.classList.add('small');
+            } else if (index === maxVisibleIndex - 1 && index < dots.length - 2) {
+                dot.classList.add('small');
+            } else {
+                dot.classList.add('std');
+            }
+        });
     }
 });
