@@ -22,7 +22,6 @@ let scrollEndTimeout;
 let currentSwipeOffset = 0;
 let flippedCardTouchStartTime = 0;
 let flippedCardTouchEndTime = 0;
-let startingDotIndex = null;
 
 // Constants
 const minSwipeDistance = 50;
@@ -51,31 +50,22 @@ function updateInstagramStyleDots(activeIndex) {
     // Determine swipe direction (-1 for left, 1 for right)
     const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
 
-    // Track the starting dot when beginning a new sequence
-    if (activeIndex !== previousActiveIndex) {
-        if (startingDotIndex === null) {
-            startingDotIndex = previousActiveIndex;
-        }
-    } else {
-        // Reset starting dot when we're stable
-        startingDotIndex = null;
-    }
-
     // Skip animation if we're clicking the same dot we're already on
-    // or if we're back to our starting dot during a transition
-    const skipAnimation = activeIndex === previousActiveIndex ||
-                         activeIndex === startingDotIndex;
+    const isSameDot = activeIndex === previousActiveIndex;
 
     // Original edge case logic for window sliding
     if (activeIndex < visibleStartIndex + 2) {
+        // Near left edge - shift window left
         visibleStartIndex = Math.max(0, activeIndex - 2);
     } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
+        // Near right edge - shift window right
         visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
     }
 
     // Update all dots, but only apply transitions when necessary
     dots.forEach((dot, index) => {
-        if (!skipAnimation) {
+        // Only apply transition if we're not clicking the same dot
+        if (!isSameDot) {
             dot.style.transition = 'all 0.3s ease';
         } else {
             dot.style.transition = 'none';
@@ -545,8 +535,8 @@ container.addEventListener('scroll', () => {
 
 // Update active card during scroll
 function updateActiveCardDuringScroll() {
-    // Don't update if manually flipping
-    if (CardSystem.isManuallyFlipping) return;
+    // Don't update if manually flipping or if we're in the middle of a dot navigation
+    if (CardSystem.isManuallyFlipping || container.style.scrollBehavior === 'smooth') return;
 
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.left + containerRect.width / 2;
@@ -562,18 +552,10 @@ function updateActiveCardDuringScroll() {
         const overlapRight = Math.min(containerRect.right, cardRect.right);
         const visibleWidth = Math.max(0, overlapRight - overlapLeft);
 
-        // If 30% or more is visible AND it's closer to center than current active card
-        if (visibleWidth / cardRect.width >= 0.3) {
-            const currentActiveCard = flipCards[CardSystem.activeCardIndex];
-            const currentActiveRect = currentActiveCard.getBoundingClientRect();
-            const currentActiveCenter = currentActiveRect.left + currentActiveRect.width / 2;
-            const currentActiveDistance = Math.abs(currentActiveCenter - containerCenter);
-
-            if (distanceFromCenter < currentActiveDistance) {
-                // Update active card index
-                CardSystem.activeCardIndex = index;
-                CardSystem.updateUI();
-            }
+        // Only update if the card is significantly visible (50% or more)
+        if (visibleWidth / cardRect.width >= 0.5 && distanceFromCenter < 10) {
+            CardSystem.activeCardIndex = index;
+            CardSystem.updateUI();
         }
     });
 }
