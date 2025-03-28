@@ -709,13 +709,20 @@ function restoreCardForMobile(card) {
     card.style.maxWidth = card.dataset.originalMaxWidth || '';
     card.style.margin = card.dataset.originalMargin || '';
     card.style.zIndex = card.dataset.originalZIndex || '';
+    card.style.height = ''; // Reset height to default
+    card.style.minHeight = ''; // Reset minHeight to default
 
     // Restore card back
     const cardBack = card.querySelector('.flip-card-back');
     if (cardBack) {
         cardBack.style.overflowY = '';
         cardBack.style.maxHeight = '';
+        cardBack.style.height = ''; // Reset height to default
+        cardBack.style.minHeight = ''; // Reset minHeight to default
     }
+
+    // Force a reflow to ensure dimensions are properly reset
+    void card.offsetHeight;
 }
 
 // Function to toggle header banner visibility
