@@ -575,37 +575,3 @@ body {
 .container.dot-navigation {
   scroll-behavior: auto !important; /* Override smooth scrolling during dot navigation */
 }
-/* Logo styling */
-.logo-container {
-  position: fixed;
-  top: 80px; /* Adjust based on your header height */
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 900; /* Below flipped cards but above regular content */
-  pointer-events: none; /* Allow clicks to pass through */
-  transition: opacity 0.3s ease;
-}
-
-#center-logo {
-  max-width: 50px; /* Adjust size as needed */
-  height: auto;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  transform: translateY(14px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .logo-container {
-    top: 60px; /* Smaller top spacing on mobile */
-  }
-  
-  #center-logo {
-    max-width: 30px;
-    /* Smaller logo on mobile */
-    /* make the log have padding which pushes the card down a smidge */
-    padding-bottom: 10px !important;
-  }
-}
