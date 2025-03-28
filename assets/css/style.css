@@ -73,7 +73,18 @@ body {
 }
 
 .flip-card.flipped {
-  z-index: 10;
+  /* Keep in normal document flow */
+  position: relative !important;
+
+  /* Center horizontally with auto margins */
+  margin-left: auto !important;
+  margin-right: auto !important;
+
+  /* Make it wider */
+  width: 90vw !important;
+
+  /* CRITICAL: Don't add any transforms except the rotation! */
+  /* Let the flip-card-inner handle ONLY the rotation */
 }
 
 .flip-card-inner {
@@ -89,7 +100,7 @@ body {
 
 .flip-card.flipped .flip-card-inner {
   transform: rotateY(180deg) !important;
-  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* No other transforms! */
 }
 
 .flip-card-front, .flip-card-back {
@@ -207,13 +218,16 @@ body {
 .card-indicator {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  align-items: center;
+  gap: 0;
   position: absolute;
   bottom: 20px;
   left: 0;
   right: 0;
   z-index: 50;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease;
+  padding: 10px 0;
+  line-height: 0;
 }
 
 /* Hide indicator when card is flipped */
@@ -222,38 +236,58 @@ body {
   pointer-events: none;
 }
 
+/* Update indicator dot styles for smoother transitions */
 .indicator-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
   background-color: #3498db;
+  border-radius: 50%;
+  transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1); /* Faster transition */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  position: relative;
-  z-index: 60;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 11px;
-  font-weight: bold;
+  font-size: 8px;
+  width: 20px;
+  height: 20px;
+  box-sizing: content-box;
+  transform-origin: center center;
+  position: relative;
+  vertical-align: middle;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.indicator-dot:hover, .indicator-dot:active {
-  background-color: #2980b9;
-  transform: scale(1.1);
+.indicator-dot.visible {
+  display: flex;
 }
 
-.indicator-dot.active {
-  background-color: #2980b9;
+/* Adjust dot sizes and spacing */
+.indicator-dot.size-small {
   transform: scale(1.2);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  opacity: 0.4;
+  margin: 0 3px;
 }
 
-.indicator-dot:active {
-  transform: scale(1.3);
-  box-shadow: 0 0 12px rgba(52, 152, 219, 0.7);
+.indicator-dot.size-mid {
+  transform: scale(1.5);
+  opacity: 0.6;
+  margin: 0 6.5px;
+}
+
+.indicator-dot.size-large {
+  transform: scale(1.8);
+  opacity: 0.8;
+  margin: 0 10px;
+}
+
+.indicator-dot.size-active {
+  transform: scale(2);
+  opacity: 1;
+  margin: 0 12px;
+  background-color: #2980b9;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  /* border: 1.5px solid #222; */
 }
 
 /* Improved navigation arrows with better visibility and device targeting */
@@ -312,6 +346,10 @@ body {
     /* Turn off snap, but keep gap between cards */
     scroll-snap-type: none;
     gap: 30px;
+
+    /* REPLACE with better centering */
+    padding-top: 100px !important;
+    padding-bottom: 100px !important;
   }
 
   /* Override any previous card styling that might interfere */
@@ -348,6 +386,70 @@ body {
   .flip-card-back {
     height: auto;
     max-height: none;
+  }
+
+  /* Make sure headers and other elements don't interfere with flipped cards */
+  header {
+    z-index: 999;
+  }
+
+  /* FIX POSITIONING FOR FLIPPED CARD */
+  .flip-card.flipped {
+    /* Don't change position in the flow */
+    position: relative !important;
+
+    /* Keep exact original dimensions */
+    width: 300px !important;
+    height: 400px !important;
+
+    /* Keep exact original margins */
+    margin: 0 15px !important;
+
+    /* Higher z-index */
+    z-index: 100 !important;
+  }
+
+  /* The back face expands from the original card position */
+  .flip-card.flipped .flip-card-back {
+    /* Position absolute from the card's frame */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) rotateY(180deg) !important;
+
+    /* Expanded size */
+    width: 90vw !important;
+    height: auto !important;
+    min-height: 70vh !important;
+    max-height: 80vh !important;
+
+    /* Scrollable content */
+    overflow-y: auto !important;
+
+    /* Improved styling */
+    padding: 25px !important;
+    z-index: 1000 !important;
+  }
+
+  /* Keep the front face in its original position */
+  .flip-card.flipped .flip-card-front {
+    /* No changes needed - backface-visibility: hidden handles this */
+  }
+
+  /* Make sure other cards are visible but slightly faded */
+  .flip-card.flipped ~ .flip-card:not(.flipped) {
+    opacity: 0.7 !important;
+  }
+
+  .flip-card.flipped .flip-card-back .summary {
+    font-size: 1.2rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* Card indicator should be below flipped cards */
+  .card-indicator {
+    z-index: 998;
   }
 }
 
@@ -434,4 +536,42 @@ body {
   font-size: 0.9em;  /* 90% of the parent element's font size */
   margin-top: 5px;
   color: #666;
+}
+
+/* Add this to your CSS to ensure JS changes take precedence */
+.flip-card.force-expanded {
+  z-index: 1000 !important;
+  width: calc(100vw - 20px) !important;
+  max-width: calc(100vw - 20px) !important;
+  margin: 0 !important;
+}
+
+.flip-card.force-expanded .flip-card-back {
+  max-height: none !important;
+  min-height: 90vh !important;
+  padding: 30px 25px !important;
+  overflow-y: auto !important;
+}
+
+.flip-card.force-expanded .flip-card-back .summary {
+  font-size: calc(1.3rem + 1vw) !important;
+  line-height: 1.4 !important;
+  margin-bottom: 20px !important;
+}
+
+.flip-card.force-expanded .flip-card-back p:not(.summary) {
+  font-size: calc(1.1rem + 0.5vw) !important;
+  line-height: 1.5 !important;
+  margin-bottom: 20px !important;
+}
+
+.flip-card.force-expanded .flip-card-back h3 {
+  font-size: calc(1.2rem + 0.8vw) !important;
+  margin-top: 25px !important;
+  margin-bottom: 15px !important;
+}
+
+/* Add smooth scrolling override for dot clicks */
+.container.dot-navigation {
+  scroll-behavior: auto !important; /* Override smooth scrolling during dot navigation */
 }
