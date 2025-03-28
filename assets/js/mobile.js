@@ -323,7 +323,7 @@ function handleFlippedCardTouchEnd(e) {
     // Calculate the swipe distance
     const xDiff = flippedCardTouchEndX - flippedCardTouchStartX;
 
-    // If it was a significant horizontal swipe, assist with navigation
+    // If it was a significant horizontal swipe, move one card
     if (isSwipingHorizontally && Math.abs(xDiff) > 50) {
         const direction = xDiff > 0 ? -1 : 1; // -1 for right swipe, 1 for left swipe
         const currentIndex = CardSystem.activeCardIndex;
@@ -334,7 +334,7 @@ function handleFlippedCardTouchEnd(e) {
             CardSystem.activeCardIndex = targetIndex;
             CardSystem.updateUI();
 
-            // Use smooth scrolling for the new card
+            // Use consistent smooth scrolling
             container.style.scrollBehavior = 'smooth';
             centerCardProperly(targetIndex);
 
@@ -348,33 +348,17 @@ function handleFlippedCardTouchEnd(e) {
 // Touch handling for mobile
 container.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
-    lastTouchX = touchStartX;
     touchStartTime = Date.now();
-    touchScrollStartTime = touchStartTime;
 
     // Immediately stop any ongoing animations
     container.style.scrollBehavior = 'auto';
     isScrolling = false;
     clearTimeout(scrollEndTimeout);
-
-    // Record starting position
-    container.dataset.touchStartActiveCard = CardSystem.activeCardIndex;
 }, { passive: true });
 
+// Simplify touchmove - we just need to know if we're scrolling
 container.addEventListener('touchmove', (e) => {
-    // Calculate scroll velocity to determine if it's a slow scroll
-    const now = Date.now();
-    const currentX = e.changedTouches[0].screenX;
-    const timeDelta = now - touchScrollStartTime;
-
-    if (timeDelta > 0) {
-        // Calculate velocity in pixels per millisecond
-        touchVelocity = Math.abs(currentX - lastTouchX) / timeDelta;
-        isSlowTouchScroll = touchVelocity < slowScrollThreshold;
-    }
-
-    lastTouchX = currentX;
-    touchScrollStartTime = now;
+    isScrolling = true;
 }, { passive: true });
 
 container.addEventListener('touchend', (e) => {
@@ -387,94 +371,42 @@ container.addEventListener('touchend', (e) => {
         return;
     }
 
-    // Calculate swipe velocity
-    const swipeDuration = touchEndTime - touchStartTime;
-    swipeVelocity = touchDiff / swipeDuration;
-
     requestAnimationFrame(() => {
-        // First, find the current active card (closest to center)
-        const containerRect = container.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-
-        // Determine which cards are visible and their positions relative to center
-        const visibleCards = [];
-
-        flipCards.forEach((card, index) => {
-            const cardRect = card.getBoundingClientRect();
-            const cardCenter = cardRect.left + cardRect.width / 2;
-            const distance = cardCenter - containerCenter;
-            const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
-
-            if (isVisible) {
-                visibleCards.push({
-                    card,
-                    index,
-                    distance,
-                    distanceAbs: Math.abs(distance)
-                });
-            }
-        });
-
-        // Sort by absolute distance to find closest
-        visibleCards.sort((a, b) => a.distanceAbs - b.distanceAbs);
-        const closestCardIndex = visibleCards.length > 0 ? visibleCards[0].index : CardSystem.activeCardIndex;
+        // Find current active card
+        const currentIndex = CardSystem.activeCardIndex;
         const swipeDirection = Math.sign(touchDiff); // 1 for right, -1 for left
 
+        // Always move exactly one card
         let targetIndex;
-
-        // SUPER FAST SWIPE: Use the original +1/-1 behavior for very fast swipes
-        if (Math.abs(swipeVelocity) > superFastVelocityThreshold) {
-            // Very fast swipe - go to next/previous card for effortless navigation
-            if (swipeDirection > 0) {
-                // Rightward swipe - go to previous card (if possible)
-                targetIndex = Math.max(0, closestCardIndex - 1);
-            } else {
-                // Leftward swipe - go to next card (if possible)
-                targetIndex = Math.min(flipCards.length - 1, closestCardIndex + 1);
-            }
-        }
-        // REGULAR FAST SWIPE: Find the closest card in the swipe direction
-        else if (Math.abs(swipeVelocity) > velocityThreshold) {
-            // Find cards in the direction of swipe
-            const cardsInSwipeDirection = visibleCards.filter(item =>
-                item.distance * swipeDirection < 0 // Cards in swipe direction
-            );
-
-            if (cardsInSwipeDirection.length > 0) {
-                // Sort cards by distance in swipe direction
-                cardsInSwipeDirection.sort((a, b) => {
-                    return swipeDirection * (a.distance - b.distance);
-                });
-
-                // Use the first card in swipe direction
-                targetIndex = cardsInSwipeDirection[0].index;
-            } else {
-                // If no cards in swipe direction, try to move to next/previous
-                if (swipeDirection > 0 && closestCardIndex > 0) {
-                    targetIndex = closestCardIndex - 1;
-                } else if (swipeDirection < 0 && closestCardIndex < flipCards.length - 1) {
-                    targetIndex = closestCardIndex + 1;
-                } else {
-                    targetIndex = closestCardIndex;
-                }
-            }
+        if (swipeDirection > 0 && currentIndex > 0) {
+            // Rightward swipe - go to previous card
+            targetIndex = currentIndex - 1;
+        } else if (swipeDirection < 0 && currentIndex < flipCards.length - 1) {
+            // Leftward swipe - go to next card
+            targetIndex = currentIndex + 1;
         } else {
-            // SLOW SWIPE: Simply use the closest card
-            targetIndex = closestCardIndex;
+            // At the edge, stay on current card
+            targetIndex = currentIndex;
         }
 
-        if (targetIndex !== undefined) {
+        if (targetIndex !== currentIndex) {
             // Update active card
             CardSystem.activeCardIndex = targetIndex;
             CardSystem.updateUI();
 
-            // Use smooth scrolling for the recentering
+            // Use consistent smooth scrolling
             container.style.scrollBehavior = 'smooth';
-
-            // Use our boundary-respecting function to center the card
             centerCardProperly(targetIndex);
 
             // Reset scrolling behavior after animation
+            setTimeout(() => {
+                container.style.scrollBehavior = 'auto';
+            }, 300);
+        } else {
+            // If we're at the edge, bounce back to current card
+            container.style.scrollBehavior = 'smooth';
+            centerCardProperly(currentIndex);
+            
             setTimeout(() => {
                 container.style.scrollBehavior = 'auto';
             }, 300);
