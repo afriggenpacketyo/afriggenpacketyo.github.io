@@ -205,24 +205,85 @@ window.CardSystem = {
         // Track if this is a direct dot click vs. a scroll
         const isDotClick = Math.abs(activeIndex - this.previousActiveIndex) > 1;
 
+        // Calculate previous and new visible window
+        const previousVisibleStart = this.visibleStartIndex;
+        
         // Handle window sliding
         if (activeIndex < this.visibleStartIndex + 2) {
             this.visibleStartIndex = Math.max(0, activeIndex - 2);
         } else if (activeIndex > this.visibleStartIndex + this.visibleRange - 3) {
             this.visibleStartIndex = Math.min(totalDots - this.visibleRange, activeIndex - (this.visibleRange - 3));
         }
-
-        // Update all dots
-        dots.forEach((dot, index) => {
-            // For dot clicks, use a single smooth transition
-            if (isDotClick) {
-                dot.style.transition = 'all 0.3s ease';
+        
+        // Detect if the window has shifted
+        const hasWindowShifted = previousVisibleStart !== this.visibleStartIndex;
+        
+        // Add special transition to all dots when the window shifts
+        if (hasWindowShifted) {
+            // Apply the sliding transition to all dots
+            dots.forEach(dot => {
+                dot.style.transition = 'all 0.3s ease, transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1)';
+            });
+        } else {
+            // First update all non-active dots
+            dots.forEach((dot, index) => {
+                // Skip the soon-to-be active dot for now
+                if (index === activeIndex) return;
+                
+                // For dot clicks, use a single smooth transition
+                if (isDotClick) {
+                    dot.style.transition = 'all 0.2s ease';
+                } else {
+                    // For scrolling/swiping, use normal transition
+                    dot.style.transition = activeIndex === this.previousActiveIndex ? 'none' : 'all 0.2s ease';
+                }
+                
+                // Just update the non-active dots first
+                this.updateDotState(dot, index, activeIndex);
+            });
+        }
+        
+        // For sequential transitions, force a reflow
+        if (!isDotClick && this.previousActiveIndex !== activeIndex) {
+            dots[0].offsetHeight; // Force reflow
+            
+            // Second: if the new active dot was mid-sized before, make it large first (intermediate state)
+            const newActiveDot = dots[activeIndex];
+            if (newActiveDot && newActiveDot.classList.contains('size-mid')) {
+                newActiveDot.classList.remove('size-mid');
+                newActiveDot.classList.add('size-large');
+                newActiveDot.style.transition = 'all 0.1s ease';
+                
+                // Force another reflow to render this intermediate state
+                dots[0].offsetHeight;
+                
+                // Short delay before final transition
+                setTimeout(() => {
+                    // Finally update the active dot
+                    newActiveDot.style.transition = 'all 0.2s ease';
+                    this.updateDotState(newActiveDot, activeIndex, activeIndex);
+                }, 50); // Small delay to ensure intermediate transition is visible
             } else {
-                // For scrolling/swiping, use normal transition
-                dot.style.transition = activeIndex === this.previousActiveIndex ? 'none' : 'all 0.3s ease';
+                // If no intermediate state needed, update active dot with slight delay
+                setTimeout(() => {
+                    dots[activeIndex].style.transition = 'all 0.2s ease';
+                    this.updateDotState(dots[activeIndex], activeIndex, activeIndex);
+                }, 30);
             }
-            this.updateDotState(dot, index, activeIndex);
-        });
+        } else {
+            // If it's a direct click or no change, just update the active dot immediately
+            dots[activeIndex].style.transition = isDotClick ? 'all 0.3s ease' : 'none';
+            this.updateDotState(dots[activeIndex], activeIndex, activeIndex);
+        }
+        
+        // If window has shifted, update all dots with the new positions
+        if (hasWindowShifted) {
+            // Need to update all dots after transition is set up
+            dots.forEach((dot, index) => {
+                // Apply the new state to all dots
+                this.updateDotState(dot, index, activeIndex);
+            });
+        }
 
         // Save values for next update
         this.previousActiveIndex = activeIndex;

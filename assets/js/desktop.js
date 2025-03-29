@@ -322,7 +322,30 @@
         container.scrollLeft = scrollPosition;
     }
 
-    // Update active card during scroll
+    // Debounce function (utility function)
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    // Throttle function (utility function)
+    function throttle(func, limit) {
+        let inThrottle;
+        return function(...args) {
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+
+    // Modified updateActiveCardDuringScroll that uses proper dot transitions
     function updateActiveCardDuringScroll() {
         // Don't update if manually flipping
         if (CardSystem.isManuallyFlipping) return;
@@ -361,7 +384,6 @@
             
             if (closestDistance < 50 || (currentActiveDistance - closestDistance) > 20) {
                 // Update active card index
-                const previousActiveIndex = CardSystem.activeCardIndex;
                 CardSystem.activeCardIndex = closestCard;
                 
                 // If we have a flipped card, only unflip it when a DIFFERENT card becomes active
@@ -371,10 +393,16 @@
                     CardSystem.resetFlippedCard();
                 }
                 
+                // Use the updateUI method which will properly update the dots
                 CardSystem.updateUI();
             }
         }
     }
+
+    // Create a throttled version for smoother dot updates
+    const updateActiveCardDuringScrollThrottled = throttle(() => {
+        updateActiveCardDuringScroll();
+    }, 120); // 120ms throttle provides a good balance
 
     // Ensure all inactive cards are unflipped
     function ensureProperCardStates() {
@@ -572,8 +600,8 @@
         // Track that we're scrolling
         isScrolling = true;
 
-        // Update active card during scroll
-            requestAnimationFrame(updateActiveCardDuringScroll);
+        // Update active card during scroll using throttled function
+        updateActiveCardDuringScrollThrottled();
         
         // Mark scrolling as complete after brief delay
         scrollEndTimeout = setTimeout(() => {
@@ -711,8 +739,116 @@
         return false; // We didn't handle this event
     }
 
+    // Add these new functions at an appropriate location
+    function smoothTransitionDotIndicators() {
+        const dots = document.querySelectorAll('.indicator-dot');
+        dots.forEach(dot => {
+            dot.style.transition = 'transform 0.2s ease-out, background-color 0.3s ease-out';
+        });
+    }
+
+    function updateDotIndicatorsDirectly(activeIndex) {
+        const dots = document.querySelectorAll('.indicator-dot');
+        
+        dots.forEach((dot, index) => {
+            if (index === activeIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    // Modify CardSystem.updateUI to allow bypassing dot updates
+    const originalUpdateUI = CardSystem.updateUI;
+    CardSystem.updateUI = function(skipDotUpdate = false) {
+        // Call original updateUI but don't update dots if we're handling it separately
+        if (skipDotUpdate) {
+            // Temporarily store the real update dots function
+            const originalUpdateDots = this.updateDotIndicators;
+            
+            // Replace with empty function
+            this.updateDotIndicators = function() {};
+            
+            // Call original update UI
+            originalUpdateUI.call(this);
+            
+            // Restore original dot update function
+            this.updateDotIndicators = originalUpdateDots;
+        } else {
+            originalUpdateUI.call(this);
+        }
+    };
+
+    // Smooth scrolling dot indicator update with animation frame control
+    let lastScrollDotUpdateTime = 0;
+    let pendingDotUpdate = null;
+    const DOT_UPDATE_INTERVAL = 100; // Minimum milliseconds between dot updates
+
+    function updateDotIndicatorsSmoothly() {
+        // Don't update if manually flipping
+        if (CardSystem.isManuallyFlipping) return;
+        
+        const now = Date.now();
+        
+        // If we have a pending update and it's too soon for another, just return
+        if (pendingDotUpdate && now - lastScrollDotUpdateTime < DOT_UPDATE_INTERVAL) {
+            return;
+        }
+        
+        // Clear any pending update
+        if (pendingDotUpdate) {
+            cancelAnimationFrame(pendingDotUpdate);
+            pendingDotUpdate = null;
+        }
+        
+        // Schedule update for next frame
+        pendingDotUpdate = requestAnimationFrame(() => {
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            
+            // Find the card closest to center
+            let closestCard = null;
+            let closestDistance = Infinity;
+            
+            flipCards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distanceFromCenter = Math.abs(cardCenter - containerCenter);
+                
+                // Check if this card is sufficiently visible
+                const overlapLeft = Math.max(containerRect.left, cardRect.left);
+                const overlapRight = Math.min(containerRect.right, cardRect.right);
+                const visibleWidth = Math.max(0, overlapRight - overlapLeft);
+                
+                if (visibleWidth / cardRect.width >= 0.4 && distanceFromCenter < closestDistance) {
+                    closestCard = index;
+                    closestDistance = distanceFromCenter;
+                }
+            });
+            
+            if (closestCard !== null && closestCard !== CardSystem.activeCardIndex) {
+                // Update internal state
+                CardSystem.activeCardIndex = closestCard;
+                
+                // Only update the dot indicators, not the cards
+                updateDotIndicatorsDirectly(closestCard);
+            }
+            
+            pendingDotUpdate = null;
+            lastScrollDotUpdateTime = Date.now();
+        });
+    }
+
+    // Initialize smooth dot transitions
+    function initSmoothDotTransitions() {
+        smoothTransitionDotIndicators();
+        console.log("Smooth dot indicator transitions initialized");
+    }
+
     // Initialize desktop-specific features
     addNavigationArrows();
     initSmoothScrolling();
+    initSmoothDotTransitions();
     console.log("iPod-style cover flow initialized");
 })();

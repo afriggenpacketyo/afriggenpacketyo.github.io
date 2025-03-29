@@ -422,9 +422,8 @@ container.addEventListener('touchend', (e) => {
 
         let targetIndex;
 
-        // SUPER FAST SWIPE: Use the original +1/-1 behavior for very fast swipes
-        if (Math.abs(swipeVelocity) > superFastVelocityThreshold) {
-            // Very fast swipe - go to next/previous card for effortless navigation
+        // SIMPLIFIED SWIPE LOGIC: Always move just one card if swipe is significant
+        if (Math.abs(touchDiff) > minSwipeDistance) {
             if (swipeDirection > 0) {
                 // Rightward swipe - go to previous card (if possible)
                 targetIndex = Math.max(0, closestCardIndex - 1);
@@ -432,34 +431,8 @@ container.addEventListener('touchend', (e) => {
                 // Leftward swipe - go to next card (if possible)
                 targetIndex = Math.min(flipCards.length - 1, closestCardIndex + 1);
             }
-        }
-        // REGULAR FAST SWIPE: Find the closest card in the swipe direction
-        else if (Math.abs(swipeVelocity) > velocityThreshold) {
-            // Find cards in the direction of swipe
-            const cardsInSwipeDirection = visibleCards.filter(item =>
-                item.distance * swipeDirection < 0 // Cards in swipe direction
-            );
-
-            if (cardsInSwipeDirection.length > 0) {
-                // Sort cards by distance in swipe direction
-                cardsInSwipeDirection.sort((a, b) => {
-                    return swipeDirection * (a.distance - b.distance);
-                });
-
-                // Use the first card in swipe direction
-                targetIndex = cardsInSwipeDirection[0].index;
-            } else {
-                // If no cards in swipe direction, try to move to next/previous
-                if (swipeDirection > 0 && closestCardIndex > 0) {
-                    targetIndex = closestCardIndex - 1;
-                } else if (swipeDirection < 0 && closestCardIndex < flipCards.length - 1) {
-                    targetIndex = closestCardIndex + 1;
-                } else {
-                    targetIndex = closestCardIndex;
-                }
-            }
         } else {
-            // SLOW SWIPE: Simply use the closest card
+            // For very small swipes, just center the closest card
             targetIndex = closestCardIndex;
         }
 
@@ -563,7 +536,7 @@ function updateActiveCardDuringScroll() {
     });
 
     // Update active card if we found one that's at least 50% visible
-    if (mostVisibleCard && highestVisibility >= 0.5) {
+    if (mostVisibleCard && highestVisibility >= 0.4) {
         CardSystem.activeCardIndex = mostVisibleCard.index;
         CardSystem.updateUI();
     }
