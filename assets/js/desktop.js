@@ -30,6 +30,9 @@
     const rapidKeyPressThreshold = 300; // ms
     const SCROLL_STABILITY_THRESHOLD = 3; // Number of stable position checks needed
 
+    // Add a flag to track the source of the last card activation
+    let lastCardActivationSource = 'none'; // Can be 'click', 'key', 'arrow', 'scroll'
+
     // Setup card indicator click handlers for desktop
     const cardIndicator = document.querySelector('.card-indicator');
     cardIndicator.querySelectorAll('.indicator-dot').forEach((dot) => {
@@ -74,6 +77,15 @@
         // Direct arrow click handlers
         navLeft.addEventListener('click', () => {
             if (CardSystem.activeCardIndex > 0) {
+                // Set activation source
+                lastCardActivationSource = 'arrow';
+                
+                // Reset any flipped card when using arrows
+                if (CardSystem.currentlyFlippedCard) {
+                    CardSystem.resetFlippedCard();
+                    toggleLogoVisibility(true);
+                }
+                
                 // Cancel all animations and scrolling
                 container.style.scrollBehavior = 'auto';
                 isScrolling = false;
@@ -94,6 +106,15 @@
 
         navRight.addEventListener('click', () => {
             if (CardSystem.activeCardIndex < flipCards.length - 1) {
+                // Set activation source
+                lastCardActivationSource = 'arrow';
+                
+                // Reset any flipped card when using arrows
+                if (CardSystem.currentlyFlippedCard) {
+                    CardSystem.resetFlippedCard();
+                    toggleLogoVisibility(true);
+                }
+                
                 // Cancel all animations and scrolling
                 container.style.scrollBehavior = 'auto';
                 isScrolling = false;
@@ -172,6 +193,9 @@
                 if (dragDistance > 5) return;
             }
 
+            // Set activation source
+            lastCardActivationSource = 'click';
+            
             // Find which card is most visible at this moment
             const containerRect = container.getBoundingClientRect();
             const containerCenter = containerRect.left + containerRect.width / 2;
@@ -426,20 +450,28 @@
         updateActiveCardDuringScroll();
     }, 120); // 120ms throttle provides a good balance
 
-    // Ensure all inactive cards are unflipped
+    // Modify the ensureProperCardStates function to respect activation source
     function ensureProperCardStates() {
-        // Only reset flipped cards if they're not the active card AND not visible in the viewport
+        // Only reset flipped cards if they're not the active card AND not visible 
+        // AND they weren't explicitly activated by the user
         if (CardSystem.currentlyFlippedCard) {
             const containerRect = container.getBoundingClientRect();
             const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
             const cardIndex = Array.from(flipCards).indexOf(CardSystem.currentlyFlippedCard);
-
+            
             // Check if the flipped card is visible in the viewport
             const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
-
-            // Only reset if the card is not visible AND not the active card
-            if (!isVisible && cardIndex !== CardSystem.activeCardIndex) {
+            
+            // Only reset if:
+            // 1. The card is not visible AND not the active card
+            // 2. The activation source is scroll or arrow (not click/key direct activation)
+            const shouldResetBasedOnSource = 
+                lastCardActivationSource === 'scroll' || 
+                lastCardActivationSource === 'arrow';
+                
+            if ((!isVisible && cardIndex !== CardSystem.activeCardIndex) || shouldResetBasedOnSource) {
                 CardSystem.resetFlippedCard();
+                toggleLogoVisibility(true);
             }
         }
     }
@@ -478,6 +510,15 @@
         lastKeyPressTime = now;
 
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            // Set activation source for arrow keys
+            lastCardActivationSource = 'arrow';
+            
+            // Reset any flipped card when using arrow keys
+            if (CardSystem.currentlyFlippedCard) {
+                CardSystem.resetFlippedCard();
+                toggleLogoVisibility(true);
+            }
+            
             // Calculate new index based on key pressed
             let newIndex = CardSystem.activeCardIndex;
             if (e.key === 'ArrowLeft' && CardSystem.activeCardIndex > 0) {
@@ -492,6 +533,9 @@
             container.style.scrollBehavior = 'smooth';
             scrollToCard(newIndex, false);
         } else if ((e.key === 'Enter' || e.key === ' ')) {
+            // Set activation source for spacebar/enter
+            lastCardActivationSource = 'key';
+            
             // Prevent default space scrolling behavior
             e.preventDefault();
             
@@ -613,6 +657,9 @@
         // Don't interfere with manual flipping
         if (CardSystem.isManuallyFlipping) return;
 
+        // Set activation source for scroll
+        lastCardActivationSource = 'scroll';
+        
         // Clear any previous timeout
         clearTimeout(scrollEndTimeout);
         
@@ -649,6 +696,9 @@
 
     // Simplified wheel event handler
     container.addEventListener('wheel', (e) => {
+        // This is definitely a manual user scroll
+        lastCardActivationSource = 'scroll';
+        
         isUserActivelyScrolling = true;
         isScrollMomentumActive = true;
         lastWheelEventTime = Date.now();
@@ -682,10 +732,13 @@
         CardSystem.updateUI();
     }
 
-    // Missing handleKeyDuringScrollMomentum function
+    // Modify handleKeyDuringScrollMomentum to set proper source
     function handleKeyDuringScrollMomentum(e) {
         // Only handle spacebar and enter during scroll momentum
         if ((e.key === 'Enter' || e.key === ' ') && isScrollMomentumActive) {
+            // Mark this as a key activation, not a scroll activation
+            lastCardActivationSource = 'key';
+            
             e.preventDefault();
 
             // Find which card is most visible at this moment
