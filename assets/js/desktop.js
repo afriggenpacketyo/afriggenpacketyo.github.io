@@ -160,7 +160,7 @@
         }
     }
 
-    // Modify the card click handler to toggle logo visibility
+    // Modify the card click handler to handle momentum and centering better
     flipCards.forEach((card, index) => {
         card.addEventListener('click', function(e) {
             // Skip link clicks
@@ -172,88 +172,110 @@
                 if (dragDistance > 5) return;
             }
 
-            // Clear any pending long swipe timeout
-            clearTimeout(longSwipeTimeout);
-
-            // Set manual flipping flag
-            CardSystem.isManuallyFlipping = true;
-
-            // Clear any scroll timeouts
-            clearTimeout(scrollEndTimeout);
-
-            // Force stop all animations for immediate response
-            forceStopAllAnimations();
-
-            const shouldFlip = !this.classList.contains('flipped');
-
-            // Add logo visibility toggle
-            if (shouldFlip) {
-                // Hide logo when flipping a card
-                toggleLogoVisibility(false);
-            } else {
-                // Show logo when unflipping
-                toggleLogoVisibility(true);
-            }
-
-            if (!this.classList.contains('active')) {
-                // If not active, center it first, then handle flipping
+            // Find which card is most visible at this moment
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            
+            // Get this card's visibility and center positioning
+            const cardRect = this.getBoundingClientRect();
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const overlapLeft = Math.max(containerRect.left, cardRect.left);
+            const overlapRight = Math.min(containerRect.right, cardRect.right);
+            const visibleWidth = Math.max(0, overlapRight - overlapLeft);
+            const isCardCentered = Math.abs(cardCenter - containerCenter) < 20; // Within 20px of center
+            
+            // If card is not significantly visible, just center it without flipping
+            if (visibleWidth / cardRect.width < 0.7) {
+                // Clear any pending timeouts
+                clearTimeout(longSwipeTimeout);
+                clearTimeout(scrollEndTimeout);
+                
+                // Just center the card without flipping
                 CardSystem.activeCardIndex = index;
                 CardSystem.updateUI();
-
-                // Use our PC-specific centering function
                 centerCardForPC(index);
-
-                // After scroll animation completes, handle flipping if needed
-                longSwipeTimeout = setTimeout(() => {
-                    if (shouldFlip) {
-                        // Handle any previously flipped card
-                        if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== this) {
-                            CardSystem.resetFlippedCard();
-                        }
-
-                        // First restore animations to ensure transitions work
-                        restoreAnimations();
-
-                        // Wait a tiny bit for animations to be restored
-                        setTimeout(() => {
-                            // Expand and flip with forced reflow
-                            CardSystem.adjustCardHeight(this, true);
-                            void this.offsetWidth; // Force reflow
-                            this.classList.add('flipped');
-                            CardSystem.currentlyFlippedCard = this;
-                        }, 10);
-                    }
-
-                    CardSystem.isManuallyFlipping = false;
-                }, 400);
-            } else {
-                // Already active, just handle flipping
-                if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== this) {
-                    CardSystem.resetFlippedCard();
-                }
-
-                // Restore animations first
-                restoreAnimations();
-
-                if (shouldFlip) {
-                    // Force a reflow between operations
-                    CardSystem.adjustCardHeight(this, true);
-                    void this.offsetWidth; // Force reflow
-                    this.classList.add('flipped');
-                    CardSystem.currentlyFlippedCard = this;
-                } else {
-                    // Force a reflow between operations
-                    void this.offsetWidth; // Force reflow
-                    this.classList.remove('flipped');
-                    CardSystem.adjustCardHeight(this, false);
-                    CardSystem.currentlyFlippedCard = null;
-                }
-
-                // Reset manual flipping flag after a delay
-                longSwipeTimeout = setTimeout(() => {
-                    CardSystem.isManuallyFlipping = false;
-                }, 500);
+                return;
             }
+            
+            // Proceed with flipping logic
+            clearTimeout(longSwipeTimeout);
+            CardSystem.isManuallyFlipping = true;
+            clearTimeout(scrollEndTimeout);
+            
+            // Force stop all animations for immediate response
+            forceStopAllAnimations();
+            
+            const shouldFlip = !this.classList.contains('flipped');
+            
+            // Toggle logo visibility
+            if (shouldFlip) {
+                toggleLogoVisibility(false);
+            } else {
+                toggleLogoVisibility(true);
+            }
+            
+            // Update active card index if needed
+            if (CardSystem.activeCardIndex !== index) {
+                CardSystem.activeCardIndex = index;
+                CardSystem.updateUI();
+            }
+            
+            // Handle any previously flipped card
+            if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== this) {
+                CardSystem.resetFlippedCard();
+            }
+            
+            // Restore animations
+            restoreAnimations();
+            
+            if (shouldFlip) {
+                // Force a reflow between operations
+                CardSystem.adjustCardHeight(this, true);
+                void this.offsetWidth; // Force reflow
+                this.classList.add('flipped');
+                CardSystem.currentlyFlippedCard = this;
+                
+                // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
+                if (!isCardCentered && isScrollMomentumActive) {
+                    // Set a flag that we want to center this card after momentum ends
+                    let momentumSettleTimeout;
+                    
+                    // Function to check if scroll momentum has settled
+                    const checkForMomentumEnd = () => {
+                        // If we're no longer in momentum state or if it's been a while, center the card
+                        if (!isScrollMomentumActive || Date.now() - lastWheelEventTime > 300) {
+                            // Momentum has ended, center the card
+                            centerCardForPC(index);
+                            clearInterval(momentumCheckInterval);
+                        }
+                    };
+                    
+                    // Check every 100ms if momentum has settled
+                    const momentumCheckInterval = setInterval(checkForMomentumEnd, 100);
+                    
+                    // Set a backup timeout to ensure we don't wait forever (max 1 second)
+                    momentumSettleTimeout = setTimeout(() => {
+                        clearInterval(momentumCheckInterval);
+                        centerCardForPC(index);
+                    }, 1000);
+                } else if (!isCardCentered) {
+                    // No active momentum, so center after a slight delay
+                    setTimeout(() => {
+                        centerCardForPC(index);
+                    }, 200);
+                }
+            } else {
+                // Unflipping
+                void this.offsetWidth; // Force reflow
+                this.classList.remove('flipped');
+                CardSystem.adjustCardHeight(this, false);
+                CardSystem.currentlyFlippedCard = null;
+            }
+            
+            // Reset manual flipping flag after a delay
+            longSwipeTimeout = setTimeout(() => {
+                CardSystem.isManuallyFlipping = false;
+            }, 500);
         });
 
         // Track mouse down for drag detection
@@ -473,7 +495,7 @@
             // Prevent default space scrolling behavior
             e.preventDefault();
             
-            // Find the most visible card (similar to click handling)
+            // Find the most visible card
             const containerRect = container.getBoundingClientRect();
             const containerCenter = containerRect.left + containerRect.width / 2;
             
@@ -495,10 +517,11 @@
             
             // Skip if not significantly visible
             const cardRect = targetCard.getBoundingClientRect();
-            const containerRect2 = container.getBoundingClientRect();
-            const overlapLeft = Math.max(containerRect2.left, cardRect.left);
-            const overlapRight = Math.min(containerRect2.right, cardRect.right);
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const overlapLeft = Math.max(containerRect.left, cardRect.left);
+            const overlapRight = Math.min(containerRect.right, cardRect.right);
             const visibleWidth = Math.max(0, overlapRight - overlapLeft);
+            const isCardCentered = Math.abs(cardCenter - containerCenter) < 20; // Within 20px of center
             
             if (visibleWidth / cardRect.width < 0.3) {
                 return; // Not visible enough to act on
@@ -520,72 +543,68 @@
             
             // Add logo visibility toggle
             if (shouldFlip) {
-                // Hide logo when flipping a card
                 toggleLogoVisibility(false);
             } else {
-                // Show logo when unflipping
                 toggleLogoVisibility(true);
             }
             
-            if (!targetCard.classList.contains('active')) {
-                // If not active, update UI and center it
-                CardSystem.activeCardIndex = bestVisibleCard;
-                CardSystem.updateUI();
-                
-                // Use our PC-specific centering function
-                centerCardForPC(bestVisibleCard);
-                
-                // After scroll animation completes, handle flipping if needed
-                longSwipeTimeout = setTimeout(() => {
-                    if (shouldFlip) {
-                        // Handle any previously flipped card
-                        if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== targetCard) {
-                            CardSystem.resetFlippedCard();
-                        }
-                        
-                        // First restore animations to ensure transitions work
-                        restoreAnimations();
-                        
-                        // Wait a tiny bit for animations to be restored
-                        setTimeout(() => {
-                            // Expand and flip with forced reflow
-                            CardSystem.adjustCardHeight(targetCard, true);
-                            void targetCard.offsetWidth; // Force reflow
-                            targetCard.classList.add('flipped');
-                            CardSystem.currentlyFlippedCard = targetCard;
-                        }, 10);
-                    }
-                    
-                    CardSystem.isManuallyFlipping = false;
-                }, 400);
-            } else {
-                // Already active, just handle flipping
-                if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== targetCard) {
-                    CardSystem.resetFlippedCard();
-                }
-                
-                // Restore animations first
-                restoreAnimations();
-                
-                if (shouldFlip) {
-                    // Force a reflow between operations
-                    CardSystem.adjustCardHeight(targetCard, true);
-                    void targetCard.offsetWidth; // Force reflow
-                    targetCard.classList.add('flipped');
-                    CardSystem.currentlyFlippedCard = targetCard;
-                } else {
-                    // Force a reflow between operations
-                    void targetCard.offsetWidth; // Force reflow
-                    targetCard.classList.remove('flipped');
-                    CardSystem.adjustCardHeight(targetCard, false);
-                    CardSystem.currentlyFlippedCard = null;
-                }
-                
-                // Reset manual flipping flag after a delay
-                longSwipeTimeout = setTimeout(() => {
-                    CardSystem.isManuallyFlipping = false;
-                }, 500);
+            // Update active card index if needed
+            CardSystem.activeCardIndex = bestVisibleCard;
+            CardSystem.updateUI();
+            
+            // Handle any previously flipped card
+            if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== targetCard) {
+                CardSystem.resetFlippedCard();
             }
+            
+            // Restore animations first
+            restoreAnimations();
+            
+            if (shouldFlip) {
+                // Force a reflow between operations
+                CardSystem.adjustCardHeight(targetCard, true);
+                void targetCard.offsetWidth; // Force reflow
+                targetCard.classList.add('flipped');
+                CardSystem.currentlyFlippedCard = targetCard;
+                
+                // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
+                if (!isCardCentered && isScrollMomentumActive) {
+                    // Function to check if scroll momentum has settled
+                    const checkForMomentumEnd = () => {
+                        // If we're no longer in momentum state or if it's been a while, center the card
+                        if (!isScrollMomentumActive || Date.now() - lastWheelEventTime > 300) {
+                            // Momentum has ended, center the card
+                            centerCardForPC(bestVisibleCard);
+                            clearInterval(momentumCheckInterval);
+                        }
+                    };
+                    
+                    // Check every 100ms if momentum has settled
+                    const momentumCheckInterval = setInterval(checkForMomentumEnd, 100);
+                    
+                    // Set a backup timeout to ensure we don't wait forever (max 1 second)
+                    setTimeout(() => {
+                        clearInterval(momentumCheckInterval);
+                        centerCardForPC(bestVisibleCard);
+                    }, 1000);
+                } else if (!isCardCentered) {
+                    // No active momentum, so center after a slight delay
+                    setTimeout(() => {
+                        centerCardForPC(bestVisibleCard);
+                    }, 200);
+                }
+            } else {
+                // Unflipping
+                void targetCard.offsetWidth; // Force reflow
+                targetCard.classList.remove('flipped');
+                CardSystem.adjustCardHeight(targetCard, false);
+                CardSystem.currentlyFlippedCard = null;
+            }
+            
+            // Reset manual flipping flag after a delay
+            longSwipeTimeout = setTimeout(() => {
+                CardSystem.isManuallyFlipping = false;
+            }, 500);
         }
     });
 
