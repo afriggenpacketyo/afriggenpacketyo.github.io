@@ -22,8 +22,6 @@ let scrollEndTimeout;
 let currentSwipeOffset = 0;
 let flippedCardTouchStartTime = 0;
 let flippedCardTouchEndTime = 0;
-let lastDotUpdateTime = 0;
-let dotUpdateThrottleTime = 100; // ms between dot updates during fast scrolling
 
 // Constants
 const minSwipeDistance = 50;
@@ -44,7 +42,43 @@ let previousDirection = 0; // 0 = initial, 1 = right, -1 = left
 let centerPointActivated = true; // Whether the center point is currently activated
 let consecutiveSwipesInSameDirection = 0; // Count of swipes in the same direction
 
-// Override updateDotState function with a version that ensures symmetric transitions
+// Function to update dot sizes based on active index and swipe direction
+function updateInstagramStyleDots(activeIndex) {
+    const dots = document.querySelectorAll('.indicator-dot');
+    const totalDots = dots.length;
+
+    // Determine swipe direction (-1 for left, 1 for right)
+    const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
+
+    // Skip animation if we're clicking the same dot we're already on
+    const isSameDot = activeIndex === previousActiveIndex;
+
+    // Original edge case logic for window sliding
+    if (activeIndex < visibleStartIndex + 2) {
+        // Near left edge - shift window left
+        visibleStartIndex = Math.max(0, activeIndex - 2);
+    } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
+        // Near right edge - shift window right
+        visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
+    }
+
+    // Update all dots, but only apply transitions when necessary
+    dots.forEach((dot, index) => {
+        // Only apply transition if we're not clicking the same dot
+        if (!isSameDot) {
+            dot.style.transition = 'all 0.3s ease';
+        } else {
+            dot.style.transition = 'none';
+        }
+        updateDotState(dot, index, activeIndex);
+    });
+
+    // Save values for next update
+    previousActiveIndex = activeIndex;
+    previousDirection = currentDirection;
+}
+
+// Helper function to update individual dot state
 function updateDotState(dot, index, activeIndex) {
     // Remove existing classes
     dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
@@ -55,52 +89,13 @@ function updateDotState(dot, index, activeIndex) {
 
     if (isVisible) {
         dot.classList.add('visible');
-        
-        // First, ensure ALL dots have consistent transition timing for uniformity
-        dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-
-        // Special case: when absolute 2nd dot or 2nd-to-last dot is active
-        const isSecondDotActive = activeIndex === 1;
-        const isSecondToLastDotActive = activeIndex === (flipCards.length - 2);
 
         if (index === activeIndex) {
             // Active dot gets active size
             dot.classList.add('size-active');
-        } else if (index === 0 || index === (flipCards.length - 1)) {
-            // First and last dots (ABSOLUTE positions, not relative to visible window)
-            // When absolute second dot is active, first dot needs consistent mid size
-            if ((isSecondDotActive && index === 0) || 
-                (isSecondToLastDotActive && index === (flipCards.length - 1))) {
-                dot.classList.add('size-mid');
-            } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
-                // Edge dots in the visible window
-                if ((activeIndex === visibleStartIndex + 1 && index === visibleStartIndex) ||
-                    (activeIndex === visibleStartIndex + visibleRange - 2 && index === visibleStartIndex + visibleRange - 1)) {
-                    dot.classList.add('size-mid');
-                } else {
-                    dot.classList.add('size-small');
-                }
-            } else {
-                dot.classList.add('size-small');
-            }
-        } else if (index === 1) {
-            // Absolute second dot
-            if (activeIndex === 0 || activeIndex === 1 || activeIndex === 2) {
-                dot.classList.add('size-large');
-            } else {
-                dot.classList.add('size-mid');
-            }
-        } else if (index === (flipCards.length - 2)) {
-            // Absolute second-to-last dot
-            if (activeIndex === (flipCards.length - 3) || 
-                activeIndex === (flipCards.length - 2) || 
-                activeIndex === (flipCards.length - 1)) {
-                dot.classList.add('size-large');
-            } else {
-                dot.classList.add('size-mid');
-            }
         } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
-            // Edge dots (first and last in visible window)
+            // Edge dots (first and last)
+            // Make them mid if adjacent to active position 2 or n-1
             if ((activeIndex === visibleStartIndex + 1 && index === visibleStartIndex) ||
                 (activeIndex === visibleStartIndex + visibleRange - 2 && index === visibleStartIndex + visibleRange - 1)) {
                 dot.classList.add('size-mid');
@@ -108,14 +103,16 @@ function updateDotState(dot, index, activeIndex) {
                 dot.classList.add('size-small');
             }
         } else if (index === visibleStartIndex + 1) {
-            // Second dot in visible window
+            // Second dot (position 2)
+            // Make it mid unless first dot or it itself is active
             if (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1) {
                 dot.classList.add('size-large');
             } else {
                 dot.classList.add('size-mid');
             }
         } else if (index === visibleStartIndex + visibleRange - 2) {
-            // Second-to-last dot in visible window
+            // Second-to-last dot (position n-1)
+            // Make it mid unless last dot or it itself is active
             if (activeIndex === visibleStartIndex + visibleRange - 1 ||
                 activeIndex === visibleStartIndex + visibleRange - 2) {
                 dot.classList.add('size-large');
@@ -127,103 +124,6 @@ function updateDotState(dot, index, activeIndex) {
             dot.classList.add('size-large');
         }
     }
-}
-
-// Make sure we're overriding the updateInstagramStyleDots to use our updated function
-// Override the original function to use our updated updateDotState
-const originalUpdateInstagramStyleDots = updateInstagramStyleDots;
-function updateInstagramStyleDots(activeIndex) {
-    const dots = document.querySelectorAll('.indicator-dot');
-    const totalDots = dots.length;
-
-    // Determine swipe direction (-1 for left, 1 for right)
-    const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
-    
-    // Calculate the actual number of positions moved
-    const positionsMoved = Math.abs(activeIndex - previousActiveIndex);
-
-    // Skip animation if we're clicking the same dot we're already on
-    const isSameDot = activeIndex === previousActiveIndex;
-
-    // Special case - handle transitions to/from absolute 2nd and 2nd-to-last dots
-    const isAbsoluteSecondDotInvolved = activeIndex === 1 || previousActiveIndex === 1;
-    const isAbsoluteSecondToLastDotInvolved = activeIndex === (totalDots - 2) || previousActiveIndex === (totalDots - 2);
-    
-    // For these special cases, ensure edge dots get proper transition timing
-    if (isAbsoluteSecondDotInvolved || isAbsoluteSecondToLastDotInvolved) {
-        dots.forEach((dot, index) => {
-            if ((index === 0 && isAbsoluteSecondDotInvolved) || 
-                (index === totalDots - 1 && isAbsoluteSecondToLastDotInvolved)) {
-                // Force reflow before setting transition to ensure it applies
-                void dot.offsetHeight;
-                dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-            }
-        });
-    }
-
-    // Original edge case logic for window sliding
-    if (activeIndex < visibleStartIndex + 2) {
-        // Near left edge - shift window left
-        visibleStartIndex = Math.max(0, activeIndex - 2);
-    } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
-        // Near right edge - shift window right
-        visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
-    }
-
-    // CRITICAL CHANGE: Apply staggered transitions based on direction
-    if (!isSameDot && positionsMoved > 1) {
-        // Apply staggered transitions in the correct direction
-        dots.forEach((dot, index) => {
-            // Calculate distance from the dot to the active index
-            let distanceToActive;
-            
-            if (currentDirection > 0) {
-                // Going right (increasing index)
-                // Dots before active should transition first, then dots after
-                distanceToActive = index <= activeIndex ? 
-                    (activeIndex - index) : 
-                    (totalDots - index + activeIndex);
-            } else {
-                // Going left (decreasing index)
-                // Dots after active should transition first, then dots before
-                distanceToActive = index >= activeIndex ? 
-                    (index - activeIndex) : 
-                    (totalDots - activeIndex + index);
-            }
-            
-            // Apply staggered delay based on distance
-            const delayMs = Math.min(distanceToActive * 30, 150); // Max 150ms delay
-            dot.style.transitionDelay = `${delayMs}ms`;
-            dot.style.transition = `all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1) ${delayMs}ms`;
-        });
-    } else {
-        // For single position moves or same dot, use standard transition
-        dots.forEach((dot, index) => {
-            if (!isSameDot) {
-                dot.style.transitionDelay = '0ms';
-                dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-            } else {
-                dot.style.transition = 'none';
-                dot.style.transitionDelay = '0ms';
-            }
-        });
-    }
-
-    // Use our improved updateDotState function
-    dots.forEach((dot, index) => {
-        updateDotState(dot, index, activeIndex);
-    });
-
-    // Save values for next update
-    previousActiveIndex = activeIndex;
-    previousDirection = currentDirection;
-    
-    // Reset transition delays after animation completes
-    setTimeout(() => {
-        dots.forEach(dot => {
-            dot.style.transitionDelay = '0ms';
-        });
-    }, 500);
 }
 
 // Override CardSystem's updateUI method to include our dot updates
@@ -563,20 +463,9 @@ container.addEventListener('scroll', () => {
     // Clear any previous timeout
     clearTimeout(scrollEndTimeout);
 
-    // Update active card during scroll, but throttle dot updates during fast scrolling
-    const now = Date.now();
+    // Update active card during scroll
     if (!isScrolling) {
-        requestAnimationFrame(() => {
-            updateActiveCardDuringScroll();
-
-            // Only update dots if we're not scrolling too fast or enough time has passed
-            const timeSinceLastUpdate = now - lastDotUpdateTime;
-            if (timeSinceLastUpdate > dotUpdateThrottleTime || touchVelocity < slowScrollThreshold) {
-                lastDotUpdateTime = now;
-                // Adjust transition speed based on scroll velocity
-                adjustDotsForScrollSpeed();
-            }
-        });
+        requestAnimationFrame(updateActiveCardDuringScroll);
     }
 
     // CRITICAL FIX: Properly handle flipped cards during scrolling
@@ -612,9 +501,8 @@ container.addEventListener('scroll', () => {
     scrollEndTimeout = setTimeout(() => {
         isScrolling = false;
 
-        // One final update when scrolling ends, with normal transitions
+        // One final update when scrolling ends
         updateActiveCardDuringScroll();
-        resetDotTransitions();
     }, 150);
 }, { passive: true });
 
@@ -647,13 +535,10 @@ function updateActiveCardDuringScroll() {
         }
     });
 
-    // Update active card if we found one that's at least 40% visible
-    if (mostVisibleCard && highestVisibility >= 0.4) {
-        const newActiveIndex = mostVisibleCard.index;
-        if (newActiveIndex !== CardSystem.activeCardIndex) {
-            CardSystem.activeCardIndex = newActiveIndex;
-            CardSystem.updateUI();
-        }
+    // Update active card if we found one that's at least 50% visible
+    if (mostVisibleCard && highestVisibility >= 0.5) {
+        CardSystem.activeCardIndex = mostVisibleCard.index;
+        CardSystem.updateUI();
     }
 }
 
@@ -859,39 +744,6 @@ function fixVerticalPositioning() {
     // Ensure flip cards are vertically centered
     document.querySelectorAll('.flip-card').forEach(card => {
         card.style.alignSelf = 'center';
-    });
-}
-
-// Add this function to adjust dot transitions based on scroll speed
-function adjustDotsForScrollSpeed() {
-    const dots = document.querySelectorAll('.indicator-dot');
-
-    // Fast scrolling needs quicker transitions
-    if (touchVelocity > velocityThreshold) {
-        dots.forEach(dot => {
-            // Use faster transitions during rapid scrolling
-            dot.style.transition = 'all 0.08s linear';
-        });
-    } else if (touchVelocity > slowScrollThreshold) {
-        dots.forEach(dot => {
-            // Medium speed scrolling
-            dot.style.transition = 'all 0.15s ease';
-        });
-    } else {
-        // Slow scrolling can use normal transition
-        dots.forEach(dot => {
-            dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        });
-    }
-}
-
-// Add this function to reset dot transitions when scrolling stops
-function resetDotTransitions() {
-    const dots = document.querySelectorAll('.indicator-dot');
-    dots.forEach(dot => {
-        // Reset to default smooth transition when scrolling stops
-        dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        dot.style.transitionDelay = '0ms'; // Reset any transition delays
     });
 }
 
