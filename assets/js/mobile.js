@@ -42,43 +42,7 @@ let previousDirection = 0; // 0 = initial, 1 = right, -1 = left
 let centerPointActivated = true; // Whether the center point is currently activated
 let consecutiveSwipesInSameDirection = 0; // Count of swipes in the same direction
 
-// Function to update dot sizes based on active index and swipe direction
-function updateInstagramStyleDots(activeIndex) {
-    const dots = document.querySelectorAll('.indicator-dot');
-    const totalDots = dots.length;
-
-    // Determine swipe direction (-1 for left, 1 for right)
-    const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
-
-    // Skip animation if we're clicking the same dot we're already on
-    const isSameDot = activeIndex === previousActiveIndex;
-
-    // Original edge case logic for window sliding
-    if (activeIndex < visibleStartIndex + 2) {
-        // Near left edge - shift window left
-        visibleStartIndex = Math.max(0, activeIndex - 2);
-    } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
-        // Near right edge - shift window right
-        visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
-    }
-
-    // Update all dots, but only apply transitions when necessary
-    dots.forEach((dot, index) => {
-        // Only apply transition if we're not clicking the same dot
-        if (!isSameDot) {
-            dot.style.transition = 'all 0.3s ease';
-        } else {
-            dot.style.transition = 'none';
-        }
-        updateDotState(dot, index, activeIndex);
-    });
-
-    // Save values for next update
-    previousActiveIndex = activeIndex;
-    previousDirection = currentDirection;
-}
-
-// Helper function to update individual dot state
+// Override updateDotState function with a version that ensures symmetric transitions
 function updateDotState(dot, index, activeIndex) {
     // Remove existing classes
     dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
@@ -104,18 +68,21 @@ function updateDotState(dot, index, activeIndex) {
             }
         } else if (index === visibleStartIndex + 1) {
             // Second dot (position 2)
-            // Make it mid unless first dot or it itself is active
             if (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1) {
                 dot.classList.add('size-large');
+                // Add a subtle animation class
+                dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
             } else {
                 dot.classList.add('size-mid');
             }
         } else if (index === visibleStartIndex + visibleRange - 2) {
             // Second-to-last dot (position n-1)
-            // Make it mid unless last dot or it itself is active
-            if (activeIndex === visibleStartIndex + visibleRange - 1 ||
+            // Apply EXACTLY the same transition as second dot
+            if (activeIndex === visibleStartIndex + visibleRange - 1 || 
                 activeIndex === visibleStartIndex + visibleRange - 2) {
                 dot.classList.add('size-large');
+                // Ensure same transition as used for the left side
+                dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
             } else {
                 dot.classList.add('size-mid');
             }
@@ -124,6 +91,47 @@ function updateDotState(dot, index, activeIndex) {
             dot.classList.add('size-large');
         }
     }
+}
+
+// Make sure we're overriding the updateInstagramStyleDots to use our updated function
+// Override the original function to use our updated updateDotState
+const originalUpdateInstagramStyleDots = updateInstagramStyleDots;
+function updateInstagramStyleDots(activeIndex) {
+    const dots = document.querySelectorAll('.indicator-dot');
+    const totalDots = dots.length;
+
+    // Determine swipe direction (-1 for left, 1 for right)
+    const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
+
+    // Skip animation if we're clicking the same dot we're already on
+    const isSameDot = activeIndex === previousActiveIndex;
+
+    // Original edge case logic for window sliding
+    if (activeIndex < visibleStartIndex + 2) {
+        // Near left edge - shift window left
+        visibleStartIndex = Math.max(0, activeIndex - 2);
+    } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
+        // Near right edge - shift window right
+        visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
+    }
+
+    // Update all dots, but only apply transitions when necessary
+    dots.forEach((dot, index) => {
+        // Apply same transition timing to left and right sides
+        if (!isSameDot) {
+            // Ensure consistent transitions everywhere
+            dot.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        } else {
+            dot.style.transition = 'none';
+        }
+        
+        // Use our improved updateDotState function
+        updateDotState(dot, index, activeIndex);
+    });
+
+    // Save values for next update
+    previousActiveIndex = activeIndex;
+    previousDirection = currentDirection;
 }
 
 // Override CardSystem's updateUI method to include our dot updates
