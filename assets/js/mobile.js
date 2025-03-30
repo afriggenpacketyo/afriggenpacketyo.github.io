@@ -87,7 +87,7 @@ function updateInstagramStyleDots(activeIndex) {
                 dot.style.transition = 'all 0.25s ease-out';
                 updateDotState(dot, index, activeIndex);
             });
-        }, 150); // Adjust delay to match the first transition
+        }, 42); // Adjust delay to match the first transition
     } else {
         // No window shift needed, just update normally
         dots.forEach((dot, index) => {
@@ -125,7 +125,7 @@ function updateDotState(dot, index, activeIndex) {
             // Edge dots (first and last)
             // Make first/last dots consistent in size to avoid jumpy transitions
             dot.classList.add('size-small');
-            
+
             // Only upgrade to mid size if directly adjacent to active index
             // OR if second/second-to-last dot is active (the fix)
             if ((index === visibleStartIndex && (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
@@ -137,12 +137,12 @@ function updateDotState(dot, index, activeIndex) {
             // Second and second-to-last dots
             // Make them a more consistent size to avoid dramatic changes
             dot.classList.add('size-mid');
-            
+
             // Only upgrade to large if they are active or adjacent to active
-            if ((index === visibleStartIndex + 1 && 
+            if ((index === visibleStartIndex + 1 &&
                  (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
-                (index === visibleStartIndex + visibleRange - 2 && 
-                 (activeIndex === visibleStartIndex + visibleRange - 1 || 
+                (index === visibleStartIndex + visibleRange - 2 &&
+                 (activeIndex === visibleStartIndex + visibleRange - 1 ||
                   activeIndex === visibleStartIndex + visibleRange - 2))) {
                 dot.classList.remove('size-mid');
                 dot.classList.add('size-large');
