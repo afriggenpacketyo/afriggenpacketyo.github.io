@@ -87,7 +87,7 @@ function updateInstagramStyleDots(activeIndex) {
                 dot.style.transition = 'all 0.25s ease-out';
                 updateDotState(dot, index, activeIndex);
             });
-        }, 150); // Adjust delay to match the first transition
+        }, 120); // Adjust delay to match the first transition
     } else {
         // No window shift needed, just update normally
         dots.forEach((dot, index) => {
