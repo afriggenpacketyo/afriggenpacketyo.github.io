@@ -53,25 +53,53 @@ function updateInstagramStyleDots(activeIndex) {
     // Skip animation if we're clicking the same dot we're already on
     const isSameDot = activeIndex === previousActiveIndex;
 
-    // Original edge case logic for window sliding
+    // Check if we need to shift the window (approaching edge)
+    let needsWindowShift = false;
+    let newVisibleStartIndex = visibleStartIndex;
+
     if (activeIndex < visibleStartIndex + 2) {
-        // Near left edge - shift window left
-        visibleStartIndex = Math.max(0, activeIndex - 2);
+        // Near left edge - will shift window left
+        newVisibleStartIndex = Math.max(0, activeIndex - 2);
+        needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
     } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
-        // Near right edge - shift window right
-        visibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
+        // Near right edge - will shift window right
+        newVisibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
+        needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
     }
 
-    // Update all dots, but only apply transitions when necessary
-    dots.forEach((dot, index) => {
-        // Only apply transition if we're not clicking the same dot
-        if (!isSameDot) {
-            dot.style.transition = 'all 0.3s ease';
-        } else {
-            dot.style.transition = 'none';
-        }
-        updateDotState(dot, index, activeIndex);
-    });
+    // First update with existing window position to show transition
+    if (needsWindowShift) {
+        // Apply transition to all dots
+        dots.forEach((dot, index) => {
+            // Use a gentler transition with linear timing for smoother effect
+            dot.style.transition = 'all 0.22s linear';
+            updateDotState(dot, index, activeIndex);
+        });
+
+        // Delay the window shift to allow the first transition to be visible
+        setTimeout(() => {
+            // Now update the window position
+            visibleStartIndex = newVisibleStartIndex;
+
+            // Apply another transition for the shift
+            dots.forEach((dot, index) => {
+                // Use a slightly longer, eased transition for the shift
+                dot.style.transition = 'all 0.25s ease-out';
+                updateDotState(dot, index, activeIndex);
+            });
+        }, 150); // Adjust delay to match the first transition
+    } else {
+        // No window shift needed, just update normally
+        dots.forEach((dot, index) => {
+            // Only apply transition if we're not clicking the same dot
+            if (!isSameDot) {
+                dot.style.transition = 'all 0.25s ease';
+            } else {
+                dot.style.transition = 'none';
+            }
+            updateDotState(dot, index, activeIndex);
+        });
+    }
 
     // Save values for next update
     previousActiveIndex = activeIndex;
@@ -95,29 +123,28 @@ function updateDotState(dot, index, activeIndex) {
             dot.classList.add('size-active');
         } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
             // Edge dots (first and last)
-            // Make them mid if adjacent to active position 2 or n-1
-            if ((activeIndex === visibleStartIndex + 1 && index === visibleStartIndex) ||
-                (activeIndex === visibleStartIndex + visibleRange - 2 && index === visibleStartIndex + visibleRange - 1)) {
-                dot.classList.add('size-mid');
-            } else {
-                dot.classList.add('size-small');
-            }
-        } else if (index === visibleStartIndex + 1) {
-            // Second dot (position 2)
-            // Make it mid unless first dot or it itself is active
-            if (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1) {
-                dot.classList.add('size-large');
-            } else {
+            // Make first/last dots consistent in size to avoid jumpy transitions
+            dot.classList.add('size-small');
+            
+            // Only upgrade to mid size if directly adjacent to active index
+            if ((index === visibleStartIndex && activeIndex === visibleStartIndex) ||
+                (index === visibleStartIndex + visibleRange - 1 && activeIndex === visibleStartIndex + visibleRange - 1)) {
+                dot.classList.remove('size-small');
                 dot.classList.add('size-mid');
             }
-        } else if (index === visibleStartIndex + visibleRange - 2) {
-            // Second-to-last dot (position n-1)
-            // Make it mid unless last dot or it itself is active
-            if (activeIndex === visibleStartIndex + visibleRange - 1 ||
-                activeIndex === visibleStartIndex + visibleRange - 2) {
+        } else if (index === visibleStartIndex + 1 || index === visibleStartIndex + visibleRange - 2) {
+            // Second and second-to-last dots
+            // Make them a more consistent size to avoid dramatic changes
+            dot.classList.add('size-mid');
+            
+            // Only upgrade to large if they are active or adjacent to active
+            if ((index === visibleStartIndex + 1 && 
+                 (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
+                (index === visibleStartIndex + visibleRange - 2 && 
+                 (activeIndex === visibleStartIndex + visibleRange - 1 || 
+                  activeIndex === visibleStartIndex + visibleRange - 2))) {
+                dot.classList.remove('size-mid');
                 dot.classList.add('size-large');
-            } else {
-                dot.classList.add('size-mid');
             }
         } else {
             // All other inactive dots get the large size
