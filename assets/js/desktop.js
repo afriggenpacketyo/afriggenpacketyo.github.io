@@ -25,6 +25,7 @@
     let wheelMomentumTimeout = null;
     let isRecentering = false;
     let pendingCardFlip = null;
+    let unflipGraceTimer = null;
 
     // Constants
     const rapidKeyPressThreshold = 300; // ms
@@ -46,15 +47,86 @@
             clearTimeout(scrollEndTimeout);
             clearTimeout(longSwipeTimeout);
 
-            // Immediate index update
+            // Set activation source
+            lastCardActivationSource = 'click';
+
+            // Reset any flipped card
+            if (CardSystem.currentlyFlippedCard) {
+                CardSystem.resetFlippedCard();
+                toggleLogoVisibility(true);
+            }
+
+            // Update UI immediately
             CardSystem.activeCardIndex = index;
             CardSystem.updateUI();
 
-            // Direct scrolling to the card
+            // Calculate the start and end positions
+            const startPosition = container.scrollLeft;
             const targetCard = flipCards[index];
             const containerCenter = container.offsetWidth / 2;
             const cardCenter = targetCard.offsetWidth / 2;
-            container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
+            const endPosition = targetCard.offsetLeft - containerCenter + cardCenter;
+
+            // Calculate distance and index difference
+            const scrollDistance = Math.abs(endPosition - startPosition);
+            const indexDifference = Math.abs(index - CardSystem.activeCardIndex);
+
+            // Dynamic duration based on distance:
+            // - Nearly instant for adjacent cards (100ms)
+            // - Very fast for 2 cards away (150ms)
+            // - Fast but noticeable for farther jumps (up to 300ms)
+            let duration;
+            if (indexDifference <= 1) {
+                duration = 200; // Slower for adjacent (was 100)
+            } else if (indexDifference <= 2) {
+                duration = 300; // Slower for 2 away (was 150)
+            } else {
+                // Scale between 300-450ms based on distance (was 200-300)
+                const baseDuration = Math.min(600, 450 + indexDifference * 30);
+                duration = Math.min(baseDuration, 450); // Cap at 450ms (was 300)
+            }
+
+            // Animation start time
+            const startTime = performance.now();
+
+            // Flag that we're in an animated scroll
+            isScrolling = true;
+
+            // Animation function using cubic easing
+            function animateScroll() {
+                const currentTime = performance.now();
+                const elapsed = currentTime - startTime;
+
+                if (elapsed < duration) {
+                    // Use a faster easing curve with less deceleration
+                    const progress = elapsed / duration;
+                    // Quadratic easing gives less pronounced deceleration
+                    const easedProgress = 1 - Math.pow(1 - progress, 2);
+
+                    // Calculate new position
+                    const newPosition = startPosition + (endPosition - startPosition) * easedProgress;
+
+                    // Apply new scroll position
+                    container.scrollLeft = newPosition;
+
+                    // Update active card during scroll for visual feedback
+                    updateActiveCardDuringScroll();
+
+                    // Continue animation
+                    requestAnimationFrame(animateScroll);
+                } else {
+                    // Animation complete - ensure we're at exact final position
+                    container.scrollLeft = endPosition;
+                    isScrolling = false;
+
+                    // Final update
+                    CardSystem.activeCardIndex = index;
+                    CardSystem.updateUI();
+                }
+            }
+
+            // Start animation
+            requestAnimationFrame(animateScroll);
         });
     });
 
@@ -79,13 +151,13 @@
             if (CardSystem.activeCardIndex > 0) {
                 // Set activation source
                 lastCardActivationSource = 'arrow';
-                
+
                 // Reset any flipped card when using arrows
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
                     toggleLogoVisibility(true);
                 }
-                
+
                 // Cancel all animations and scrolling
                 container.style.scrollBehavior = 'auto';
                 isScrolling = false;
@@ -108,13 +180,13 @@
             if (CardSystem.activeCardIndex < flipCards.length - 1) {
                 // Set activation source
                 lastCardActivationSource = 'arrow';
-                
+
                 // Reset any flipped card when using arrows
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
                     toggleLogoVisibility(true);
                 }
-                
+
                 // Cancel all animations and scrolling
                 container.style.scrollBehavior = 'auto';
                 isScrolling = false;
@@ -195,11 +267,11 @@
 
             // Set activation source
             lastCardActivationSource = 'click';
-            
+
             // Find which card is most visible at this moment
             const containerRect = container.getBoundingClientRect();
             const containerCenter = containerRect.left + containerRect.width / 2;
-            
+
             // Get this card's visibility and center positioning
             const cardRect = this.getBoundingClientRect();
             const cardCenter = cardRect.left + cardRect.width / 2;
@@ -207,63 +279,63 @@
             const overlapRight = Math.min(containerRect.right, cardRect.right);
             const visibleWidth = Math.max(0, overlapRight - overlapLeft);
             const isCardCentered = Math.abs(cardCenter - containerCenter) < 20; // Within 20px of center
-            
+
             // If card is not significantly visible, just center it without flipping
             if (visibleWidth / cardRect.width < 0.7) {
                 // Clear any pending timeouts
                 clearTimeout(longSwipeTimeout);
                 clearTimeout(scrollEndTimeout);
-                
+
                 // Just center the card without flipping
                 CardSystem.activeCardIndex = index;
                 CardSystem.updateUI();
                 centerCardForPC(index);
                 return;
             }
-            
+
             // Proceed with flipping logic
             clearTimeout(longSwipeTimeout);
             CardSystem.isManuallyFlipping = true;
             clearTimeout(scrollEndTimeout);
-            
+
             // Force stop all animations for immediate response
             forceStopAllAnimations();
-            
+
             const shouldFlip = !this.classList.contains('flipped');
-            
+
             // Toggle logo visibility
             if (shouldFlip) {
                 toggleLogoVisibility(false);
             } else {
                 toggleLogoVisibility(true);
             }
-            
+
             // Update active card index if needed
             if (CardSystem.activeCardIndex !== index) {
                 CardSystem.activeCardIndex = index;
                 CardSystem.updateUI();
             }
-            
+
             // Handle any previously flipped card
             if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== this) {
                 CardSystem.resetFlippedCard();
             }
-            
+
             // Restore animations
             restoreAnimations();
-            
+
             if (shouldFlip) {
                 // Force a reflow between operations
                 CardSystem.adjustCardHeight(this, true);
                 void this.offsetWidth; // Force reflow
                 this.classList.add('flipped');
                 CardSystem.currentlyFlippedCard = this;
-                
+
                 // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
                 if (!isCardCentered && isScrollMomentumActive) {
                     // Set a flag that we want to center this card after momentum ends
                     let momentumSettleTimeout;
-                    
+
                     // Function to check if scroll momentum has settled
                     const checkForMomentumEnd = () => {
                         // If we're no longer in momentum state or if it's been a while, center the card
@@ -273,10 +345,10 @@
                             clearInterval(momentumCheckInterval);
                         }
                     };
-                    
+
                     // Check every 100ms if momentum has settled
                     const momentumCheckInterval = setInterval(checkForMomentumEnd, 100);
-                    
+
                     // Set a backup timeout to ensure we don't wait forever (max 1 second)
                     momentumSettleTimeout = setTimeout(() => {
                         clearInterval(momentumCheckInterval);
@@ -295,7 +367,7 @@
                 CardSystem.adjustCardHeight(this, false);
                 CardSystem.currentlyFlippedCard = null;
             }
-            
+
             // Reset manual flipping flag after a delay
             longSwipeTimeout = setTimeout(() => {
                 CardSystem.isManuallyFlipping = false;
@@ -314,40 +386,24 @@
     });
 
     // Scroll to card function for desktop (simplified to remove unnecessary snapping)
-    function scrollToCard(index, andFlip = false) {
-        if (index < 0 || index >= flipCards.length) return;
+    function scrollToCard(index, instantly = false) {
+        const targetCard = flipCards[index];
+        const containerCenter = container.offsetWidth / 2;
+        const cardCenter = targetCard.offsetWidth / 2;
 
-        const cardToScrollTo = flipCards[index];
+        // If instantly is true, use auto scroll behavior
+        if (instantly) {
+            container.style.scrollBehavior = 'auto';
+        }
 
-        // Update active card index
-        CardSystem.activeCardIndex = index;
-        CardSystem.updateUI();
+        // Scroll to the card
+        container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
 
-        // Enable smooth scrolling
-        container.style.scrollBehavior = 'smooth';
-
-        // Center the card
-        const containerWidth = container.offsetWidth;
-        const containerCenter = containerWidth / 2;
-        const cardCenter = cardToScrollTo.offsetWidth / 2;
-        const scrollPosition = cardToScrollTo.offsetLeft - containerCenter + cardCenter;
-
-        // Apply smooth scrolling animation
-        container.scrollLeft = scrollPosition;
-
-        // Handle flipping if needed
-        if (andFlip) {
-            longSwipeTimeout = setTimeout(() => {
-                // Reset any previously flipped card
-                if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== cardToScrollTo) {
-                    CardSystem.resetFlippedCard();
-                }
-                
-                CardSystem.adjustCardHeight(cardToScrollTo, true);
-                cardToScrollTo.classList.add('flipped');
-                CardSystem.currentlyFlippedCard = cardToScrollTo;
-                toggleLogoVisibility(false);
-            }, 400); // Wait for scroll to complete
+        // Restore smooth scrolling if we temporarily disabled it
+        if (instantly) {
+            // Force a reflow before restoring smooth scrolling
+            void container.offsetHeight;
+            container.style.scrollBehavior = 'smooth';
         }
     }
 
@@ -366,6 +422,28 @@
 
         // Apply smooth scrolling animation
         container.scrollLeft = scrollPosition;
+
+        // Clear any existing grace timer when we explicitly center a card
+        if (unflipGraceTimer && CardSystem.currentlyFlippedCard === card) {
+            clearTimeout(unflipGraceTimer);
+            unflipGraceTimer = null;
+        }
+
+        // After scrolling completes, check if card is centered and manage grace period
+        setTimeout(() => {
+            if (CardSystem.currentlyFlippedCard) {
+                const containerRect = container.getBoundingClientRect();
+                const containerCenter = containerRect.left + containerRect.width / 2;
+                const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const isCardCentered = Math.abs(cardCenter - containerCenter) < 20;
+
+                if (!isCardCentered && CardSystem.currentlyFlippedCard === card) {
+                    // Card still not centered after scrolling - start grace period
+                    manageFlippedCardGracePeriod(index);
+                }
+            }
+        }, 300); // Check after scroll animation completes
     }
 
     // Debounce function (utility function)
@@ -391,35 +469,35 @@
         };
     }
 
-    // Modified updateActiveCardDuringScroll that uses proper dot transitions
+    // Modify updateActiveCardDuringScroll to not automatically unflip cards
     function updateActiveCardDuringScroll() {
         // Don't update if manually flipping
         if (CardSystem.isManuallyFlipping) return;
 
         const containerRect = container.getBoundingClientRect();
         const containerCenter = containerRect.left + containerRect.width / 2;
-        
+
         // Find the card closest to center
         let closestCard = null;
         let closestDistance = Infinity;
-        
+
         flipCards.forEach((card, index) => {
             const cardRect = card.getBoundingClientRect();
             const cardCenter = cardRect.left + cardRect.width / 2;
             const distanceFromCenter = Math.abs(cardCenter - containerCenter);
-            
+
             // Check if this card is at least 50% visible
             const overlapLeft = Math.max(containerRect.left, cardRect.left);
             const overlapRight = Math.min(containerRect.right, cardRect.right);
             const visibleWidth = Math.max(0, overlapRight - overlapLeft);
-            
+
             // Only consider cards that are at least 50% visible and closer than current closest
             if (visibleWidth / cardRect.width >= 0.5 && distanceFromCenter < closestDistance) {
                 closestCard = index;
                 closestDistance = distanceFromCenter;
             }
         });
-        
+
         // Only update if we found a card and it's significantly closer to center (at least 20px)
         // or if it's very close to center (within 50px)
         if (closestCard !== null) {
@@ -427,18 +505,11 @@
             const currentActiveRect = currentActiveCard.getBoundingClientRect();
             const currentActiveCenter = currentActiveRect.left + currentActiveRect.width / 2;
             const currentActiveDistance = Math.abs(currentActiveCenter - containerCenter);
-            
+
             if (closestDistance < 50 || (currentActiveDistance - closestDistance) > 20) {
                 // Update active card index
                 CardSystem.activeCardIndex = closestCard;
-                
-                // If we have a flipped card, only unflip it when a DIFFERENT card becomes active
-                if (CardSystem.currentlyFlippedCard &&
-                    CardSystem.currentlyFlippedCard !== flipCards[closestCard] &&
-                    Array.from(flipCards).indexOf(CardSystem.currentlyFlippedCard) !== closestCard) {
-                    CardSystem.resetFlippedCard();
-                }
-                
+
                 // Use the updateUI method which will properly update the dots
                 CardSystem.updateUI();
             }
@@ -450,28 +521,70 @@
         updateActiveCardDuringScroll();
     }, 120); // 120ms throttle provides a good balance
 
-    // Modify the ensureProperCardStates function to respect activation source
+    // Add this function to handle grace period timing for off-center flipped cards
+    function manageFlippedCardGracePeriod(cardIndex) {
+        // Clear any existing timer
+        if (unflipGraceTimer) {
+            clearTimeout(unflipGraceTimer);
+            unflipGraceTimer = null;
+        }
+
+        // If we have a flipped card and it's not centered, start the grace timer
+        if (CardSystem.currentlyFlippedCard) {
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const isCardCentered = Math.abs(cardCenter - containerCenter) < 20; // Within 20px of center
+
+            if (!isCardCentered) {
+                // Card is flipped but not centered - start grace period
+                unflipGraceTimer = setTimeout(() => {
+                    // After grace period, check if the card is still not centered
+                    if (CardSystem.currentlyFlippedCard) {
+                        const newContainerRect = container.getBoundingClientRect();
+                        const newContainerCenter = newContainerRect.left + newContainerRect.width / 2;
+                        const newCardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
+                        const newCardCenter = newCardRect.left + newCardRect.width / 2;
+                        const isCardCenteredNow = Math.abs(newCardCenter - newContainerCenter) < 20;
+
+                        // Only unflip if the card is still not centered after grace period
+                        if (!isCardCenteredNow) {
+                            CardSystem.resetFlippedCard();
+                            toggleLogoVisibility(true);
+                        }
+                    }
+                    unflipGraceTimer = null;
+                }, 500); // 500ms grace period
+            }
+        }
+    }
+
+    // Modify ensureProperCardStates to use our grace period manager
     function ensureProperCardStates() {
-        // Only reset flipped cards if they're not the active card AND not visible 
-        // AND they weren't explicitly activated by the user
+        // We'll use our new grace period manager instead
+        // Only check for specific conditions like visibility
         if (CardSystem.currentlyFlippedCard) {
             const containerRect = container.getBoundingClientRect();
             const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
             const cardIndex = Array.from(flipCards).indexOf(CardSystem.currentlyFlippedCard);
-            
+
             // Check if the flipped card is visible in the viewport
             const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
-            
-            // Only reset if:
-            // 1. The card is not visible AND not the active card
-            // 2. The activation source is scroll or arrow (not click/key direct activation)
-            const shouldResetBasedOnSource = 
-                lastCardActivationSource === 'scroll' || 
-                lastCardActivationSource === 'arrow';
-                
-            if ((!isVisible && cardIndex !== CardSystem.activeCardIndex) || shouldResetBasedOnSource) {
+
+            // If card is completely invisible, reset it immediately without grace period
+            if (!isVisible && cardIndex !== CardSystem.activeCardIndex) {
                 CardSystem.resetFlippedCard();
                 toggleLogoVisibility(true);
+
+                // Clear any grace timer
+                if (unflipGraceTimer) {
+                    clearTimeout(unflipGraceTimer);
+                    unflipGraceTimer = null;
+                }
+            } else {
+                // Card is visible but might not be centered - manage grace period
+                manageFlippedCardGracePeriod(cardIndex);
             }
         }
     }
@@ -512,13 +625,13 @@
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             // Set activation source for arrow keys
             lastCardActivationSource = 'arrow';
-            
+
             // Reset any flipped card when using arrow keys
             if (CardSystem.currentlyFlippedCard) {
                 CardSystem.resetFlippedCard();
                 toggleLogoVisibility(true);
             }
-            
+
             // Calculate new index based on key pressed
             let newIndex = CardSystem.activeCardIndex;
             if (e.key === 'ArrowLeft' && CardSystem.activeCardIndex > 0) {
@@ -535,30 +648,30 @@
         } else if ((e.key === 'Enter' || e.key === ' ')) {
             // Set activation source for spacebar/enter
             lastCardActivationSource = 'key';
-            
+
             // Prevent default space scrolling behavior
             e.preventDefault();
-            
+
             // Find the most visible card
             const containerRect = container.getBoundingClientRect();
             const containerCenter = containerRect.left + containerRect.width / 2;
-            
+
             let bestVisibleCard = CardSystem.activeCardIndex;
             let bestVisibleDistance = Infinity;
-            
+
             flipCards.forEach((card, index) => {
                 const cardRect = card.getBoundingClientRect();
                 const cardCenter = cardRect.left + cardRect.width / 2;
                 const distance = Math.abs(cardCenter - containerCenter);
-                
+
                 if (distance < bestVisibleDistance) {
                     bestVisibleCard = index;
                     bestVisibleDistance = distance;
                 }
             });
-            
+
             const targetCard = flipCards[bestVisibleCard];
-            
+
             // Skip if not significantly visible
             const cardRect = targetCard.getBoundingClientRect();
             const cardCenter = cardRect.left + cardRect.width / 2;
@@ -566,51 +679,51 @@
             const overlapRight = Math.min(containerRect.right, cardRect.right);
             const visibleWidth = Math.max(0, overlapRight - overlapLeft);
             const isCardCentered = Math.abs(cardCenter - containerCenter) < 20; // Within 20px of center
-            
+
             if (visibleWidth / cardRect.width < 0.3) {
                 return; // Not visible enough to act on
             }
-            
+
             // Clear any pending long swipe timeout
             clearTimeout(longSwipeTimeout);
-            
+
             // Set manual flipping flag
             CardSystem.isManuallyFlipping = true;
-            
+
             // Clear any scroll timeouts
             clearTimeout(scrollEndTimeout);
-            
+
             // Force stop all animations for immediate response
             forceStopAllAnimations();
-            
+
             const shouldFlip = !targetCard.classList.contains('flipped');
-            
+
             // Add logo visibility toggle
             if (shouldFlip) {
                 toggleLogoVisibility(false);
             } else {
                 toggleLogoVisibility(true);
             }
-            
+
             // Update active card index if needed
             CardSystem.activeCardIndex = bestVisibleCard;
             CardSystem.updateUI();
-            
+
             // Handle any previously flipped card
             if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== targetCard) {
                 CardSystem.resetFlippedCard();
             }
-            
+
             // Restore animations first
             restoreAnimations();
-            
+
             if (shouldFlip) {
                 // Force a reflow between operations
                 CardSystem.adjustCardHeight(targetCard, true);
                 void targetCard.offsetWidth; // Force reflow
                 targetCard.classList.add('flipped');
                 CardSystem.currentlyFlippedCard = targetCard;
-                
+
                 // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
                 if (!isCardCentered && isScrollMomentumActive) {
                     // Function to check if scroll momentum has settled
@@ -622,10 +735,10 @@
                             clearInterval(momentumCheckInterval);
                         }
                     };
-                    
+
                     // Check every 100ms if momentum has settled
                     const momentumCheckInterval = setInterval(checkForMomentumEnd, 100);
-                    
+
                     // Set a backup timeout to ensure we don't wait forever (max 1 second)
                     setTimeout(() => {
                         clearInterval(momentumCheckInterval);
@@ -644,7 +757,7 @@
                 CardSystem.adjustCardHeight(targetCard, false);
                 CardSystem.currentlyFlippedCard = null;
             }
-            
+
             // Reset manual flipping flag after a delay
             longSwipeTimeout = setTimeout(() => {
                 CardSystem.isManuallyFlipping = false;
@@ -652,31 +765,37 @@
         }
     });
 
-    // Simplified scroll event handler
+    // Modify the scroll event handler to use grace period instead of immediate unflipping
     container.addEventListener('scroll', () => {
         // Don't interfere with manual flipping
         if (CardSystem.isManuallyFlipping) return;
 
         // Set activation source for scroll
         lastCardActivationSource = 'scroll';
-        
+
         // Clear any previous timeout
         clearTimeout(scrollEndTimeout);
-        
+
         // Track that we're scrolling
         isScrolling = true;
 
         // Update active card during scroll using throttled function
         updateActiveCardDuringScrollThrottled();
-        
+
         // Mark scrolling as complete after brief delay
         scrollEndTimeout = setTimeout(() => {
             isScrolling = false;
-            
+
             // Final update
             if (!CardSystem.isManuallyFlipping) {
                 updateActiveCardDuringScroll();
-                ensureProperCardStates();
+
+                // Instead of immediately ensuring proper card states,
+                // just manage the grace period for any flipped card
+                if (CardSystem.currentlyFlippedCard) {
+                    const cardIndex = Array.from(flipCards).indexOf(CardSystem.currentlyFlippedCard);
+                    manageFlippedCardGracePeriod(cardIndex);
+                }
             }
         }, 150);
 
@@ -686,10 +805,17 @@
             const containerRect = container.getBoundingClientRect();
             const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
             const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
-            
+
             if (!isVisible) {
-                // Card scrolled out of view, handle logo visibility
+                // Card scrolled completely out of view, reset it immediately
+                CardSystem.resetFlippedCard();
                 toggleLogoVisibility(true);
+
+                // Clear any grace timer
+                if (unflipGraceTimer) {
+                    clearTimeout(unflipGraceTimer);
+                    unflipGraceTimer = null;
+                }
             }
         }
     }, { passive: true });
@@ -698,7 +824,7 @@
     container.addEventListener('wheel', (e) => {
         // This is definitely a manual user scroll
         lastCardActivationSource = 'scroll';
-        
+
         isUserActivelyScrolling = true;
         isScrollMomentumActive = true;
         lastWheelEventTime = Date.now();
@@ -721,12 +847,12 @@
     function initSmoothScrolling() {
         // Set smooth scrolling style
         container.style.scrollBehavior = 'smooth';
-        
+
         // Make sure cards have proper transitions
         flipCards.forEach(card => {
             card.style.transition = 'transform 0.3s ease-out';
         });
-        
+
         // Initialize scrolling to first card
         scrollToCard(0);
         CardSystem.updateUI();
@@ -738,7 +864,7 @@
         if ((e.key === 'Enter' || e.key === ' ') && isScrollMomentumActive) {
             // Mark this as a key activation, not a scroll activation
             lastCardActivationSource = 'key';
-            
+
             e.preventDefault();
 
             // Find which card is most visible at this moment
@@ -763,14 +889,14 @@
             // If we found a visible card, flip it immediately without interrupting momentum
             if (bestVisibleCard !== null) {
                 const targetCard = flipCards[bestVisibleCard];
-                
+
                 // Update active card index without recentering
                 CardSystem.activeCardIndex = bestVisibleCard;
                 CardSystem.updateUI();
-                
+
                 // Force stop all animations for immediate response
                 forceStopAllAnimations();
-                
+
                 // Set manual flipping flag
                 CardSystem.isManuallyFlipping = true;
 
@@ -784,7 +910,7 @@
 
                 // Restore animations for smooth flipping
                 restoreAnimations();
-                
+
                 if (shouldFlip) {
                     // Expand and flip
                     CardSystem.adjustCardHeight(targetCard, true);
@@ -821,7 +947,7 @@
 
     function updateDotIndicatorsDirectly(activeIndex) {
         const dots = document.querySelectorAll('.indicator-dot');
-        
+
         dots.forEach((dot, index) => {
             if (index === activeIndex) {
                 dot.classList.add('active');
@@ -831,20 +957,36 @@
         });
     }
 
-    // Modify CardSystem.updateUI to allow bypassing dot updates
+    // Add this function near the other utility functions
+    function addCardOpacityTransitions() {
+        // Add transition for opacity to all cards
+        flipCards.forEach(card => {
+            card.style.transition = `${card.style.transition || ''}, opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1.0)`;
+            // Initialize opacity (non-active cards will be slightly faded)
+            card.style.opacity = (Array.from(flipCards).indexOf(card) === CardSystem.activeCardIndex) ? '1' : '0.7';
+        });
+    }
+
+    // Modify the CardSystem.updateUI override to include opacity transitions
     const originalUpdateUI = CardSystem.updateUI;
     CardSystem.updateUI = function(skipDotUpdate = false) {
+        // Update opacity for all cards
+        flipCards.forEach((card, index) => {
+            // Use a consistent transition time for both activating and deactivating
+            card.style.opacity = (index === this.activeCardIndex) ? '1' : '0.7';
+        });
+
         // Call original updateUI but don't update dots if we're handling it separately
         if (skipDotUpdate) {
             // Temporarily store the real update dots function
             const originalUpdateDots = this.updateDotIndicators;
-            
+
             // Replace with empty function
             this.updateDotIndicators = function() {};
-            
+
             // Call original update UI
             originalUpdateUI.call(this);
-            
+
             // Restore original dot update function
             this.updateDotIndicators = originalUpdateDots;
         } else {
@@ -860,53 +1002,53 @@
     function updateDotIndicatorsSmoothly() {
         // Don't update if manually flipping
         if (CardSystem.isManuallyFlipping) return;
-        
+
         const now = Date.now();
-        
+
         // If we have a pending update and it's too soon for another, just return
         if (pendingDotUpdate && now - lastScrollDotUpdateTime < DOT_UPDATE_INTERVAL) {
             return;
         }
-        
+
         // Clear any pending update
         if (pendingDotUpdate) {
             cancelAnimationFrame(pendingDotUpdate);
             pendingDotUpdate = null;
         }
-        
+
         // Schedule update for next frame
         pendingDotUpdate = requestAnimationFrame(() => {
             const containerRect = container.getBoundingClientRect();
             const containerCenter = containerRect.left + containerRect.width / 2;
-            
+
             // Find the card closest to center
             let closestCard = null;
             let closestDistance = Infinity;
-            
+
             flipCards.forEach((card, index) => {
                 const cardRect = card.getBoundingClientRect();
                 const cardCenter = cardRect.left + cardRect.width / 2;
                 const distanceFromCenter = Math.abs(cardCenter - containerCenter);
-                
+
                 // Check if this card is sufficiently visible
                 const overlapLeft = Math.max(containerRect.left, cardRect.left);
                 const overlapRight = Math.min(containerRect.right, cardRect.right);
                 const visibleWidth = Math.max(0, overlapRight - overlapLeft);
-                
+
                 if (visibleWidth / cardRect.width >= 0.4 && distanceFromCenter < closestDistance) {
                     closestCard = index;
                     closestDistance = distanceFromCenter;
                 }
             });
-            
+
             if (closestCard !== null && closestCard !== CardSystem.activeCardIndex) {
                 // Update internal state
                 CardSystem.activeCardIndex = closestCard;
-                
+
                 // Only update the dot indicators, not the cards
                 updateDotIndicatorsDirectly(closestCard);
             }
-            
+
             pendingDotUpdate = null;
             lastScrollDotUpdateTime = Date.now();
         });
@@ -922,5 +1064,6 @@
     addNavigationArrows();
     initSmoothScrolling();
     initSmoothDotTransitions();
+    addCardOpacityTransitions();
     console.log("iPod-style cover flow initialized");
 })();
