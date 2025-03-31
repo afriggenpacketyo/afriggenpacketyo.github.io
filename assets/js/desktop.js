@@ -26,6 +26,7 @@
     let isRecentering = false;
     let pendingCardFlip = null;
     let unflipGraceTimer = null;
+    let isAnyCardFlipped = false;
 
     // Constants
     const rapidKeyPressThreshold = 300; // ms
@@ -158,6 +159,7 @@
                 // Reset any flipped card
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
+                    isAnyCardFlipped = false;
                     toggleLogoVisibility(true);
                 }
 
@@ -194,6 +196,7 @@
                 // Reset any flipped card
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
+                    isAnyCardFlipped = false;
                     toggleLogoVisibility(true);
                 }
 
@@ -258,7 +261,7 @@
         });
     }
 
-    // Add this function near the other utility functions
+    // Update the existing toggleLogoVisibility function
     function toggleLogoVisibility(show) {
         const logoContainer = document.querySelector('.logo-container');
         if (logoContainer) {
@@ -320,8 +323,10 @@
             // Toggle logo visibility
             if (shouldFlip) {
                 toggleLogoVisibility(false);
+                isAnyCardFlipped = true;
             } else {
                 toggleLogoVisibility(true);
+                isAnyCardFlipped = false;
             }
 
             // Update active card index if needed
@@ -1123,6 +1128,21 @@
         smoothTransitionDotIndicators();
         console.log("Smooth dot indicator transitions initialized");
     }
+
+    // Add initialization to show logo when page loads
+    function initLogoVisibility() {
+        // Show logo initially
+        toggleLogoVisibility(true);
+
+        // Check if any card is already flipped (page refresh case)
+        isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null;
+        if (isAnyCardFlipped) {
+            toggleLogoVisibility(false);
+        }
+    }
+
+    // Call during initialization
+    document.addEventListener('DOMContentLoaded', initLogoVisibility);
 
     // Initialize desktop-specific features
     addNavigationArrows();

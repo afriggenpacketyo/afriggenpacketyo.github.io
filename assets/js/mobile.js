@@ -37,6 +37,9 @@
     let visibleStartIndex = 0;
     let visibleRange = 9; // Show 9 dots at a time
 
+    // Add this near the top where other variables are defined
+    let isAnyCardFlipped = false;
+
     // Function to update dot sizes based on active index
     function updateInstagramStyleDots(activeIndex) {
         const dots = document.querySelectorAll('.indicator-dot');
@@ -543,6 +546,10 @@
             card.addEventListener('touchstart', handleFlippedCardTouchStart, { passive: true });
             card.addEventListener('touchmove', handleFlippedCardTouchMove, { passive: true });
             card.addEventListener('touchend', handleFlippedCardTouchEnd);
+
+            // When a card is flipped:
+            isAnyCardFlipped = true;
+            toggleLogoVisibility(false);
         } else {
             // Unflip the card
             card.classList.remove('flipped');
@@ -561,6 +568,10 @@
             card.removeEventListener('touchstart', handleFlippedCardTouchStart);
             card.removeEventListener('touchmove', handleFlippedCardTouchMove);
             card.removeEventListener('touchend', handleFlippedCardTouchEnd);
+
+            // When a card is unflipped:
+            isAnyCardFlipped = false;
+            toggleLogoVisibility(true);
         }
 
         // Reset manual flipping flag after a delay
@@ -865,6 +876,27 @@
         }
     }
 
+    // Add this function in mobile.js
+    function toggleLogoVisibility(show) {
+        const logoContainer = document.querySelector('.logo-container');
+        if (logoContainer) {
+            logoContainer.style.opacity = show ? '1' : '0';
+            logoContainer.style.visibility = show ? 'visible' : 'hidden';
+        }
+    }
+
+    // Add initialization to show logo when page loads
+    function initLogoVisibility() {
+        // Show logo initially
+        toggleLogoVisibility(true);
+
+        // Check if any card is already flipped (page refresh case)
+        isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null;
+        if (isAnyCardFlipped) {
+            toggleLogoVisibility(false);
+        }
+    }
+
     // Initialize everything properly
     function initialize() {
         console.log("Initializing mobile card system...");
@@ -887,6 +919,8 @@
             // Ensure card states are correctly set
             resetCardHighlights();
         }, 100);
+
+        initLogoVisibility();
 
         console.log("Mobile card initialization complete");
     }
