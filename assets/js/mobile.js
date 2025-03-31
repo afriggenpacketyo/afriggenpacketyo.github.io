@@ -5,652 +5,736 @@
     const container = CardSystem.container;
     const flipCards = CardSystem.flipCards;
 
+    // Touch tracking variables
+    let touchStartX = 0;
+    let touchCurrentX = 0;
+    let touchEndX = 0;
+    let touchStartTime = 0;
+    let isTouchActive = false;
+    let isAnimating = false;
+    let initialScrollLeft = 0;
+    let currentDragOffset = 0;
+    let lastDragTimestamp = 0;
+    let lastDragX = 0;
+    let dragVelocity = 0;
+    let swipeInProgress = false; // Track if a swipe has triggered card movement
+    let lastSwipeDirection = 0; // -1 for left, 1 for right, 0 for none
+    let pendingCardIndex = -1; // Track which card we're transitioning to
 
+    // Constants - UPDATED FOR BETTER TOUCH RESPONSE
+    const SWIPE_THRESHOLD = 30; // Minimum distance for a swipe
+    const SWIPE_TIMEOUT = 300;  // Maximum time in ms for a swipe
+    const DRAG_RESISTANCE = 1.0; // No resistance for more direct control
+    const POSITION_THRESHOLD = 0.4; // When to snap to next/previous card
+    const TRANSITION_DURATION = 178; // Faster transition for better responsiveness
 
-// Mobile-specific variables
-let touchStartX = 0;
-let touchEndX = 0;
-let lastTouchX = 0;
-let touchStartTime = 0;
-let touchEndTime = 0;
-let touchScrollStartTime = 0;
-let touchVelocity = 0;
-let isSlowTouchScroll = false;
-let swipeVelocity = 0;
-let isScrolling = false;
-let scrollEndTimeout;
-let currentSwipeOffset = 0;
-let flippedCardTouchStartTime = 0;
-let flippedCardTouchEndTime = 0;
+    // Variables for flipped card handling
+    let flippedCardTouchStartX = 0;
+    let flippedCardTouchStartY = 0;
 
-// Constants
-const minSwipeDistance = 50;
-const slowScrollThreshold = 0.5; // pixels per millisecond
-const velocityThreshold = 0.3; // pixels per millisecond
-const superFastVelocityThreshold = 0.8; // pixels per millisecond
+    // Instagram style dot indicator
+    let previousActiveIndex = CardSystem.activeCardIndex || 0;
+    let visibleStartIndex = 0;
+    let visibleRange = 9; // Show 9 dots at a time
 
-// Store previous active index to determine swipe direction
-let previousActiveIndex = CardSystem.activeCardIndex || 0;
+    // Function to update dot sizes based on active index
+    function updateInstagramStyleDots(activeIndex) {
+        const dots = document.querySelectorAll('.indicator-dot');
+        const totalDots = dots.length;
 
-// Track direction of movement
-let lastSwipeDirection = 0; // 0 = initial, 1 = right, -1 = left
+        // Determine swipe direction
+        const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
 
-// Track current visible range and position
-let visibleStartIndex = 0;
-let visibleRange = 9; // Show 9 dots at a time
-let previousDirection = 0; // 0 = initial, 1 = right, -1 = left
-let centerPointActivated = true; // Whether the center point is currently activated
-let consecutiveSwipesInSameDirection = 0; // Count of swipes in the same direction
+        // Skip animation if we're clicking the same dot we're already on
+        const isSameDot = activeIndex === previousActiveIndex;
 
-// Function to update dot sizes based on active index and swipe direction
-function updateInstagramStyleDots(activeIndex) {
-    const dots = document.querySelectorAll('.indicator-dot');
-    const totalDots = dots.length;
+        // Check if we need to shift the window (approaching edge)
+        let needsWindowShift = false;
+        let newVisibleStartIndex = visibleStartIndex;
 
-    // Determine swipe direction (-1 for left, 1 for right)
-    const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
+        if (activeIndex < visibleStartIndex + 2) {
+            // Near left edge - will shift window left
+            newVisibleStartIndex = Math.max(0, activeIndex - 2);
+            needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
+        } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
+            // Near right edge - will shift window right
+            newVisibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
+            needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
+        }
 
-    // Skip animation if we're clicking the same dot we're already on
-    const isSameDot = activeIndex === previousActiveIndex;
-
-    // Check if we need to shift the window (approaching edge)
-    let needsWindowShift = false;
-    let newVisibleStartIndex = visibleStartIndex;
-
-    if (activeIndex < visibleStartIndex + 2) {
-        // Near left edge - will shift window left
-        newVisibleStartIndex = Math.max(0, activeIndex - 2);
-        needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
-    } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
-        // Near right edge - will shift window right
-        newVisibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
-        needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
-    }
-
-    // First update with existing window position to show transition
-    if (needsWindowShift) {
-        // Apply transition to all dots
-        dots.forEach((dot, index) => {
-            // Use a gentler transition with linear timing for smoother effect
-            dot.style.transition = 'all 0.22s linear';
-            updateDotState(dot, index, activeIndex);
-        });
-
-        // Delay the window shift to allow the first transition to be visible
-        setTimeout(() => {
-            // Now update the window position
-            visibleStartIndex = newVisibleStartIndex;
-
-            // Apply another transition for the shift
+        // First update with existing window position to show transition
+        if (needsWindowShift) {
+            // Apply transition to all dots
             dots.forEach((dot, index) => {
-                // Use a slightly longer, eased transition for the shift
-                dot.style.transition = 'all 0.25s ease-out';
+                // Use a gentler transition with linear timing for smoother effect
+                dot.style.transition = 'all 0.22s linear';
                 updateDotState(dot, index, activeIndex);
             });
-        }, 42); // Adjust delay to match the first transition
-    } else {
-        // No window shift needed, just update normally
-        dots.forEach((dot, index) => {
-            // Only apply transition if we're not clicking the same dot
-            if (!isSameDot) {
-                dot.style.transition = 'all 0.25s ease';
-            } else {
-                dot.style.transition = 'none';
-            }
-            updateDotState(dot, index, activeIndex);
-        });
+
+            // Delay the window shift to allow the first transition to be visible
+            setTimeout(() => {
+                // Now update the window position
+                visibleStartIndex = newVisibleStartIndex;
+
+                // Apply another transition for the shift
+                dots.forEach((dot, index) => {
+                    // Use a slightly longer, eased transition for the shift
+                    dot.style.transition = 'all 0.25s ease-out';
+                    updateDotState(dot, index, activeIndex);
+                });
+            }, 42); // Adjust delay to match the first transition
+        } else {
+            // No window shift needed, just update normally
+            dots.forEach((dot, index) => {
+                // Only apply transition if we're not clicking the same dot
+                if (!isSameDot) {
+                    dot.style.transition = 'all 0.25s ease';
+                } else {
+                    dot.style.transition = 'none';
+                }
+                updateDotState(dot, index, activeIndex);
+            });
+        }
+
+        // Save values for next update
+        previousActiveIndex = activeIndex;
     }
 
-    // Save values for next update
-    previousActiveIndex = activeIndex;
-    previousDirection = currentDirection;
-}
+    // Helper function to update individual dot state
+    function updateDotState(dot, index, activeIndex) {
+        // Remove existing classes
+        dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
 
-// Helper function to update individual dot state
-function updateDotState(dot, index, activeIndex) {
-    // Remove existing classes
-    dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
+        // Check if dot should be visible
+        const isVisible = (index >= visibleStartIndex &&
+                          index < visibleStartIndex + visibleRange);
 
-    // Check if dot should be visible
-    const isVisible = (index >= visibleStartIndex &&
-                      index < visibleStartIndex + visibleRange);
+        if (isVisible) {
+            dot.classList.add('visible');
 
-    if (isVisible) {
-        dot.classList.add('visible');
+            if (index === activeIndex) {
+                // Active dot gets active size
+                dot.classList.add('size-active');
+            } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
+                // Edge dots (first and last)
+                dot.classList.add('size-small');
 
-        if (index === activeIndex) {
-            // Active dot gets active size
-            dot.classList.add('size-active');
-        } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
-            // Edge dots (first and last)
-            // Make first/last dots consistent in size to avoid jumpy transitions
-            dot.classList.add('size-small');
-
-            // Only upgrade to mid size if directly adjacent to active index
-            // OR if second/second-to-last dot is active (the fix)
-            if ((index === visibleStartIndex && (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
-                (index === visibleStartIndex + visibleRange - 1 && (activeIndex === visibleStartIndex + visibleRange - 1 || activeIndex === visibleStartIndex + visibleRange - 2))) {
-                dot.classList.remove('size-small');
+                // Only upgrade to mid size if directly adjacent to active index
+                if ((index === visibleStartIndex && (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
+                    (index === visibleStartIndex + visibleRange - 1 && (activeIndex === visibleStartIndex + visibleRange - 1 || activeIndex === visibleStartIndex + visibleRange - 2))) {
+                    dot.classList.remove('size-small');
+                    dot.classList.add('size-mid');
+                }
+            } else if (index === visibleStartIndex + 1 || index === visibleStartIndex + visibleRange - 2) {
+                // Second and second-to-last dots
                 dot.classList.add('size-mid');
-            }
-        } else if (index === visibleStartIndex + 1 || index === visibleStartIndex + visibleRange - 2) {
-            // Second and second-to-last dots
-            // Make them a more consistent size to avoid dramatic changes
-            dot.classList.add('size-mid');
 
-            // Only upgrade to large if they are active or adjacent to active
-            if ((index === visibleStartIndex + 1 &&
-                 (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
-                (index === visibleStartIndex + visibleRange - 2 &&
-                 (activeIndex === visibleStartIndex + visibleRange - 1 ||
-                  activeIndex === visibleStartIndex + visibleRange - 2))) {
-                dot.classList.remove('size-mid');
+                // Only upgrade to large if they are active or adjacent to active
+                if ((index === visibleStartIndex + 1 &&
+                     (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
+                    (index === visibleStartIndex + visibleRange - 2 &&
+                     (activeIndex === visibleStartIndex + visibleRange - 1 ||
+                      activeIndex === visibleStartIndex + visibleRange - 2))) {
+                    dot.classList.remove('size-mid');
+                    dot.classList.add('size-large');
+                }
+            } else {
+                // All other inactive dots get the large size
                 dot.classList.add('size-large');
             }
-        } else {
-            // All other inactive dots get the large size
-            dot.classList.add('size-large');
         }
     }
-}
 
-// Override CardSystem's updateUI method to include our dot updates
-const originalUpdateUI = CardSystem.updateUI;
-CardSystem.updateUI = function() {
-    // Call original method first
-    originalUpdateUI.call(this);
+    // Override CardSystem's updateUI method to include our dot updates
+    const originalUpdateUI = CardSystem.updateUI;
+    CardSystem.updateUI = function() {
+        // Call original method first
+        originalUpdateUI.call(this);
 
-    // Then add our Instagram-style dot updates
-    updateInstagramStyleDots(this.activeCardIndex);
-};
+        // Then add our Instagram-style dot updates
+        updateInstagramStyleDots(this.activeCardIndex);
+    };
 
-// Initialize dots on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateInstagramStyleDots(CardSystem.activeCardIndex);
-});
+    // CORE FUNCTION: Move to a specific card with animation
+    function moveToCard(index, shouldAnimate = true) {
+        // Always cancel any ongoing animations
+        if (isAnimating) {
+            clearTimeout(container._animationResetTimer);
+            container.style.transition = 'none';
+            container.scrollLeft = getCurrentCardScrollPosition();
+            void container.offsetWidth;
+        }
 
-// Add this to your existing touch events in mobile.js
-container.addEventListener('touchend', function() {
-    // At touch end, update the dots with the current active index
-    updateInstagramStyleDots(CardSystem.activeCardIndex);
-});
+        // Enforce boundaries
+        index = Math.max(0, Math.min(flipCards.length - 1, index));
 
-// Make sure card click events also update the dots
-flipCards.forEach((card, index) => {
-    const existingClickHandler = card.onclick;
-    card.addEventListener('click', function(e) {
-        // Run normal click handler (if applicable)
-        if (existingClickHandler) existingClickHandler.call(this, e);
+        // Store the pending target card index
+        pendingCardIndex = index;
 
-        // Update dots after a slight delay to ensure CardSystem.activeCardIndex is updated
-        setTimeout(() => {
-            updateInstagramStyleDots(CardSystem.activeCardIndex);
-        }, 50);
-    });
-});
-
-// Initialize Instagram-style dots right away
-updateInstagramStyleDots(CardSystem.activeCardIndex);
-
-// Setup card indicator click handlers for mobile
-const cardIndicator = document.querySelector('.card-indicator');
-cardIndicator.querySelectorAll('.indicator-dot').forEach((dot) => {
-    dot.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const index = parseInt(dot.dataset.index);
-
-        // Update active card
+        // Update CardSystem state
         CardSystem.activeCardIndex = index;
         CardSystem.updateUI();
 
-        // Use smooth scrolling for the recentering
-        container.style.scrollBehavior = 'smooth';
+        // Update active/inactive card styles after changing index
+        resetCardHighlights();
 
-        // Center the card
-        centerCardProperly(index);
+        // Get target card
+        const targetCard = flipCards[index];
 
-        // Reset scrolling behavior after animation
-        setTimeout(() => {
+        // SIMPLIFIED: Direct calculation without complex positioning logic
+        const containerWidth = container.offsetWidth;
+        const cardWidth = targetCard.offsetWidth;
+        const targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
+
+        // Apply smooth scroll animation if requested
+        if (shouldAnimate) {
+            container.style.scrollBehavior = 'smooth';
+            container.style.transition = `all ${TRANSITION_DURATION}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+            isAnimating = true;
+            swipeInProgress = true; // Prevent new swipes until animation completes
+        } else {
             container.style.scrollBehavior = 'auto';
-        }, 300);
-    });
-});
+            container.style.transition = 'none';
+        }
 
-// Card click handler for mobile
-flipCards.forEach((card, index) => {
-    card.addEventListener('click', function(e) {
-        // Skip link clicks
-        if (e.target.tagName === 'A') return;
+        // Scroll to target position
+        container.scrollLeft = targetScrollLeft;
 
+        // Reset animation state after a delay
+        if (shouldAnimate) {
+            container._animationResetTimer = setTimeout(() => {
+                isAnimating = false;
+                swipeInProgress = false; // Allow new swipes after animation completes
+                pendingCardIndex = -1; // Reset pending card index
+                container.style.scrollBehavior = 'auto';
+                container.style.transition = '';
+            }, TRANSITION_DURATION + 50);
+        }
+    }
+
+    // Move to next card (Instagram-style)
+    function moveToNextCard() {
+        const nextIndex = Math.min(flipCards.length - 1, CardSystem.activeCardIndex + 1);
+        moveToCard(nextIndex);
+    }
+
+    // Move to previous card (Instagram-style)
+    function moveToPrevCard() {
+        const prevIndex = Math.max(0, CardSystem.activeCardIndex - 1);
+        moveToCard(prevIndex);
+    }
+
+    // Calculate the position of a specific card
+    function getCardScrollPosition(index) {
+        const card = flipCards[index];
+        const containerWidth = container.offsetWidth;
+        const cardWidth = card.offsetWidth;
+        return card.offsetLeft - (containerWidth - cardWidth) / 2;
+    }
+
+    // Get current active card scroll position
+    function getCurrentCardScrollPosition() {
+        return getCardScrollPosition(CardSystem.activeCardIndex);
+    }
+
+    // CRITICAL: Replace the scroll-based navigation with hybrid touch-based navigation
+    // Allow real-time dragging but enforce one-card-at-a-time on release
+    container.style.overflow = 'hidden'; // Disable native scrolling
+
+    // Clean up existing touch event listeners if any
+    container.removeEventListener('touchstart', container._touchstartHandler);
+    container.removeEventListener('touchmove', container._touchmoveHandler);
+    container.removeEventListener('touchend', container._touchendHandler);
+
+    // Add SIMPLIFIED touch event handlers
+    container._touchstartHandler = function(e) {
+        // If a card is flipped, ignore new touches
+        if (CardSystem.currentlyFlippedCard) return;
+
+        // Allow touch input even during swipe animation - makes it interruptible
+        // Only check for flipped card, not swipeInProgress
+
+        // Store initial touch and scroll position
+        touchStartX = e.touches[0].clientX;
+        touchCurrentX = touchStartX;
+        touchStartTime = Date.now();
+        initialScrollLeft = container.scrollLeft;
+        currentDragOffset = 0;
+        isTouchActive = true;
+        lastSwipeDirection = 0; // Reset swipe direction
+
+        // IMPORTANT: Always cancel any ongoing animations to allow immediate interaction
+        if (isAnimating) {
+            clearTimeout(container._animationResetTimer);
+            container.style.transition = 'none';
+            container.scrollLeft = getCurrentCardScrollPosition();
+            void container.offsetWidth;
+            isAnimating = false;
+            swipeInProgress = false;
+
+            // If there was a pending target, make that the new active index
+            // This ensures we don't skip cards while making transitions interruptible
+            if (pendingCardIndex >= 0) {
+                CardSystem.activeCardIndex = pendingCardIndex;
+                pendingCardIndex = -1;
+                // Update UI to reflect the new active card
+                CardSystem.updateUI();
+                resetCardHighlights();
+            }
+        }
+    };
+
+    container._touchmoveHandler = function(e) {
+        // Only proceed if touch is active and not on a flipped card
+        if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
+
+        // Allow movement even during animation - makes it interruptible
+        // Remove the swipeInProgress check here
+
+        // Update current touch position
+        touchCurrentX = e.touches[0].clientX;
+
+        // Calculate velocity for momentum scrolling
+        const now = Date.now();
+        const timeDelta = now - lastDragTimestamp;
+        if (timeDelta > 0) {
+            dragVelocity = (touchCurrentX - lastDragX) / timeDelta;
+        }
+        lastDragX = touchCurrentX;
+        lastDragTimestamp = now;
+
+        // Calculate drag distance with 1:1 mapping (MUCH more responsive)
+        const touchDistance = touchCurrentX - touchStartX;
+
+        // Determine current swipe direction
+        const currentDirection = touchDistance > 0 ? 1 : touchDistance < 0 ? -1 : 0;
+
+        // Only apply edge resistance (not general resistance)
+        let effectiveDistance = touchDistance;
+        if ((CardSystem.activeCardIndex === 0 && touchDistance > 0) ||
+            (CardSystem.activeCardIndex === flipCards.length - 1 && touchDistance < 0)) {
+            // Apply resistance only at the edges (first and last card)
+            effectiveDistance = touchDistance * 0.3;
+        }
+
+        // Apply the drag immediately with no artificial resistance
+        currentDragOffset = effectiveDistance;
+        container.scrollLeft = initialScrollLeft - currentDragOffset;
+
+        // Highlight cards during swipe
+        const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
+        const progress = Math.abs(effectiveDistance) / (cardWidth * POSITION_THRESHOLD);
+
+        // If we're swiping past the threshold and the direction is valid
+        if (progress > 0.5) {
+            // Give visual feedback about which card will be activated
+            if (currentDirection < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
+                // Highlight next card
+                const nextCard = flipCards[CardSystem.activeCardIndex + 1];
+                highlightTargetCard(nextCard);
+            } else if (currentDirection > 0 && CardSystem.activeCardIndex > 0) {
+                // Highlight previous card
+                const prevCard = flipCards[CardSystem.activeCardIndex - 1];
+                highlightTargetCard(prevCard);
+            }
+        }
+
+        // Prevent default to disable native scrolling
         e.preventDefault();
-        e.stopPropagation();
+    };
 
+    container._touchendHandler = function(e) {
+        // Only proceed if touch is active and not on a flipped card
+        if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
+
+        // Get final touch position
+        touchEndX = e.changedTouches[0].clientX;
+        const touchDuration = Date.now() - touchStartTime;
+        const touchDistance = touchEndX - touchStartX;
+        const absTouchDistance = Math.abs(touchDistance);
+
+        // Get card width to calculate threshold
+        const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
+        const thresholdDistance = cardWidth * POSITION_THRESHOLD;
+
+        // Determine whether to move to next/prev card or snap back
+        let targetIndex = CardSystem.activeCardIndex;
+
+        // If we've moved far enough OR swipe was fast enough
+        // Remove the swipeInProgress check to make transitions interruptible
+        if (absTouchDistance > thresholdDistance ||
+            (touchDuration < SWIPE_TIMEOUT && absTouchDistance > SWIPE_THRESHOLD)) {
+
+            // Direction based on touch distance
+            if (touchDistance > 0 && CardSystem.activeCardIndex > 0) {
+                // Right swipe - previous card
+                targetIndex = CardSystem.activeCardIndex - 1;
+            } else if (touchDistance < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
+                // Left swipe - next card
+                targetIndex = CardSystem.activeCardIndex + 1;
+            }
+        }
+
+        // Reset all card highlights
+        resetCardHighlights();
+
+        // IMMEDIATE feedback - start animation right away
+        container.style.scrollBehavior = 'smooth';
+        container.style.transition = `all ${TRANSITION_DURATION}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+
+        // Move to target card (will snap back if same as current)
+        moveToCard(targetIndex);
+
+        isTouchActive = false;
+    };
+
+    // Function to highlight the target card
+    function highlightTargetCard(card) {
+        // Reset all cards first (but preserve proper active index from CardSystem)
+        resetCardHighlights();
+
+        // Add highlight effect to target card
+        card.classList.add('card-targeted');
+
+        // Get current active card and card we're moving to
+        const currentCard = flipCards[CardSystem.activeCardIndex];
+
+        // CRITICAL: Make the target card FULLY VISIBLE like an active card
+        // Set explicit styles with !important to override any potential conflicts
+        if (card.querySelector('.flip-card-front')) {
+            // Force full opacity with !important
+            card.querySelector('.flip-card-front').style.cssText = `
+                opacity: 1 !important;
+                background-color: var(--primary-color, #0078e7) !important;
+                border-color: var(--primary-color-dark, #005bb1) !important;
+                transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+            `;
+        }
+
+        // Make the current card visually inactive (reduced opacity, lighter blue)
+        if (currentCard !== card && currentCard.querySelector('.flip-card-front')) {
+            currentCard.querySelector('.flip-card-front').style.cssText = `
+                opacity: 0.7 !important;
+                background-color: var(--secondary-color, #76b5e7) !important;
+                border-color: var(--secondary-color-dark, #5090c9) !important;
+                transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+            `;
+        }
+    }
+
+    // Function to reset all card highlights
+    function resetCardHighlights() {
+        // Reset temporary visual styles
+        flipCards.forEach(card => {
+            card.classList.remove('card-targeted');
+        });
+
+        // Ensure proper active/inactive states based on CardSystem.activeCardIndex
+        flipCards.forEach((card, index) => {
+            if (card.querySelector('.flip-card-front')) {
+                if (index === CardSystem.activeCardIndex) {
+                    // Active card - full opacity, primary color
+                    card.querySelector('.flip-card-front').style.cssText = `
+                        opacity: 1 !important;
+                        background-color: var(--primary-color, #0078e7) !important;
+                        border-color: var(--primary-color-dark, #005bb1) !important;
+                        transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+                    `;
+                } else {
+                    // Inactive card - reduced opacity, secondary color
+                    card.querySelector('.flip-card-front').style.cssText = `
+                        opacity: 0.7 !important;
+                        background-color: var(--secondary-color, #76b5e7) !important;
+                        border-color: var(--secondary-color-dark, #5090c9) !important;
+                        transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+                    `;
+                }
+            }
+        });
+    }
+
+    // Add the event listeners
+    container.addEventListener('touchstart', container._touchstartHandler, { passive: true });
+    container.addEventListener('touchmove', container._touchmoveHandler, { passive: false });
+    container.addEventListener('touchend', container._touchendHandler);
+
+    // Setup card indicator click handlers
+    const cardIndicator = document.querySelector('.card-indicator');
+    cardIndicator.querySelectorAll('.indicator-dot').forEach((dot) => {
+        dot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(dot.dataset.index);
+
+            // Get distance between current and target index to adjust animation duration
+            const currentIndex = CardSystem.activeCardIndex;
+            const indexDistance = Math.abs(index - currentIndex);
+
+            // For distant jumps (more than 2 cards away), adjust animation parameters
+            if (indexDistance > 2) {
+                // Save original transition duration
+                const originalDuration = TRANSITION_DURATION;
+
+                // Temporarily increase transition duration based on distance
+                const adjustedDuration = Math.min(TRANSITION_DURATION * (1 + indexDistance * 0.15), 350);
+                container.style.transition = `all ${adjustedDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+
+                // Move to card with animation
+                moveToCard(index, true);
+
+                // Reset to original duration after this transition
+                setTimeout(() => {
+                    container.style.transition = `all ${originalDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+                }, adjustedDuration + 50);
+            } else {
+                // For adjacent cards, use normal animation
+                moveToCard(index, true);
+            }
+        });
+    });
+
+    // Card click handler for toggling flip state
+    flipCards.forEach((card, index) => {
+        card.addEventListener('click', function(e) {
+            // Skip link clicks
+            if (e.target.tagName === 'A') return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Ensure we're on the correct card first
+            if (CardSystem.activeCardIndex !== index) {
+                moveToCard(index);
+                setTimeout(() => toggleCardFlip(this), TRANSITION_DURATION);
+            } else {
+                toggleCardFlip(this);
+            }
+        });
+    });
+
+    // Function to toggle card flip state
+    function toggleCardFlip(card) {
         // Set flags
         CardSystem.isManuallyFlipping = true;
 
-        // 1. Center this card with boundary enforcement
-        CardSystem.activeCardIndex = index;
-        CardSystem.updateUI();
-
-        // Enable smooth centering
-        container.style.scrollBehavior = 'smooth';
-
-        // Use our boundary-respecting function
-        centerCardProperly(index);
-
-        // 2. Flip the card
-        const shouldFlip = !this.classList.contains('flipped');
+        // Check if already flipped
+        const shouldFlip = !card.classList.contains('flipped');
 
         // Handle any previously flipped card
-        if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== this) {
+        if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== card) {
             CardSystem.resetFlippedCard();
         }
 
-        // Get the current transform-origin before changing anything
-        const computedStyle = window.getComputedStyle(this);
-        const originalTransformOrigin = computedStyle.transformOrigin;
-
-        // Apply a consistent transform origin
-        this.style.transformOrigin = 'center center';
-
         if (shouldFlip) {
             // Force a reflow before adding the flipped class
-            CardSystem.adjustCardHeight(this, true);
-            void this.offsetWidth; // Force reflow
-            this.classList.add('flipped');
-            CardSystem.currentlyFlippedCard = this;
+            CardSystem.adjustCardHeight(card, true);
+            void card.offsetWidth; // Force reflow
+            card.classList.add('flipped');
+            CardSystem.currentlyFlippedCard = card;
 
             // Hide indicators when card is flipped on mobile
             document.querySelector('.card-indicator').style.opacity = '0';
             document.querySelector('.card-indicator').style.pointerEvents = 'none';
 
             // Make card larger and hide header banner
-            expandCardForMobile(this);
+            expandCardForMobile(card);
             toggleHeaderBanner(false);
 
-            // Add swipe-to-close event listeners to the flipped card
-            this.addEventListener('touchstart', handleFlippedCardTouchStart, { passive: true });
-            this.addEventListener('touchmove', handleFlippedCardTouchMove, { passive: true });
-            this.addEventListener('touchend', handleFlippedCardTouchEnd);
+            // Add swipe-down-to-close event listeners
+            card.addEventListener('touchstart', handleFlippedCardTouchStart, { passive: true });
+            card.addEventListener('touchmove', handleFlippedCardTouchMove, { passive: true });
+            card.addEventListener('touchend', handleFlippedCardTouchEnd);
         } else {
-            // Force a reflow before removing the flipped class
-            void this.offsetWidth; // Force reflow
-            this.classList.remove('flipped');
-            CardSystem.adjustCardHeight(this, false);
+            // Unflip the card
+            card.classList.remove('flipped');
+            CardSystem.adjustCardHeight(card, false);
             CardSystem.currentlyFlippedCard = null;
 
-            // Show indicators when card is unflipped on mobile
+            // Show indicators when card is unflipped
             document.querySelector('.card-indicator').style.opacity = '1';
             document.querySelector('.card-indicator').style.pointerEvents = 'auto';
 
             // Restore card size and show header banner
-            restoreCardForMobile(this);
+            restoreCardForMobile(card);
             toggleHeaderBanner(true);
 
-            // Center the card after restoring it to make sure it's visible
-            centerCardProperly(index);
-
-            // Remove event listeners for swiping
-            this.removeEventListener('touchstart', handleFlippedCardTouchStart);
-            this.removeEventListener('touchmove', handleFlippedCardTouchMove);
-            this.removeEventListener('touchend', handleFlippedCardTouchEnd);
+            // Remove swipe-to-close event listeners
+            card.removeEventListener('touchstart', handleFlippedCardTouchStart);
+            card.removeEventListener('touchmove', handleFlippedCardTouchMove);
+            card.removeEventListener('touchend', handleFlippedCardTouchEnd);
         }
 
         // Reset manual flipping flag after a delay
         setTimeout(() => {
             CardSystem.isManuallyFlipping = false;
-            container.style.scrollBehavior = 'auto';
-        }, 300);
-    });
-});
-
-// Variables for swipe detection on flipped cards
-let flippedCardTouchStartX = 0;
-let flippedCardTouchStartY = 0;
-let flippedCardTouchEndX = 0;
-let flippedCardTouchEndY = 0;
-let isSwipingHorizontally = false;
-
-// Touch start handler for flipped cards
-function handleFlippedCardTouchStart(e) {
-    flippedCardTouchStartX = e.touches[0].clientX;
-    flippedCardTouchStartY = e.touches[0].clientY;
-    flippedCardTouchStartTime = Date.now();
-    isSwipingHorizontally = false;
-
-    // We'll let the container handle scrolling normally
-    // DO NOT prevent default or set any styles that would interfere
-}
-
-// Touch move handler for flipped cards
-function handleFlippedCardTouchMove(e) {
-    if (!e.touches.length) return;
-
-    // Simply detect horizontal movement - don't try to control the card directly
-    // Let the container's natural scroll behavior handle movement
-    const touchMoveX = e.touches[0].clientX;
-    const touchMoveY = e.touches[0].clientY;
-
-    // Calculate distances
-    const xDiff = Math.abs(touchMoveX - flippedCardTouchStartX);
-    const yDiff = Math.abs(touchMoveY - flippedCardTouchStartY);
-
-    // If horizontal movement is greater, mark as horizontal swipe
-    if (xDiff > yDiff && xDiff > 10) {
-        isSwipingHorizontally = true;
+        }, TRANSITION_DURATION);
     }
 
-    // NO preventDefault - let the container scroll naturally
-}
+    // Touch handlers for flipped cards (swipe down to close AND swipe left/right)
+    function handleFlippedCardTouchStart(e) {
+        flippedCardTouchStartX = e.touches[0].clientX;
+        flippedCardTouchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        isTouchActive = true;
 
-// Touch end handler for flipped cards
-function handleFlippedCardTouchEnd(e) {
-    flippedCardTouchEndX = e.changedTouches[0].clientX;
-    flippedCardTouchEndY = e.changedTouches[0].clientY;
+        // Reset drag tracking
+        currentDragOffset = 0;
 
-    // Calculate the swipe distance
-    const xDiff = flippedCardTouchEndX - flippedCardTouchStartX;
-
-    // If it was a significant horizontal swipe, assist with navigation
-    if (isSwipingHorizontally && Math.abs(xDiff) > 50) {
-        const direction = xDiff > 0 ? -1 : 1; // -1 for right swipe, 1 for left swipe
-        const currentIndex = CardSystem.activeCardIndex;
-        const targetIndex = Math.max(0, Math.min(flipCards.length - 1, currentIndex + direction));
-
-        // Only do something if we're changing cards
-        if (targetIndex !== currentIndex) {
-            CardSystem.activeCardIndex = targetIndex;
-            CardSystem.updateUI();
-
-            // Use smooth scrolling for the new card
-            container.style.scrollBehavior = 'smooth';
-            centerCardProperly(targetIndex);
-
-            setTimeout(() => {
-                container.style.scrollBehavior = 'auto';
-            }, 300);
+        // If we're animating, stop any current animation
+        if (isAnimating) {
+            clearTimeout(container._animationResetTimer);
+            container.style.transition = 'none';
+            container.scrollLeft = getCurrentCardScrollPosition();
+            void container.offsetWidth;
         }
     }
-}
 
-// Touch handling for mobile
-container.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-    lastTouchX = touchStartX;
-    touchStartTime = Date.now();
-    touchScrollStartTime = touchStartTime;
+    function handleFlippedCardTouchMove(e) {
+        if (!isTouchActive) return;
 
-    // Immediately stop any ongoing animations
-    container.style.scrollBehavior = 'auto';
-    isScrolling = false;
-    clearTimeout(scrollEndTimeout);
+        // Get current touch position
+        const touchCurrentX = e.touches[0].clientX;
+        const touchCurrentY = e.touches[0].clientY;
 
-    // Record starting position
-    container.dataset.touchStartActiveCard = CardSystem.activeCardIndex;
-}, { passive: true });
+        // Calculate vertical distance to detect if it's a down swipe
+        const vertDistance = touchCurrentY - flippedCardTouchStartY;
 
-container.addEventListener('touchmove', (e) => {
-    // Calculate scroll velocity to determine if it's a slow scroll
-    const now = Date.now();
-    const currentX = e.changedTouches[0].screenX;
-    const timeDelta = now - touchScrollStartTime;
+        // Calculate horizontal distance for card sliding
+        const horizDistance = touchCurrentX - flippedCardTouchStartX;
+        const absHorizDistance = Math.abs(horizDistance);
 
-    if (timeDelta > 0) {
-        // Calculate velocity in pixels per millisecond
-        touchVelocity = Math.abs(currentX - lastTouchX) / timeDelta;
-        isSlowTouchScroll = touchVelocity < slowScrollThreshold;
-    }
+        // If it's primarily a horizontal movement (wider than tall)
+        if (absHorizDistance > Math.abs(vertDistance)) {
+            // Apply resistance to make it feel more natural
+            let resistanceFactor = DRAG_RESISTANCE;
 
-    lastTouchX = currentX;
-    touchScrollStartTime = now;
-}, { passive: true });
-
-container.addEventListener('touchend', (e) => {
-    const touchEndX = e.changedTouches[0].screenX;
-    const touchDiff = touchEndX - touchStartX;
-    touchEndTime = Date.now();
-
-    // For very small movements (likely a tap), don't interfere
-    if (Math.abs(touchDiff) < 10) {
-        return;
-    }
-
-    // Calculate swipe velocity
-    const swipeDuration = touchEndTime - touchStartTime;
-    swipeVelocity = touchDiff / swipeDuration;
-
-    requestAnimationFrame(() => {
-        // First, find the current active card (closest to center)
-        const containerRect = container.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-
-        // Determine which cards are visible and their positions relative to center
-        const visibleCards = [];
-
-        flipCards.forEach((card, index) => {
-            const cardRect = card.getBoundingClientRect();
-            const cardCenter = cardRect.left + cardRect.width / 2;
-            const distance = cardCenter - containerCenter;
-            const isVisible = cardRect.right > containerRect.left && cardRect.left < containerRect.right;
-
-            if (isVisible) {
-                visibleCards.push({
-                    card,
-                    index,
-                    distance,
-                    distanceAbs: Math.abs(distance)
-                });
+            // Add extra resistance at the edges
+            if ((CardSystem.activeCardIndex === 0 && horizDistance > 0) ||
+                (CardSystem.activeCardIndex === flipCards.length - 1 && horizDistance < 0)) {
+                resistanceFactor *= 0.3;
             }
-        });
 
-        // Sort by absolute distance to find closest
-        visibleCards.sort((a, b) => a.distanceAbs - b.distanceAbs);
-        const closestCardIndex = visibleCards.length > 0 ? visibleCards[0].index : CardSystem.activeCardIndex;
-        const swipeDirection = Math.sign(touchDiff); // 1 for right, -1 for left
+            // Calculate drag offset with resistance
+            currentDragOffset = horizDistance * resistanceFactor;
 
-        let targetIndex;
+            // Apply drag in real-time
+            const basePosition = getCurrentCardScrollPosition();
+            container.style.transition = 'none';
+            container.scrollLeft = basePosition - currentDragOffset;
 
-        // SIMPLIFIED SWIPE LOGIC: Always move just one card if swipe is significant
-        if (Math.abs(touchDiff) > minSwipeDistance) {
-            if (swipeDirection > 0) {
-                // Rightward swipe - go to previous card (if possible)
-                targetIndex = Math.max(0, closestCardIndex - 1);
+            // Prevent default to disable native scrolling
+            e.preventDefault();
+        }
+        // If it's primarily a downward swipe
+        else if (vertDistance > 30 && absHorizDistance < 30) {
+            // We could add visual feedback for "pull down to close"
+            e.preventDefault();
+        }
+    }
+
+    function handleFlippedCardTouchEnd(e) {
+        if (!isTouchActive) return;
+        isTouchActive = false;
+
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDuration = Date.now() - touchStartTime;
+
+        // Calculate distances
+        const xDistance = touchEndX - flippedCardTouchStartX;
+        const absXDistance = Math.abs(xDistance);
+        const yDistance = touchEndY - flippedCardTouchStartY;
+
+        // Get thresholds for navigation
+        const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
+        const thresholdDistance = cardWidth * POSITION_THRESHOLD;
+
+        // If it's a downward swipe with minimal horizontal movement
+        if (yDistance > 100 && absXDistance < 50) {
+            // Close the card
+            toggleCardFlip(CardSystem.currentlyFlippedCard);
+        }
+        // If it's a significant horizontal swipe or drag
+        else if ((touchDuration < SWIPE_TIMEOUT && absXDistance > SWIPE_THRESHOLD) ||
+                 absXDistance > thresholdDistance) {
+
+            // Store the currently flipped card and target index
+            const flippedCard = CardSystem.currentlyFlippedCard;
+            const currentIndex = CardSystem.activeCardIndex;
+            const targetIndex = xDistance < 0 ?
+                Math.min(flipCards.length - 1, currentIndex + 1) :
+                Math.max(0, currentIndex - 1);
+
+            // Start navigation immediately
+            if (targetIndex !== currentIndex) {
+                // Begin navigation immediately
+                moveToCard(targetIndex);
+
+                // Simultaneously close the card
+                toggleCardFlip(flippedCard);
             } else {
-                // Leftward swipe - go to next card (if possible)
-                targetIndex = Math.min(flipCards.length - 1, closestCardIndex + 1);
+                // At the edge - snap back with animation
+                moveToCard(currentIndex);
             }
         } else {
-            // For very small swipes, just center the closest card
-            targetIndex = closestCardIndex;
-        }
-
-        if (targetIndex !== undefined) {
-            // Update active card
-            CardSystem.activeCardIndex = targetIndex;
-            CardSystem.updateUI();
-
-            // Use smooth scrolling for the recentering
-            container.style.scrollBehavior = 'smooth';
-
-            // Use our boundary-respecting function to center the card
-            centerCardProperly(targetIndex);
-
-            // Reset scrolling behavior after animation
-            setTimeout(() => {
-                container.style.scrollBehavior = 'auto';
-            }, 300);
-        }
-    });
-}, { passive: true });
-
-// Scroll handling
-container.addEventListener('scroll', () => {
-    // Don't interfere with manual flipping
-    if (CardSystem.isManuallyFlipping) return;
-
-    // Clear any previous timeout
-    clearTimeout(scrollEndTimeout);
-
-    // Update active card during scroll
-    if (!isScrolling) {
-        requestAnimationFrame(updateActiveCardDuringScroll);
-    }
-
-    // CRITICAL FIX: Properly handle flipped cards during scrolling
-    if (CardSystem.currentlyFlippedCard) {
-        const containerRect = container.getBoundingClientRect();
-        const containerCenter = containerRect.left + containerRect.width / 2;
-        const cardRect = CardSystem.currentlyFlippedCard.getBoundingClientRect();
-        const cardCenter = cardRect.left + cardRect.width / 2;
-        const distanceFromCenter = Math.abs(cardCenter - containerCenter);
-
-        // Show/hide indicators based on whether the flipped card is centered
-        const cardIndicator = document.querySelector('.card-indicator');
-        const isCentered = distanceFromCenter < 50; // Increased threshold for better detection
-
-        cardIndicator.style.opacity = isCentered ? '0' : '1';
-        cardIndicator.style.pointerEvents = isCentered ? 'none' : 'auto';
-
-        // Also show/hide header banner based on whether the flipped card is centered
-        toggleHeaderBanner(!isCentered);
-
-        // CRITICAL FIX: Unflip card when it's scrolled significantly away from center
-        // Use a smaller threshold to trigger unflipping sooner
-        if (!isCentered && distanceFromCenter > cardRect.width / 3) {
-            console.log("Unflipping card due to scroll distance:", distanceFromCenter);
-            // Unflip the card if it's off-center
-            CardSystem.currentlyFlippedCard.classList.remove('flipped');
-            restoreCardForMobile(CardSystem.currentlyFlippedCard);
-            CardSystem.currentlyFlippedCard = null;
+            // Below threshold - snap back to current card
+            moveToCard(CardSystem.activeCardIndex);
         }
     }
 
-    // Detect when scrolling stops
-    scrollEndTimeout = setTimeout(() => {
-        isScrolling = false;
+    // Function to expand card for mobile view
+    function expandCardForMobile(card) {
+        // Save original styles to restore later
+        card.dataset.originalWidth = card.style.width || '';
+        card.dataset.originalMaxWidth = card.style.maxWidth || '';
+        card.dataset.originalMargin = card.style.margin || '';
+        card.dataset.originalZIndex = card.style.zIndex || '';
 
-        // One final update when scrolling ends
-        updateActiveCardDuringScroll();
-    }, 150);
-}, { passive: true });
+        // Apply expanded styles
+        card.classList.add('enhanced-card');
 
-// Update active card during scroll
-function updateActiveCardDuringScroll() {
-    // Don't update if manually flipping or if we're in the middle of a dot navigation
-    if (CardSystem.isManuallyFlipping || container.style.scrollBehavior === 'smooth') return;
-
-    const containerRect = container.getBoundingClientRect();
-    const containerCenter = containerRect.left + containerRect.width / 2;
-
-    // Track the most visible card
-    let mostVisibleCard = null;
-    let highestVisibility = 0;
-
-    // For each card, calculate visibility percentage
-    flipCards.forEach((card, index) => {
-        const cardRect = card.getBoundingClientRect();
-
-        // Calculate intersection/overlap with container
-        const overlapLeft = Math.max(containerRect.left, cardRect.left);
-        const overlapRight = Math.min(containerRect.right, cardRect.right);
-        const visibleWidth = Math.max(0, overlapRight - overlapLeft);
-        const visibilityPercentage = visibleWidth / cardRect.width;
-
-        // If this card is more visible than our current most visible
-        if (visibilityPercentage > highestVisibility) {
-            highestVisibility = visibilityPercentage;
-            mostVisibleCard = { card, index };
+        // Style for flipped cards
+        const cardBack = card.querySelector('.flip-card-back');
+        if (cardBack) {
+            cardBack.style.overflowY = 'auto';
+            cardBack.style.maxHeight = 'none';
         }
-    });
-
-    // Update active card if we found one that's at least 50% visible
-    if (mostVisibleCard && highestVisibility >= 0.5) {
-        CardSystem.activeCardIndex = mostVisibleCard.index;
-        CardSystem.updateUI();
-    }
-}
-
-// Center card properly for mobile
-function centerCardProperly(index) {
-    // Don't apply constraints - let the browser handle the bounce naturally
-    const card = flipCards[index];
-    const containerWidth = container.offsetWidth;
-    const containerCenter = containerWidth / 2;
-    const cardCenter = card.offsetWidth / 2;
-
-    // Simple position calculation without constraints
-    container.scrollLeft = card.offsetLeft - containerCenter + cardCenter;
-}
-
-// Add edge card padding for mobile
-function addEdgeCardPadding() {
-    const firstCard = flipCards[0];
-    const lastCard = flipCards[flipCards.length - 1];
-
-    // Set explicit left margin for first card to ensure it stays in the center
-    firstCard.style.marginLeft = 'calc(50vw - 150px)';
-
-    // Set explicit right margin for last card to ensure it stays in the center
-    lastCard.style.marginRight = 'calc(50vw - 150px)';
-}
-
-// Fix edge scrolling for mobile
-function fixEdgeScrolling() {
-    // We need to modify how the container's scrollable area is defined
-    const firstCard = document.querySelector('.flip-card:first-child');
-    const lastCard = document.querySelector('.flip-card:last-child');
-
-    if (!container || !firstCard || !lastCard) return;
-
-    // Create padding elements to prevent scrolling past the first and last cards
-    let leftPadding = document.querySelector('#left-scroll-padding');
-    let rightPadding = document.querySelector('#right-scroll-padding');
-
-    if (!leftPadding) {
-        leftPadding = document.createElement('div');
-        leftPadding.id = 'left-scroll-padding';
-        leftPadding.style.flex = '0 0 calc(50vw - 150px)';
-        leftPadding.style.minWidth = 'calc(50vw - 150px)';
-        leftPadding.style.height = '1px';
-        container.insertBefore(leftPadding, firstCard);
-    } else {
-        // Ensure styles are applied even if element exists
-        leftPadding.style.flex = '0 0 calc(50vw - 150px)';
-        leftPadding.style.minWidth = 'calc(50vw - 150px)';
     }
 
-    if (!rightPadding) {
-        rightPadding = document.createElement('div');
-        rightPadding.id = 'right-scroll-padding';
-        rightPadding.style.flex = '0 0 calc(50vw - 150px)';
-        rightPadding.style.minWidth = 'calc(50vw - 150px)';
-        rightPadding.style.height = '1px';
-        container.appendChild(rightPadding);
+    // Function to restore card to original size
+    function restoreCardForMobile(card) {
+        // Remove enhanced class
+        card.classList.remove('enhanced-card');
+
+        // Restore original styles
+        card.style.width = card.dataset.originalWidth || '';
+        card.style.maxWidth = card.dataset.originalMaxWidth || '';
+        card.style.margin = card.dataset.originalMargin || '';
+        card.style.zIndex = card.dataset.originalZIndex || '';
+
+        // Restore card back
+        const cardBack = card.querySelector('.flip-card-back');
+        if (cardBack) {
+            cardBack.style.overflowY = '';
+            cardBack.style.maxHeight = '';
+        }
     }
 
-    // Remove any direct margins on cards that might interfere
-    document.querySelectorAll('.flip-card').forEach(card => {
-        card.style.marginLeft = '15px';
-        card.style.marginRight = '15px';
-    });
-}
+    // Function to toggle header banner visibility
+    function toggleHeaderBanner(show) {
+        const header = document.querySelector('header');
+        if (header) {
+            if (show) {
+                header.style.display = '';
+                header.style.visibility = '';
+            } else {
+                header.style.display = 'none';
+                header.style.visibility = 'hidden';
+            }
+        }
+    }
 
-// Function to expand card for mobile view
-function expandCardForMobile(card) {
-    // Save original styles to restore later
-    card.dataset.originalWidth = card.style.width || '';
-    card.dataset.originalMaxWidth = card.style.maxWidth || '';
-    card.dataset.originalMargin = card.style.margin || '';
-    card.dataset.originalZIndex = card.style.zIndex || '';
-
-    // CRITICAL CHANGE: Do NOT set overflow: hidden on body
-    // document.body.style.overflow = 'hidden'; <- REMOVE THIS LINE
-
-    // CRITICAL CHANGE: Use enhanced class without fixed positioning
-    card.classList.add('enhanced-card');
-
-    // Style improvements without breaking scrolling
-    const enhancedCardStyle = document.getElementById('enhanced-card-style') || document.createElement('style');
+    // Add CSS for enhanced cards
+    const enhancedCardStyle = document.createElement('style');
     enhancedCardStyle.id = 'enhanced-card-style';
     enhancedCardStyle.textContent = `
         .enhanced-card {
@@ -659,7 +743,6 @@ function expandCardForMobile(card) {
             margin: 15px auto !important;
             z-index: 100 !important;
             height: auto !important;
-            /* CRITICAL: NO position:fixed, NO transform that takes out of flow */
         }
 
         .enhanced-card .flip-card-back {
@@ -677,110 +760,148 @@ function expandCardForMobile(card) {
             font-size: 1.2rem !important;
             line-height: 1.4 !important;
         }
+
+        /* Card highlight effect for next/prev card being targeted */
+        .card-targeted {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2) !important;
+            transform: scale(1.05) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            z-index: 10 !important;
+        }
+
+        /* CRITICAL FIX: Override the :not(.active) selector with higher specificity */
+        .flip-card.card-targeted:not(.active) {
+            opacity: 1 !important;
+        }
+
+        /* Apply smooth transitions to card front styles */
+        .flip-card-front {
+            transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+        }
+
+        /* Just keep the performance hint without transition */
+        .flip-cards-container {
+            will-change: transform, scroll-position;
+        }
     `;
     document.head.appendChild(enhancedCardStyle);
 
-    // CRITICAL: DON'T add the absolute-center class that uses fixed positioning
-    // card.classList.add('absolute-center'); <- REMOVE THIS LINE
+    // Add edge card padding for better visual appearance
+    function addEdgeCardPadding() {
+        // Add spacers at the start and end for better appearance
+        const firstCard = flipCards[0];
+        const lastCard = flipCards[flipCards.length - 1];
 
-    // CRITICAL: DON'T add the style with position:fixed
-    // absoluteCenterStyle... <- REMOVE THIS ENTIRE SECTION
+        if (firstCard && lastCard) {
+            // Create padding elements if they don't exist
+            let leftPadding = document.querySelector('#left-scroll-padding');
+            let rightPadding = document.querySelector('#right-scroll-padding');
 
-    // Let the card remain in normal document flow
-    const cardBack = card.querySelector('.flip-card-back');
-    if (cardBack) {
-        cardBack.style.overflowY = 'auto';
-        cardBack.style.maxHeight = 'none';
-    }
-}
+            if (!leftPadding) {
+                leftPadding = document.createElement('div');
+                leftPadding.id = 'left-scroll-padding';
+                leftPadding.style.flex = '0 0 calc(50vw - 150px)';
+                leftPadding.style.minWidth = 'calc(50vw - 150px)';
+                leftPadding.style.height = '1px';
+                container.insertBefore(leftPadding, firstCard);
+            }
 
-// Function to restore card to original size
-function restoreCardForMobile(card) {
-    // Remove enhanced class
-    card.classList.remove('enhanced-card');
-
-    // Remove the style element
-    const styleElement = document.getElementById('enhanced-card-style');
-    if (styleElement) {
-        styleElement.remove();
-    }
-
-    // Restore original styles
-    card.style.width = card.dataset.originalWidth || '';
-    card.style.maxWidth = card.dataset.originalMaxWidth || '';
-    card.style.margin = card.dataset.originalMargin || '';
-    card.style.zIndex = card.dataset.originalZIndex || '';
-    card.style.height = ''; // Reset height to default
-    card.style.minHeight = ''; // Reset minHeight to default
-
-    // Restore card back
-    const cardBack = card.querySelector('.flip-card-back');
-    if (cardBack) {
-        cardBack.style.overflowY = '';
-        cardBack.style.maxHeight = '';
-        cardBack.style.height = ''; // Reset height to default
-        cardBack.style.minHeight = ''; // Reset minHeight to default
-    }
-
-    // Force a reflow to ensure dimensions are properly reset
-    void card.offsetHeight;
-}
-
-// Function to toggle header banner visibility
-function toggleHeaderBanner(show) {
-    const header = document.querySelector('header');
-    if (header) {
-        if (show) {
-            header.style.display = '';
-            header.style.position = '';
-            header.style.zIndex = '';
-            header.style.visibility = '';
-            header.style.pointerEvents = '';
-            document.body.style.paddingTop = '';
-        } else {
-            header.style.display = 'none';
-            header.style.position = 'absolute';
-            header.style.zIndex = '-100';
-            header.style.visibility = 'hidden';
-            header.style.pointerEvents = 'none';
-            document.body.style.paddingTop = '0';
+            if (!rightPadding) {
+                rightPadding = document.createElement('div');
+                rightPadding.id = 'right-scroll-padding';
+                rightPadding.style.flex = '0 0 calc(50vw - 150px)';
+                rightPadding.style.minWidth = 'calc(50vw - 150px)';
+                rightPadding.style.height = '1px';
+                container.appendChild(rightPadding);
+            }
         }
     }
-}
 
-// Add this function at the end of your file (before the console.log statement)
-function fixVerticalPositioning() {
-    // Adjust container's vertical padding
-    container.style.paddingTop = '0';
-    container.style.paddingBottom = '40px';
+    // Fix vertical positioning for better appearance
+    function fixVerticalPositioning() {
+        // Adjust container's vertical padding
+        container.style.paddingTop = '0';
+        container.style.paddingBottom = '40px';
 
-    // Ensure body is properly set up for vertical centering
-    document.body.style.display = 'flex';
-    document.body.style.flexDirection = 'column';
-    document.body.style.justifyContent = 'center';
-    document.body.style.height = '100vh';
-    document.body.style.paddingTop = '0';
+        // Adjust body layout
+        document.body.style.display = 'flex';
+        document.body.style.flexDirection = 'column';
+        document.body.style.justifyContent = 'center';
+        document.body.style.minHeight = '100vh';
 
-    // Compensate for the header height
-    const header = document.querySelector('header');
-    if (header) {
-        const headerHeight = header.offsetHeight;
-        // Adjust container position to account for header
-        container.style.marginTop = `-${headerHeight/2}px`;
+        // Center flip cards vertically
+        document.querySelectorAll('.flip-card').forEach(card => {
+            card.style.alignSelf = 'center';
+        });
     }
 
-    // Ensure flip cards are vertically centered
-    document.querySelectorAll('.flip-card').forEach(card => {
-        card.style.alignSelf = 'center';
+    // Function to ensure the first card is properly centered initially
+    function centerFirstCardOnLoad() {
+        // Make sure we have valid measurements before trying to center
+        if (container && flipCards && flipCards.length > 0) {
+            // Force proper initial state
+            CardSystem.activeCardIndex = 0;
+
+            // Calculate exact center position - don't rely on current scrollLeft
+            const firstCard = flipCards[0];
+            const containerWidth = container.offsetWidth;
+            const cardWidth = firstCard.offsetWidth;
+
+            // Calculate the ideal scrollLeft to center the first card
+            const targetScrollLeft = firstCard.offsetLeft - (containerWidth - cardWidth) / 2;
+
+            // Apply positioning immediately (no animation)
+            container.style.scrollBehavior = 'auto';
+            container.style.transition = 'none';
+            container.scrollLeft = targetScrollLeft;
+
+            // Force reflow to ensure the position applies immediately
+            void container.offsetWidth;
+
+            // Update UI to reflect initial state
+            CardSystem.updateUI();
+
+            console.log("First card centered with scrollLeft:", targetScrollLeft);
+        }
+    }
+
+    // Initialize everything properly
+    function initialize() {
+        console.log("Initializing mobile card system...");
+
+        // Add padding and fix positioning first
+        addEdgeCardPadding();
+        fixVerticalPositioning();
+
+        // Initialize card states (active/inactive styles)
+        resetCardHighlights();
+
+        // First ensure proper centering
+        centerFirstCardOnLoad();
+
+        // Center the active card with a slight delay to ensure measurements are complete
+        setTimeout(() => {
+            // Double-check centering after everything has fully rendered
+            centerFirstCardOnLoad();
+
+            // Ensure card states are correctly set
+            resetCardHighlights();
+        }, 100);
+
+        console.log("Mobile card initialization complete");
+    }
+
+    // Run initialization when everything is fully loaded
+    if (document.readyState === 'complete') {
+        initialize();
+    } else {
+        // For safety, use both DOMContentLoaded and window.onload
+        window.addEventListener('load', initialize);
+    }
+
+    // Also run on resize to maintain proper centering
+    window.addEventListener('resize', () => {
+        // Recenter current card on resize
+        moveToCard(CardSystem.activeCardIndex);
     });
-}
-
-// Initialize mobile-specific features
-addEdgeCardPadding();
-fixEdgeScrolling();
-fixVerticalPositioning();
-centerCardProperly(0);
-CardSystem.updateUI();
-
-console.log("Mobile implementation initialized");
 })();

@@ -442,9 +442,8 @@ body {
   }
 
   .flip-card.flipped .flip-card-back .summary {
-    font-size: 1.2rem !important;
-    line-height: 1.4 !important;
-    margin-bottom: 15px !important;
+    font-size: 1.2rem;
+    line-height: 1.4;
   }
 
   /* Card indicator should be below flipped cards */
@@ -574,4 +573,41 @@ body {
 /* Add smooth scrolling override for dot clicks */
 .container.dot-navigation {
   scroll-behavior: auto !important; /* Override smooth scrolling during dot navigation */
+}
+
+/* Preserve line breaks for summary text during transitions */
+.flip-card-back .summary {
+  /* Force consistent width in all states */
+  width: 260px;
+  display: block;
+
+  /* Preserve line breaks */
+  white-space: pre-wrap;
+  word-break: keep-all;
+
+  /* Use transform instead of font-size changes */
+  transform-origin: left top;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* When flipped, scale the entire summary instead of changing font size */
+.flip-card.flipped .flip-card-back .summary {
+  /* Scale up by 12.5% without changing dimensions/line breaks */
+  transform: scale(1.125);
+
+  /* Adjust container to accommodate the scaling */
+  width: 260px;
+  margin-bottom: 0.5em;
+}
+
+/* For mobile, maintain consistent approach */
+@media (max-width: 768px) {
+  .flip-card-back .summary {
+    width: 100%;
+  }
+
+  .flip-card.flipped .flip-card-back .summary {
+    transform: scale(1.2);
+    width: 100%;
+  }
 }
