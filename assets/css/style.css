@@ -535,7 +535,7 @@ body {
   .flip-card.flipped .flip-card-back {
     /* Position fixed relative to viewport */
     position: fixed !important;
-    top: 19vh !important; /* Use viewport height instead of % */
+    top: 18.9vh !important; /* Use viewport height instead of % */
     left: 50% !important;
     transform: translate(-50%, -50%) rotateY(180deg) !important;
 
