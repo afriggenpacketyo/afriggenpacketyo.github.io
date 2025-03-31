@@ -968,3 +968,90 @@
         moveToCard(CardSystem.activeCardIndex);
     });
 })();
+
+// Browser detection for Safari vs Chrome positioning
+(function() {
+  // More reliable browser detection for mobile
+  function detectBrowser() {
+    const userAgent = navigator.userAgent.toLowerCase();
+
+    // iOS Safari detection
+    if (/iphone|ipad|ipod/.test(userAgent) && /safari/.test(userAgent) && !(/crios/.test(userAgent)) && !(/fxios/.test(userAgent))) {
+      return 'safari-mobile';
+    }
+
+    // Chrome on iOS detection
+    if (/crios/.test(userAgent)) {
+      return 'chrome-ios';
+    }
+
+    // Android Chrome detection
+    if (/android/.test(userAgent) && /chrome/.test(userAgent) && !(/firefox/.test(userAgent))) {
+      return 'chrome-android';
+    }
+
+    // Desktop Safari
+    if (!(/android|iphone|ipad|ipod/.test(userAgent)) && /safari/.test(userAgent) && !(/chrome/.test(userAgent))) {
+      return 'safari-desktop';
+    }
+
+    // Desktop Chrome
+    if (!(/android|iphone|ipad|ipod/.test(userAgent)) && /chrome/.test(userAgent) && !(/edge|edg|firefox/.test(userAgent))) {
+      return 'chrome-desktop';
+    }
+
+    // Default fallback
+    return 'other-browser';
+  }
+
+  // Apply the appropriate class to the body element
+  function applyBrowserClass() {
+    const browserType = detectBrowser();
+
+    // Remove all browser classes first
+    document.body.classList.remove(
+      'safari-mobile', 'chrome-ios', 'chrome-android',
+      'safari-desktop', 'chrome-desktop', 'other-browser',
+      'safari-browser', 'chrome-browser'
+    );
+
+    // Add detected browser class
+    document.body.classList.add(browserType);
+
+    // Also add the general browser family class for backward compatibility
+    if (browserType.includes('safari')) {
+      document.body.classList.add('safari-browser');
+    } else if (browserType.includes('chrome')) {
+      document.body.classList.add('chrome-browser');
+    }
+
+    // Log for debugging
+    console.log('Browser detected:', browserType);
+  }
+
+  // Run on page load
+  if (document.readyState === 'complete') {
+    applyBrowserClass();
+  } else {
+    window.addEventListener('load', applyBrowserClass);
+  }
+
+  // Also add a debug element to verify detection
+  function addDebugInfo() {
+    const debugDiv = document.createElement('div');
+    debugDiv.style.position = 'fixed';
+    debugDiv.style.bottom = '5px';
+    debugDiv.style.right = '5px';
+    debugDiv.style.background = 'rgba(0,0,0,0.7)';
+    debugDiv.style.color = 'white';
+    debugDiv.style.padding = '5px';
+    debugDiv.style.fontSize = '10px';
+    debugDiv.style.zIndex = '9999';
+    debugDiv.style.borderRadius = '3px';
+    debugDiv.textContent = 'Browser: ' + detectBrowser() + ' | UA: ' + navigator.userAgent.substring(0, 50) + '...';
+    document.body.appendChild(debugDiv);
+  }
+
+  // Uncomment this line to add debug info
+  // window.addEventListener('load', addDebugInfo);
+})();

@@ -535,7 +535,7 @@ body {
   .flip-card.flipped .flip-card-back {
     /* Position fixed relative to viewport */
     position: fixed !important;
-    top: 18.9vh !important; /* Use viewport height instead of % */
+    /* top value will be set by JavaScript based on browser detection */
     left: 50% !important;
     transform: translate(-50%, -50%) rotateY(180deg) !important;
 
@@ -553,10 +553,16 @@ body {
     z-index: 1000 !important;
   }
 
-  /* Keep the front face in its original position */
-  .flip-card.flipped .flip-card-front {
-    /* No changes needed - backface-visibility: hidden handles this */
+  /* Safari-specific positioning class - will be added by JS */
+  .safari-browser .flip-card.flipped .flip-card-back {
+    top: 21vh !important;
   }
+
+  /* Chrome-specific positioning class - will be added by JS */
+  .chrome-browser .flip-card.flipped .flip-card-back {
+    top: 18.9vh !important;
+  }
+
 
   /* Make sure other cards are visible but slightly faded */
   .flip-card.flipped ~ .flip-card:not(.flipped) {
@@ -644,9 +650,6 @@ body {
 
 /* Mobile-specific logo positioning */
 @media (max-width: 768px) {
-  .logo-container {
-    /* Remove top positioning */
-  }
 
   .site-logo {
     max-width: 60px;
