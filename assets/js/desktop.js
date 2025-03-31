@@ -270,6 +270,33 @@
         }
     }
 
+    // Add a new function to dynamically position the logo
+    function updateLogoPosition() {
+        const logoContainer = document.querySelector('.logo-container');
+        const header = document.querySelector('header');
+        const activeCard = document.querySelector('.flip-card.active');
+
+        if (logoContainer && header && activeCard) {
+            // Get header bottom position relative to viewport
+            const headerBottom = header.getBoundingClientRect().bottom;
+
+            // Get the active card's top position
+            const cardTop = activeCard.getBoundingClientRect().top;
+
+            // Calculate the midpoint between header and card
+            const midPoint = headerBottom + (cardTop - headerBottom) / 2;
+
+            // Adjust for logo height to truly center it
+            const logoHeight = logoContainer.offsetHeight;
+            const adjustedPosition = midPoint - (logoHeight / 2);
+
+            // Set the position
+            logoContainer.style.position = 'fixed';
+            logoContainer.style.top = `${adjustedPosition}px`;
+            logoContainer.style.transform = 'translateX(-50%)';
+        }
+    }
+
     // Modify the card click handler to handle momentum and centering better
     flipCards.forEach((card, index) => {
         card.addEventListener('click', function(e) {
@@ -1150,4 +1177,11 @@
     initSmoothDotTransitions();
     addCardOpacityTransitions();
     console.log("iPod-style cover flow initialized");
+
+    // Initial positioning
+    updateLogoPosition();
+
+    // Add event listeners for responsive positioning
+    window.addEventListener('resize', updateLogoPosition);
+    window.addEventListener('orientationchange', updateLogoPosition);
 })();

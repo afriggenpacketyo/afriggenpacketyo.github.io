@@ -633,7 +633,6 @@ body {
   transition: opacity 0.3s ease, visibility 0.3s ease;
   pointer-events: none;
   left: 50%;
-  transform: translateX(-50%);
   width: auto;
 }
 
@@ -643,17 +642,10 @@ body {
   opacity: 0.9;
 }
 
-/* Desktop-specific logo positioning */
-@media (min-width: 769px) {
-  .logo-container {
-    top: calc(var(--header-height, 120px) + 45px);
-  }
-}
-
 /* Mobile-specific logo positioning */
 @media (max-width: 768px) {
   .logo-container {
-    top: calc(var(--header-height, 80px) + 28px);
+    /* Remove top positioning */
   }
 
   .site-logo {

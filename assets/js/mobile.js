@@ -885,6 +885,25 @@
         }
     }
 
+    // Add the same positioning function
+    function updateLogoPosition() {
+        const logoContainer = document.querySelector('.logo-container');
+        const header = document.querySelector('header');
+        const activeCard = document.querySelector('.flip-card.active');
+
+        if (logoContainer && header && activeCard) {
+            const headerBottom = header.getBoundingClientRect().bottom;
+            const cardTop = activeCard.getBoundingClientRect().top;
+            const midPoint = headerBottom + (cardTop - headerBottom) / 2;
+            const logoHeight = logoContainer.offsetHeight;
+            const adjustedPosition = midPoint - (logoHeight / 2);
+
+            logoContainer.style.position = 'fixed';
+            logoContainer.style.top = `${adjustedPosition}px`;
+            logoContainer.style.transform = 'translateX(-50%)';
+        }
+    }
+
     // Add initialization to show logo when page loads
     function initLogoVisibility() {
         // Show logo initially
@@ -921,6 +940,16 @@
         }, 100);
 
         initLogoVisibility();
+
+        // Position the logo
+        updateLogoPosition();
+
+        // Add event listeners
+        window.addEventListener('resize', updateLogoPosition);
+        window.addEventListener('orientationchange', updateLogoPosition);
+
+        // Also call it whenever card position changes
+        setTimeout(updateLogoPosition, 100);
 
         console.log("Mobile card initialization complete");
     }
