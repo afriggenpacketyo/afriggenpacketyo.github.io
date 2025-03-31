@@ -1,10 +1,3 @@
-(function() {
-    // Simple auto-refresh after 16 minutes
-    setTimeout(() => {
-      window.location.reload();
-    }, 16 * 60 * 1000); // 16 minutes in milliseconds
-})();
-
 document.addEventListener('DOMContentLoaded', function() {
     // Detect device type
     const isMobile = window.innerWidth <= 768;
