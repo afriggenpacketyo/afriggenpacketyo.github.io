@@ -149,59 +149,73 @@
         // Direct arrow click handlers
         navLeft.addEventListener('click', () => {
             if (CardSystem.activeCardIndex > 0) {
-                // Set activation source
-                lastCardActivationSource = 'arrow';
+                // Clear the long swipe timeout to prevent race condition
+                clearTimeout(longSwipeTimeout);
 
-                // Reset any flipped card when using arrows
+                // Reset manual flipping flag immediately
+                CardSystem.isManuallyFlipping = false;
+
+                // Reset any flipped card
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
                     toggleLogoVisibility(true);
                 }
 
-                // Cancel all animations and scrolling
+                const newIndex = CardSystem.activeCardIndex - 1;
+
+                CardSystem.activeCardIndex = newIndex;
+
+                flipCards.forEach((card, index) => {
+                    card.classList.toggle('active', index === newIndex);
+                    card.style.opacity = index === newIndex ? '1' : '0.65';
+                });
+
+                updateDotIndicatorsDirectly(newIndex);
+
                 container.style.scrollBehavior = 'auto';
-                isScrolling = false;
-                clearTimeout(scrollEndTimeout);
-                clearTimeout(longSwipeTimeout);
 
-                // Immediate index update
-                CardSystem.activeCardIndex--;
-                CardSystem.updateUI();
-
-                // Direct scrolling to the card
-                const targetCard = flipCards[CardSystem.activeCardIndex];
+                const targetCard = flipCards[newIndex];
                 const containerCenter = container.offsetWidth / 2;
                 const cardCenter = targetCard.offsetWidth / 2;
-                container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
+                const scrollPosition = targetCard.offsetLeft - containerCenter + cardCenter;
+
+                container.scrollLeft = scrollPosition;
             }
         });
 
         navRight.addEventListener('click', () => {
             if (CardSystem.activeCardIndex < flipCards.length - 1) {
-                // Set activation source
-                lastCardActivationSource = 'arrow';
+                // Clear the long swipe timeout to prevent race condition
+                clearTimeout(longSwipeTimeout);
 
-                // Reset any flipped card when using arrows
+                // Reset manual flipping flag immediately
+                CardSystem.isManuallyFlipping = false;
+
+                // Reset any flipped card
                 if (CardSystem.currentlyFlippedCard) {
                     CardSystem.resetFlippedCard();
                     toggleLogoVisibility(true);
                 }
 
-                // Cancel all animations and scrolling
+                const newIndex = CardSystem.activeCardIndex + 1;
+
+                CardSystem.activeCardIndex = newIndex;
+
+                flipCards.forEach((card, index) => {
+                    card.classList.toggle('active', index === newIndex);
+                    card.style.opacity = index === newIndex ? '1' : '0.65';
+                });
+
+                updateDotIndicatorsDirectly(newIndex);
+
                 container.style.scrollBehavior = 'auto';
-                isScrolling = false;
-                clearTimeout(scrollEndTimeout);
-                clearTimeout(longSwipeTimeout);
 
-                // Immediate index update
-                CardSystem.activeCardIndex++;
-                CardSystem.updateUI();
-
-                // Direct scrolling to the card
-                const targetCard = flipCards[CardSystem.activeCardIndex];
+                const targetCard = flipCards[newIndex];
                 const containerCenter = container.offsetWidth / 2;
                 const cardCenter = targetCard.offsetWidth / 2;
-                container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
+                const scrollPosition = targetCard.offsetLeft - containerCenter + cardCenter;
+
+                container.scrollLeft = scrollPosition;
             }
         });
     }
@@ -391,19 +405,24 @@
         const containerCenter = container.offsetWidth / 2;
         const cardCenter = targetCard.offsetWidth / 2;
 
-        // If instantly is true, use auto scroll behavior
-        if (instantly) {
-            container.style.scrollBehavior = 'auto';
+        // Set scroll behavior based on parameter
+        container.style.scrollBehavior = instantly ? 'auto' : 'smooth';
+
+        // Use a shorter duration for arrow navigation
+        if (!instantly) {
+            container.style.scrollBehavior = 'smooth';
+            // Add a CSS variable to control animation speed (300ms is snappy but not instant)
+            document.documentElement.style.setProperty('--scroll-duration', '300ms');
         }
 
         // Scroll to the card
         container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
 
-        // Restore smooth scrolling if we temporarily disabled it
-        if (instantly) {
-            // Force a reflow before restoring smooth scrolling
-            void container.offsetHeight;
-            container.style.scrollBehavior = 'smooth';
+        // Reset scroll behavior after a short delay
+        if (!instantly) {
+            setTimeout(() => {
+                document.documentElement.style.removeProperty('--scroll-duration');
+            }, 350); // slightly longer than the animation
         }
     }
 
@@ -611,27 +630,30 @@
         }, 300);
     }
 
-    // Keyboard navigation - simplified for consistent behavior
+    // Helper function to ensure visual updates complete before scrolling
+    function updateCardVisualsThenScroll(newIndex) {
+        // 1. Update the active index
+        CardSystem.activeCardIndex = newIndex;
+
+        // 2. Immediately update visual appearance of all cards
+        flipCards.forEach((card, index) => {
+            card.style.opacity = (index === newIndex) ? '1' : '0.7';
+        });
+
+        // 3. Update dot indicators
+        updateDotIndicatorsDirectly(newIndex);
+
+        // 4. Force a reflow to ensure visual changes are applied before scroll starts
+        // This is crucial - it forces the browser to apply the visual changes immediately
+        void document.body.offsetHeight;
+
+        // 5. Now start the scroll animation, after visual updates are guaranteed to be rendered
+        scrollToCard(newIndex, false);
+    }
+
+    // Keyboard navigation - add timeout clearing
     document.addEventListener('keydown', (e) => {
-        // First check if we're handling a key during scroll momentum
-        if (handleKeyDuringScrollMomentum(e)) {
-            return;
-        }
-
-        const now = Date.now();
-        const isRapidKeyPress = (now - lastKeyPressTime) < rapidKeyPressThreshold;
-        lastKeyPressTime = now;
-
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            // Set activation source for arrow keys
-            lastCardActivationSource = 'arrow';
-
-            // Reset any flipped card when using arrow keys
-            if (CardSystem.currentlyFlippedCard) {
-                CardSystem.resetFlippedCard();
-                toggleLogoVisibility(true);
-            }
-
             // Calculate new index based on key pressed
             let newIndex = CardSystem.activeCardIndex;
             if (e.key === 'ArrowLeft' && CardSystem.activeCardIndex > 0) {
@@ -642,10 +664,52 @@
                 return;
             }
 
-            // Use smooth scrolling for arrow keys
-            container.style.scrollBehavior = 'smooth';
-            scrollToCard(newIndex, false);
-        } else if ((e.key === 'Enter' || e.key === ' ')) {
+            // Clear the long swipe timeout to prevent the race condition
+            clearTimeout(longSwipeTimeout);
+
+            // Also reset the manual flipping flag immediately
+            CardSystem.isManuallyFlipping = false;
+
+            // Reset any flipped card
+            if (CardSystem.currentlyFlippedCard) {
+                CardSystem.resetFlippedCard();
+                toggleLogoVisibility(true);
+            }
+
+            // IMMEDIATELY update the active card index
+            CardSystem.activeCardIndex = newIndex;
+
+            // Rest of the code remains the same...
+            flipCards.forEach((card, index) => {
+                card.classList.toggle('active', index === newIndex);
+                card.style.opacity = index === newIndex ? '1' : '0.65';
+            });
+
+            updateDotIndicatorsDirectly(newIndex);
+
+            container.style.scrollBehavior = 'auto';
+
+            const targetCard = flipCards[newIndex];
+            const containerCenter = container.offsetWidth / 2;
+            const cardCenter = targetCard.offsetWidth / 2;
+            const scrollPosition = targetCard.offsetLeft - containerCenter + cardCenter;
+
+            container.scrollLeft = scrollPosition;
+
+            e.preventDefault();
+            return;
+        }
+
+        // First check if we're handling a key during scroll momentum
+        if (handleKeyDuringScrollMomentum(e)) {
+            return;
+        }
+
+        const now = Date.now();
+        const isRapidKeyPress = (now - lastKeyPressTime) < rapidKeyPressThreshold;
+        lastKeyPressTime = now;
+
+        if ((e.key === 'Enter' || e.key === ' ')) {
             // Set activation source for spacebar/enter
             lastCardActivationSource = 'key';
 
