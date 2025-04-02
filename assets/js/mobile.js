@@ -614,7 +614,7 @@
         const absHorizDistance = Math.abs(horizDistance);
 
         // If it's primarily a horizontal movement (wider than tall)
-        if (absHorizDistance > Math.abs(vertDistance)) {
+        if (absHorizDistance > Math.abs(vertDistance) && absHorizDistance > 20) {
             // Apply resistance to make it feel more natural
             let resistanceFactor = DRAG_RESISTANCE;
 
@@ -635,11 +635,8 @@
             // Prevent default to disable native scrolling
             e.preventDefault();
         }
-        // If it's primarily a downward swipe
-        else if (vertDistance > 30 && absHorizDistance < 30) {
-            // We could add visual feedback for "pull down to close"
-            e.preventDefault();
-        }
+        // For vertical movements, we don't do anything special - let native scrolling work
+        // Remove the downward swipe detection that was here before
     }
 
     function handleFlippedCardTouchEnd(e) {
@@ -654,19 +651,17 @@
         const xDistance = touchEndX - flippedCardTouchStartX;
         const absXDistance = Math.abs(xDistance);
         const yDistance = touchEndY - flippedCardTouchStartY;
+        const absYDistance = Math.abs(yDistance);
 
         // Get thresholds for navigation
         const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
         const thresholdDistance = cardWidth * POSITION_THRESHOLD;
 
-        // If it's a downward swipe with minimal horizontal movement
-        if (yDistance > 100 && absXDistance < 50) {
-            // Close the card
-            toggleCardFlip(CardSystem.currentlyFlippedCard);
-        }
-        // If it's a significant horizontal swipe or drag
-        else if ((touchDuration < SWIPE_TIMEOUT && absXDistance > SWIPE_THRESHOLD) ||
-                 absXDistance > thresholdDistance) {
+        // ONLY handle horizontal swipes - ignore vertical swipes completely
+        // Check if it's primarily a horizontal movement
+        if (absXDistance > absYDistance &&
+            ((touchDuration < SWIPE_TIMEOUT && absXDistance > SWIPE_THRESHOLD) ||
+             absXDistance > thresholdDistance)) {
 
             // Store the currently flipped card and target index
             const flippedCard = CardSystem.currentlyFlippedCard;
@@ -686,10 +681,11 @@
                 // At the edge - snap back with animation
                 moveToCard(currentIndex);
             }
-        } else {
-            // Below threshold - snap back to current card
+        } else if (absXDistance > 20) {
+            // Below threshold but still a horizontal movement - snap back to current card
             moveToCard(CardSystem.activeCardIndex);
         }
+        // For vertical movements, we do nothing - let native scrolling handle it
     }
 
     // Function to expand card for mobile view
