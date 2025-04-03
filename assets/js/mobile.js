@@ -177,6 +177,42 @@
         // Enforce boundaries
         index = Math.max(0, Math.min(flipCards.length - 1, index));
 
+        // COMPREHENSIVE FIX: Reset all possible scroll positions
+
+        // 1. Reset all card backs
+        flipCards.forEach(card => {
+            const cardBack = card.querySelector('.flip-card-back');
+            if (cardBack) {
+                // Force scroll reset with !important style
+                cardBack.style.cssText += '; overflow-y: hidden !important;';
+                cardBack.scrollTop = 0;
+
+                // Also reset any content containers inside the card back
+                const contentContainers = cardBack.querySelectorAll('.flip-card-back-content, div, section');
+                contentContainers.forEach(container => {
+                    if (container.scrollTop) container.scrollTop = 0;
+                });
+
+                // Re-enable scrolling after reset
+                setTimeout(() => {
+                    cardBack.style.cssText = cardBack.style.cssText.replace('overflow-y: hidden !important;', 'overflow-y: auto !important;');
+                }, 50);
+            }
+        });
+
+        // 2. If we're using an overlay approach, reset that too
+        if (overlayContent) {
+            overlayContent.scrollTop = 0;
+        }
+
+        // 3. Reset any currently flipped card
+        if (CardSystem.currentlyFlippedCard) {
+            const currentBack = CardSystem.currentlyFlippedCard.querySelector('.flip-card-back');
+            if (currentBack) {
+                currentBack.scrollTop = 0;
+            }
+        }
+
         // Store the pending target card index
         pendingCardIndex = index;
 
