@@ -456,8 +456,8 @@ body {
     gap: 30px;
 
     /* REPLACE with better centering */
-    padding-top: 100px !important;
-    padding-bottom: 70px !important;
+    padding-top: 70px !important;
+    padding-bottom: 50px !important;
 
     /* Basic setup */
     display: flex;
@@ -556,12 +556,15 @@ body {
 
   /* Safari-specific positioning class - will be added by JS */
   .safari-browser .flip-card.flipped .flip-card-back {
-    top: 19vh !important;
+    top: 22vh !important;
   }
 
   /* Chrome-specific positioning class - will be added by JS */
   .chrome-browser .flip-card.flipped .flip-card-back {
-    top: 16.9vh !important;
+    top: 21vh !important;
+  }
+  .chrome-browser .container {
+    padding-bottom: 100px !important;
   }
 
 
