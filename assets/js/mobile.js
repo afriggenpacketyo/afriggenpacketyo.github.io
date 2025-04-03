@@ -790,36 +790,6 @@
         .flip-cards-container {
             will-change: transform, scroll-position;
         }
-
-        /* Move active card down slightly */
-        .flip-card.active {
-            margin-top: 10px !important;
-        }
-
-        /* Special positioning for flipped cards on small viewports */
-        @media screen and (max-height: 668px) {
-            .enhanced-card {
-                position: fixed !important;
-                top: 15vh !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-                transform: none !important;
-                width: calc(100vw - 30px) !important;
-            }
-
-            /* Ensure the back of the card is properly centered */
-            .enhanced-card .flip-card-inner {
-                transform-style: preserve-3d !important;
-            }
-
-            .enhanced-card .flip-card-back {
-                left: 0 !important;
-                right: 0 !important;
-                margin: 0 auto !important;
-            }
-        }
     `;
     document.head.appendChild(enhancedCardStyle);
 
@@ -916,76 +886,17 @@
         const logoContainer = document.querySelector('.logo-container');
         const header = document.querySelector('header');
         const activeCard = document.querySelector('.flip-card.active');
-        const logoImage = document.querySelector('.logo-container img');  // Get the actual logo image
 
         if (logoContainer && header && activeCard) {
             const headerBottom = header.getBoundingClientRect().bottom;
             const cardTop = activeCard.getBoundingClientRect().top;
-
-            // Calculate the default midpoint
-            const defaultMidPoint = headerBottom + (cardTop - headerBottom) / 2;
-
-            // Adjust vertical position based on viewport height
-            const viewportHeight = window.innerHeight;
-            let midPoint = defaultMidPoint;
-
-            // For smaller viewports, move the logo higher up (closer to header)
-            if (viewportHeight <= 668) {
-                // Calculate how much to move up
-                const minHeight = 400;
-                const maxHeight = 668;
-                const maxOffset = 60; // Maximum pixels to move up (adjust as needed)
-
-                // Calculate offset - more aggressive for smaller heights
-                let upwardOffset = 100;
-                if (viewportHeight < maxHeight) {
-                    // Non-linear calculation to move up faster as height decreases
-                    const heightRatio = Math.max(0, (viewportHeight - minHeight) / (maxHeight - minHeight));
-                    // Use inverse square to move up faster at smaller heights
-                    upwardOffset = maxOffset * (1 - (heightRatio * heightRatio));
-                }
-
-                // Apply the upward offset
-                midPoint = defaultMidPoint - upwardOffset;
-            }
-
+            const midPoint = headerBottom + (cardTop - headerBottom) / 2;
             const logoHeight = logoContainer.offsetHeight;
             const adjustedPosition = midPoint - (logoHeight / 2);
 
             logoContainer.style.position = 'fixed';
             logoContainer.style.top = `${adjustedPosition}px`;
             logoContainer.style.transform = 'translateX(-50%)';
-
-            // Add responsive scaling for viewport heights below 669px
-            if (viewportHeight <= 668 && logoImage) {
-                // More aggressive scaling parameters
-                const minHeight = 400; // Minimum height we'll handle
-                const maxHeight = 668; // Height at which scaling begins
-                const minScale = 0.3;  // Smaller minimum scale
-                const maxScale = 0.5;  // Maximum scale factor
-
-                // Calculate scale based on current viewport height
-                let scale = maxScale;
-                if (viewportHeight < maxHeight) {
-                    // Non-linear scaling that gets smaller faster
-                    const heightRatio = Math.max(0, (viewportHeight - minHeight) / (maxHeight - minHeight));
-                    // Square the ratio to make it decrease faster at the beginning
-                    scale = minScale + (heightRatio * heightRatio) * (maxScale - minScale);
-                }
-
-                // Apply the scale to the actual image
-                logoImage.style.transform = `scale(${scale})`;
-                logoImage.style.transformOrigin = 'center center';
-
-                // Adjust container position to account for scaling
-                const scaledLogoHeight = logoHeight * scale;
-                const scaledPosition = midPoint - (scaledLogoHeight / 2);
-                logoContainer.style.top = `${scaledPosition}px`;
-            } else if (logoImage) {
-                // Reset to normal size for larger viewports
-                logoImage.style.transform = '';
-                logoImage.style.transformOrigin = '';
-            }
         }
     }
 

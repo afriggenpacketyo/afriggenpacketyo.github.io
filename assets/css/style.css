@@ -555,12 +555,12 @@ body {
 
   /* Safari-specific positioning class - will be added by JS */
   .safari-browser .flip-card.flipped .flip-card-back {
-    top: 20.75vh !important;
+    top: 21vh !important;
   }
 
   /* Chrome-specific positioning class - will be added by JS */
   .chrome-browser .flip-card.flipped .flip-card-back {
-    top: 18.2vh !important;
+    top: 18.9vh !important;
   }
 
 
