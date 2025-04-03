@@ -410,6 +410,7 @@
                 opacity: 1 !important;
                 background-color: var(--primary-color, #0078e7) !important;
                 border-color: var(--primary-color-dark, #005bb1) !important;
+                padding-bottom: 0px !important;
                 transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
             `;
         }
@@ -441,6 +442,7 @@
                         opacity: 1 !important;
                         background-color: var(--primary-color, #0078e7) !important;
                         border-color: var(--primary-color-dark, #005bb1) !important;
+                        padding-bottom: 20px !important;
                         transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
                     `;
                 } else {
@@ -571,7 +573,13 @@
 
             // When a card is unflipped:
             isAnyCardFlipped = false;
-            toggleLogoVisibility(true);
+
+            // Wait for the header to become visible before showing the logo
+            setTimeout(() => {
+                toggleLogoVisibility(true);
+                // Update logo position after it's visible
+                setTimeout(updateLogoPosition, 100);
+            }, 100);
         }
 
         // Reset manual flipping flag after a delay
@@ -872,47 +880,99 @@
         }
     }
 
-    // Add this function in mobile.js
+    // Function to toggle logo visibility with smoother transitions
     function toggleLogoVisibility(show) {
         const logoContainer = document.querySelector('.logo-container');
         if (logoContainer) {
-            logoContainer.style.opacity = show ? '1' : '0';
-            logoContainer.style.visibility = show ? 'visible' : 'hidden';
+            // Use transition for smoother appearance/disappearance
+            logoContainer.style.transition = 'opacity 0.3s ease';
+
+            if (show) {
+                // Make visible first, then fade in
+                logoContainer.style.visibility = 'visible';
+                // Use a small delay to ensure visibility change is applied first
+                setTimeout(() => {
+                    logoContainer.style.opacity = '1';
+                }, 10);
+            } else {
+                // Fade out first, then hide
+                logoContainer.style.opacity = '0';
+                // Wait for fade out to complete before hiding
+                setTimeout(() => {
+                    logoContainer.style.visibility = 'hidden';
+                }, 300);
+            }
         }
     }
 
-    // Add the same positioning function
+    // Improved function to precisely position the logo between header and active card
     function updateLogoPosition() {
         const logoContainer = document.querySelector('.logo-container');
         const header = document.querySelector('header');
         const activeCard = document.querySelector('.flip-card.active');
 
-        if (logoContainer && header && activeCard) {
-            const headerBottom = header.getBoundingClientRect().bottom;
-            const cardTop = activeCard.getBoundingClientRect().top;
-            const midPoint = headerBottom + (cardTop - headerBottom) / 2;
-            const logoHeight = logoContainer.offsetHeight;
-            const adjustedPosition = midPoint - (logoHeight / 2);
-
-            logoContainer.style.position = 'fixed';
-            logoContainer.style.top = `${adjustedPosition}px`;
-            logoContainer.style.transform = 'translateX(-50%)';
+        if (!logoContainer || !header || !activeCard) {
+            console.log("Missing elements for logo positioning");
+            return;
         }
+
+        // Only update position if logo is visible
+        if (logoContainer.style.visibility === 'hidden') {
+            return;
+        }
+
+        // Get precise measurements
+        const headerRect = header.getBoundingClientRect();
+        const cardRect = activeCard.getBoundingClientRect();
+
+        // Ensure we have valid measurements
+        if (headerRect.height === 0 || cardRect.height === 0) {
+            console.log("Invalid element dimensions for logo positioning");
+            return;
+        }
+
+        // Calculate the exact midpoint between header bottom and card top
+        const headerBottom = headerRect.bottom;
+        const cardTop = cardRect.top;
+
+        // Ensure there's actually space between header and card
+        if (cardTop <= headerBottom) {
+            console.log("No space between header and card for logo");
+            return;
+        }
+
+        const availableSpace = cardTop - headerBottom;
+        const midPoint = headerBottom + (availableSpace / 2);
+
+        // Center the logo at this midpoint
+        const logoHeight = logoContainer.offsetHeight;
+        const adjustedPosition = midPoint - (logoHeight / 2);
+
+        // Apply the positioning with fixed position
+        logoContainer.style.position = 'fixed';
+        logoContainer.style.top = `${Math.max(0, adjustedPosition)}px`; // Prevent negative values
+        logoContainer.style.left = '50%';
+        logoContainer.style.transform = 'translateX(-50%)';
+
+        // For debugging
+        console.log(`Logo positioning: Header bottom: ${headerBottom}, Card top: ${cardTop}, Midpoint: ${midPoint}, Logo position: ${adjustedPosition}`);
     }
 
-    // Add initialization to show logo when page loads
+    // Make sure we call this function at the right times
     function initLogoVisibility() {
-        // Show logo initially
-        toggleLogoVisibility(true);
-
         // Check if any card is already flipped (page refresh case)
         isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null;
-        if (isAnyCardFlipped) {
-            toggleLogoVisibility(false);
-        }
+
+        // Show logo initially if no card is flipped
+        toggleLogoVisibility(!isAnyCardFlipped);
+
+        // Position the logo after a short delay to ensure all elements are properly rendered
+        setTimeout(() => {
+            updateLogoPosition();
+        }, 200);
     }
 
-    // Initialize everything properly
+    // Add these calls to the initialize function
     function initialize() {
         console.log("Initializing mobile card system...");
 
@@ -926,6 +986,9 @@
         // First ensure proper centering
         centerFirstCardOnLoad();
 
+        // Initialize logo visibility and position
+        initLogoVisibility();
+
         // Center the active card with a slight delay to ensure measurements are complete
         setTimeout(() => {
             // Double-check centering after everything has fully rendered
@@ -933,22 +996,27 @@
 
             // Ensure card states are correctly set
             resetCardHighlights();
+
+            // Update logo position again after cards are positioned
+            updateLogoPosition();
         }, 100);
 
-        initLogoVisibility();
-
-        // Position the logo
-        updateLogoPosition();
-
-        // Add event listeners
+        // Add event listeners for responsive positioning
         window.addEventListener('resize', updateLogoPosition);
         window.addEventListener('orientationchange', updateLogoPosition);
-
-        // Also call it whenever card position changes
-        setTimeout(updateLogoPosition, 100);
+        window.addEventListener('scroll', updateLogoPosition);
 
         console.log("Mobile card initialization complete");
     }
+
+    // Also call updateLogoPosition whenever the active card changes
+    const originalMoveToCard = moveToCard;
+    moveToCard = function(index, shouldAnimate = true) {
+        originalMoveToCard(index, shouldAnimate);
+
+        // Update logo position after card transition completes
+        setTimeout(updateLogoPosition, TRANSITION_DURATION + 50);
+    };
 
     // Run initialization when everything is fully loaded
     if (document.readyState === 'complete') {
