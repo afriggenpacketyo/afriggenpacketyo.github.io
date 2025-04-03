@@ -797,7 +797,7 @@
         }
 
         /* Special positioning for flipped cards on small viewports */
-        @media screen and (max-height: 660px) {
+        @media screen and (max-height: 668px) {
             .enhanced-card {
                 position: fixed !important;
                 top: 15vh !important;
@@ -930,10 +930,10 @@
             let midPoint = defaultMidPoint;
 
             // For smaller viewports, move the logo higher up (closer to header)
-            if (viewportHeight <= 660) {
+            if (viewportHeight <= 668) {
                 // Calculate how much to move up
                 const minHeight = 400;
-                const maxHeight = 660;
+                const maxHeight = 668;
                 const maxOffset = 60; // Maximum pixels to move up (adjust as needed)
 
                 // Calculate offset - more aggressive for smaller heights
@@ -957,10 +957,10 @@
             logoContainer.style.transform = 'translateX(-50%)';
 
             // Add responsive scaling for viewport heights below 669px
-            if (viewportHeight <= 660 && logoImage) {
+            if (viewportHeight <= 668 && logoImage) {
                 // More aggressive scaling parameters
                 const minHeight = 400; // Minimum height we'll handle
-                const maxHeight = 660; // Height at which scaling begins
+                const maxHeight = 668; // Height at which scaling begins
                 const minScale = 0.3;  // Smaller minimum scale
                 const maxScale = 0.5;  // Maximum scale factor
 
