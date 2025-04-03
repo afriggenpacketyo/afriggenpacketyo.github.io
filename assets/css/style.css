@@ -556,7 +556,7 @@ body {
 
   /* Safari-specific positioning class - will be added by JS */
   .safari-browser .flip-card.flipped .flip-card-back {
-    top: 22vh !important;
+    top: 20.9vh !important;
   }
 
   /* Chrome-specific positioning class - will be added by JS */
@@ -661,11 +661,28 @@ body {
   }
 }
 
-/* Safari-specific logo padding */
+/* Safari-specific logo padding with higher specificity */
 body.safari-browser .site-logo,
 body.safari-mobile .site-logo {
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
+  padding: 10px !important;
+  margin: 10px !important;
+  display: inline-block !important;
+  box-sizing: content-box !important;
+  z-index: 2 !important;
+}
+
+/* Target the img element directly if site-logo is a container */
+body.safari-browser .site-logo img,
+body.safari-mobile .site-logo img {
+  padding: 100px !important;
+  margin: 10px !important;
+  display: inline-block !important;
+  box-sizing: content-box !important;
 }
 
 /* safari specific properties for  */
+
+/* Reduce bottom padding for container in Safari mobile */
+body.safari-mobile .container.with-coverflow {
+  padding-bottom: 40px !important; /* Reduced from 40px to 10px */
+}
