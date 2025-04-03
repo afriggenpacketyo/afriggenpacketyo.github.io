@@ -710,8 +710,35 @@
         // Style for flipped cards
         const cardBack = card.querySelector('.flip-card-back');
         if (cardBack) {
-            cardBack.style.overflowY = 'auto';
-            cardBack.style.maxHeight = 'none';
+            // Clear any existing styles first
+            cardBack.style.cssText = '';
+
+            // Apply fixed positioning with viewport-centered approach
+            cardBack.style.position = 'fixed !important';
+            cardBack.style.top = '50% !important';
+            cardBack.style.left = '50% !important';
+            cardBack.style.transform = 'translate(-50%, -50%) rotateY(180deg) !important';
+
+            // Set dimensions with important flags
+            cardBack.style.width = '95vw !important';
+            cardBack.style.height = 'auto !important';
+            cardBack.style.minHeight = '70vh !important';
+            cardBack.style.maxHeight = '80vh !important'; // Reduced to ensure it fits within viewport
+
+            // Add margin to prevent touching edges
+            cardBack.style.margin = '0 !important';
+
+            // Other important styles
+            cardBack.style.overflowY = 'auto !important';
+            cardBack.style.padding = '25px !important';
+            cardBack.style.zIndex = '1000 !important';
+
+            // Add safe area insets for modern browsers
+            cardBack.style.paddingTop = 'max(25px, env(safe-area-inset-top)) !important';
+            cardBack.style.paddingBottom = 'max(25px, env(safe-area-inset-bottom)) !important';
+
+            // Force a reflow to ensure styles are applied
+            void cardBack.offsetHeight;
         }
     }
 
@@ -731,6 +758,17 @@
         if (cardBack) {
             cardBack.style.overflowY = '';
             cardBack.style.maxHeight = '';
+
+            // Clear positioning styles
+            cardBack.style.position = '';
+            cardBack.style.top = '';
+            cardBack.style.left = '';
+            cardBack.style.transform = 'rotateY(180deg)'; // Keep only the rotation
+            cardBack.style.width = '';
+            cardBack.style.minHeight = '';
+            cardBack.style.maxHeight = '';
+            cardBack.style.margin = '';
+            cardBack.style.zIndex = '';
         }
     }
 
@@ -753,18 +791,80 @@
     enhancedCardStyle.id = 'enhanced-card-style';
     enhancedCardStyle.textContent = `
         .enhanced-card {
-            width: calc(100vw - 30px) !important;
-            max-width: calc(100vw - 30px) !important;
-            margin: 15px auto !important;
+            width: 300px !important;
+            height: 400px !important;
+            margin: 0 15px !important;
             z-index: 100 !important;
-            height: auto !important;
         }
 
         .enhanced-card .flip-card-back {
-            max-height: none !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotateY(180deg) !important;
+            width: 95vw !important;
             height: auto !important;
-            min-height: 400px !important;
+            min-height: 70vh !important;
+            max-height: 80vh !important;
             overflow-y: auto !important;
+            padding: 25px !important;
+            z-index: 1000 !important;
+            margin: 0 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 10px !important;
+
+            /* Add safe area insets for modern browsers */
+            padding-top: max(25px, env(safe-area-inset-top)) !important;
+            padding-bottom: max(25px, env(safe-area-inset-bottom)) !important;
+        }
+
+        /* Chrome-specific adjustments */
+        body.chrome-browser .enhanced-card .flip-card-back {
+            top: 50% !important;
+            transform: translate(-50%, -50%) rotateY(180deg) !important;
+            max-height: 80vh !important;
+        }
+
+        /* Safari-specific adjustments */
+        body.safari-browser .enhanced-card .flip-card-back {
+            top: 50% !important; /* Center vertically */
+            transform: translate(-50%, -50%) rotateY(180deg) !important;
+            max-height: 80vh !important; /* Consistent height constraint */
+        }
+
+        /* Safari mobile specific fix - Keep top position, extend downward */
+        body.safari-mobile .enhanced-card .flip-card-back {
+            /* Keep current top position exactly as is */
+            top: 50% !important;
+            bottom: auto !important;
+            /* Keep the transform that was working */
+            transform: translate(-50%, -50%) rotateY(180deg) !important;
+
+            /* Use fixed height but increase it */
+            height: 75vh !important;
+            max-height: 75vh !important;
+            min-height: 75vh !important;
+
+            /* Add a small offset with padding to push content down */
+            padding: 20px !important;
+            padding-top: 15px !important; /* Less padding at top */
+            padding-bottom: 25px !important; /* More padding at bottom */
+
+            /* Add a small negative margin at top to pull up slightly */
+            margin-top: -10px !important;
+            margin-bottom: 0 !important;
+
+            /* Ensure content is properly contained */
+            overflow-y: auto !important;
+            display: block !important;
+        }
+
+        /* Additional fix for iOS devices with notches */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            body.safari-mobile .enhanced-card .flip-card-back {
+                padding-top: max(15px, env(safe-area-inset-top)) !important;
+                padding-bottom: max(25px, env(safe-area-inset-bottom)) !important;
+            }
         }
 
         .enhanced-card .section-title {
