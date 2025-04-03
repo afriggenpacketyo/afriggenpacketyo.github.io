@@ -185,7 +185,7 @@ body {
   right: 0;
   z-index: 50;
   transition: opacity 0.3s ease;
-  padding: 10px 0;
+  /* padding: 10px 0; */
   line-height: 0;
 }
 
@@ -556,7 +556,7 @@ body {
 
   /* Safari-specific positioning class - will be added by JS */
   .safari-browser .flip-card.flipped .flip-card-back {
-    top: 20.9vh !important;
+    top: 19.9vh !important;
   }
 
   /* Chrome-specific positioning class - will be added by JS */
@@ -674,8 +674,8 @@ body.safari-mobile .site-logo {
 /* Target the img element directly if site-logo is a container */
 body.safari-browser .site-logo img,
 body.safari-mobile .site-logo img {
-  padding: 100px !important;
-  margin: 10px !important;
+  /* padding: 100px !important; */
+  /* margin: 10px !important; */
   display: inline-block !important;
   box-sizing: content-box !important;
 }
@@ -684,5 +684,5 @@ body.safari-mobile .site-logo img {
 
 /* Reduce bottom padding for container in Safari mobile */
 body.safari-mobile .container.with-coverflow {
-  padding-bottom: 40px !important; /* Reduced from 40px to 10px */
+  padding-bottom: 25px !important; /* Reduced from 40px to 10px */
 }
