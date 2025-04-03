@@ -829,7 +829,7 @@
         body.safari-browser .enhanced-card .flip-card-back {
             top: 50% !important; /* Center vertically */
             transform: translate(-50%, -50%) rotateY(180deg) !important;
-            max-height: 80vh !important; /* Consistent height constraint */
+            max-height: 85vh !important; /* Consistent height constraint */
         }
 
         /* Safari mobile specific fix - Keep top position, extend downward */

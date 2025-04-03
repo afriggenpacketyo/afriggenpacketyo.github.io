@@ -641,7 +641,7 @@ body {
   z-index: 50;
   text-align: center;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  pointer-events: none;
+  pointer-events: auto;
   left: 50%;
   width: auto;
 }
@@ -650,6 +650,7 @@ body {
   max-width: 80px;
   height: auto;
   opacity: 0.9;
+  pointer-events: auto;
 }
 
 /* Mobile-specific logo positioning */
@@ -659,3 +660,12 @@ body {
     max-width: 60px;
   }
 }
+
+/* Safari-specific logo padding */
+body.safari-browser .site-logo,
+body.safari-mobile .site-logo {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* safari specific properties for  */
