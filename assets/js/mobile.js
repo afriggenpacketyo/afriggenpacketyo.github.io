@@ -40,6 +40,12 @@
     // Add this near the top where other variables are defined
     let isAnyCardFlipped = false;
 
+    // Add these variables for overlay functionality
+    let cardOverlay = null;
+    let overlayContent = null;
+    let currentOverlayCard = null;
+    let isOverlayActive = false;
+
     // Function to update dot sizes based on active index
     function updateInstagramStyleDots(activeIndex) {
         const dots = document.querySelectorAll('.indicator-dot');
@@ -518,17 +524,28 @@
 
     // Function to toggle card flip state
     function toggleCardFlip(card) {
+        // Get current state
+        const isFlipped = card.classList.contains('flipped');
+        const shouldFlip = !isFlipped;
+
         // Set flags
         CardSystem.isManuallyFlipping = true;
 
-        // Check if already flipped
-        const shouldFlip = !card.classList.contains('flipped');
-
-        // Handle any previously flipped card
-        if (CardSystem.currentlyFlippedCard && CardSystem.currentlyFlippedCard !== card) {
-            CardSystem.resetFlippedCard();
+        // If we're on Safari Mobile, use the overlay approach
+        if (document.body.classList.contains('safari-mobile')) {
+            if (shouldFlip) {
+                // Show in overlay instead of flipping
+                openOverlay(card);
+                return; // Exit early, don't do regular flip
+            } else if (isOverlayActive) {
+                // Close overlay instead of unflipping
+                closeOverlay();
+                return; // Exit early, don't do regular flip
+            }
         }
 
+        // Regular flip behavior for non-Safari-mobile continues here
+        // (Keep your existing toggleCardFlip code for other browsers)
         if (shouldFlip) {
             // Force a reflow before adding the flipped class
             CardSystem.adjustCardHeight(card, true);
@@ -1106,6 +1123,9 @@
         window.addEventListener('orientationchange', updateLogoPosition);
         window.addEventListener('scroll', updateLogoPosition);
 
+        // Create overlay for Safari Mobile
+        createOverlay();
+
         console.log("Mobile card initialization complete");
     }
 
@@ -1131,6 +1151,203 @@
         // Recenter current card on resize
         moveToCard(CardSystem.activeCardIndex);
     });
+
+    // Function to create the overlay
+    function createOverlay() {
+        // Only create if we're on Safari Mobile
+        if (!document.body.classList.contains('safari-mobile')) {
+            return;
+        }
+
+        // Create overlay elements if they don't exist
+        if (!cardOverlay) {
+            // Create main overlay
+            cardOverlay = document.createElement('div');
+            cardOverlay.className = 'card-overlay';
+
+            // Create content container
+            overlayContent = document.createElement('div');
+            overlayContent.className = 'overlay-content';
+
+            // Create close button
+            const closeButton = document.createElement('div');
+            closeButton.className = 'overlay-close';
+            closeButton.addEventListener('click', closeOverlay);
+
+            // Create swipe indicator
+            const swipeIndicator = document.createElement('div');
+            swipeIndicator.className = 'swipe-indicator';
+            swipeIndicator.textContent = 'Scroll down for more';
+
+            // Append elements
+            overlayContent.appendChild(closeButton);
+            overlayContent.appendChild(swipeIndicator);
+            cardOverlay.appendChild(overlayContent);
+            document.body.appendChild(cardOverlay);
+
+            // Add touch event listeners for the overlay
+            overlayContent.addEventListener('touchstart', handleOverlayTouchStart, { passive: true });
+            overlayContent.addEventListener('touchmove', handleOverlayTouchMove, { passive: true });
+            overlayContent.addEventListener('touchend', handleOverlayTouchEnd);
+
+            // Add click event to close overlay when clicking outside content
+            cardOverlay.addEventListener('click', function(e) {
+                if (e.target === cardOverlay) {
+                    closeOverlay();
+                }
+            });
+        }
+    }
+
+    // Function to open the overlay with card content and animation
+    function openOverlay(card) {
+        if (!cardOverlay) {
+            createOverlay();
+        }
+
+        // Store reference to current card
+        currentOverlayCard = card;
+        CardSystem.currentlyFlippedCard = card;
+
+        // Get the card's position for animation
+        const cardRect = card.getBoundingClientRect();
+        const cardCenterX = cardRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top + cardRect.height / 2;
+
+        // Get the card back content
+        const cardBack = card.querySelector('.flip-card-back');
+
+        // Clear the overlay content
+        overlayContent.innerHTML = '';
+
+        // Add close button
+        const closeButton = document.createElement('div');
+        closeButton.className = 'overlay-close';
+        closeButton.addEventListener('click', closeOverlay);
+        overlayContent.appendChild(closeButton);
+
+        // Create a content wrapper to hold the card content
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'overlay-content-wrapper';
+        contentWrapper.style.width = '100%';
+        contentWrapper.style.height = 'auto';
+        contentWrapper.style.position = 'relative';
+
+        // Clone and append the content
+        const contentClone = cardBack.cloneNode(true);
+        contentClone.style.transform = 'none';
+        contentClone.style.position = 'relative';
+        contentClone.style.top = '0';
+        contentClone.style.left = '0';
+        contentClone.style.width = '100%';
+        contentClone.style.height = 'auto';
+        contentWrapper.appendChild(contentClone);
+
+        // Add the content wrapper to the overlay
+        overlayContent.appendChild(contentWrapper);
+
+        // Add swipe indicator after all content
+        const swipeIndicator = document.createElement('div');
+        swipeIndicator.className = 'swipe-indicator';
+        swipeIndicator.textContent = 'scroll for more';
+        overlayContent.appendChild(swipeIndicator);
+
+        // Show the overlay
+        cardOverlay.classList.add('active');
+        isOverlayActive = true;
+
+        // Hide header and indicators
+        toggleHeaderBanner(false);
+        document.querySelector('.card-indicator').style.opacity = '0';
+        document.querySelector('.card-indicator').style.pointerEvents = 'none';
+        toggleLogoVisibility(false);
+
+        // Mark card as "flipped" for state tracking
+        card.classList.add('flipped');
+
+        // Prevent body scrolling
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Function to close the overlay
+    function closeOverlay() {
+        if (cardOverlay) {
+            cardOverlay.classList.remove('active');
+            isOverlayActive = false;
+
+            // Unmark the card
+            if (currentOverlayCard) {
+                currentOverlayCard.classList.remove('flipped');
+                CardSystem.currentlyFlippedCard = null;
+            }
+
+            // Show header and indicators
+            toggleHeaderBanner(true);
+            document.querySelector('.card-indicator').style.opacity = '1';
+            document.querySelector('.card-indicator').style.pointerEvents = 'auto';
+
+            // Show logo after a delay
+            setTimeout(() => {
+                toggleLogoVisibility(true);
+                setTimeout(updateLogoPosition, 100);
+            }, 100);
+
+            // Reset current card
+            currentOverlayCard = null;
+
+            // Re-enable body scrolling
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Touch handlers for overlay swipe navigation
+    let overlayTouchStartX = 0;
+    let overlayTouchStartY = 0;
+
+    function handleOverlayTouchStart(e) {
+        overlayTouchStartX = e.touches[0].clientX;
+        overlayTouchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+    }
+
+    function handleOverlayTouchMove(e) {
+        // Just track movement, don't prevent default to allow scrolling
+    }
+
+    function handleOverlayTouchEnd(e) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDuration = Date.now() - touchStartTime;
+
+        // Calculate distances
+        const xDistance = touchEndX - overlayTouchStartX;
+        const absXDistance = Math.abs(xDistance);
+        const yDistance = touchEndY - overlayTouchStartY;
+        const absYDistance = Math.abs(yDistance);
+
+        // Only handle horizontal swipes - ignore vertical swipes
+        if (absXDistance > absYDistance &&
+            absXDistance > SWIPE_THRESHOLD &&
+            touchDuration < SWIPE_TIMEOUT) {
+
+            // Get current and target indices
+            const currentIndex = CardSystem.activeCardIndex;
+            const targetIndex = xDistance < 0 ?
+                Math.min(flipCards.length - 1, currentIndex + 1) :
+                Math.max(0, currentIndex - 1);
+
+            if (targetIndex !== currentIndex) {
+                // Close current overlay first
+                closeOverlay();
+
+                // Move to the new card after a short delay
+                setTimeout(() => {
+                    moveToCard(targetIndex);
+                    // Don't automatically open the new card's overlay
+                }, 50);
+            }
+        }
+    }
 })();
 
 // Browser detection for Safari vs Chrome positioning
