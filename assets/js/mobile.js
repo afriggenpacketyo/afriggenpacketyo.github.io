@@ -26,7 +26,8 @@
     const SWIPE_TIMEOUT = 300;  // Maximum time in ms for a swipe
     const DRAG_RESISTANCE = 1.0; // No resistance for more direct control
     const POSITION_THRESHOLD = 0.4; // When to snap to next/previous card
-    const TRANSITION_DURATION = 178; // Faster transition for better responsiveness
+    const TRANSITION_DURATION = 270; // Increased for smoother recentering
+    const RECENTERING_EASING = 'cubic-bezier(0.25, 0.1, 0.25, 1)'; // More elegant easing
 
     // Variables for flipped card handling
     let flippedCardTouchStartX = 0;
@@ -46,16 +47,32 @@
     let currentOverlayCard = null;
     let isOverlayActive = false;
 
+    // Add a global variable to store the final logo position
+    let finalLogoPosition = null;
+
+    // Add these variables at an appropriate scope level
+    let preactivatedCard = null;
+    let previouslyActiveCard = null;
+    let visibilityThreshold = 0.4; // Adjust this value as needed (40% visibility)
+
     // Function to update dot sizes based on active index
     function updateInstagramStyleDots(activeIndex) {
-        const dots = document.querySelectorAll('.indicator-dot');
+        // Cache dots selector - don't query DOM every time
+        if (!updateInstagramStyleDots.dots) {
+            updateInstagramStyleDots.dots = document.querySelectorAll('.indicator-dot');
+        }
+        const dots = updateInstagramStyleDots.dots;
         const totalDots = dots.length;
+
+        // Skip the entire function if no dots exist
+        if (totalDots === 0) return;
 
         // Determine swipe direction
         const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
 
         // Skip animation if we're clicking the same dot we're already on
         const isSameDot = activeIndex === previousActiveIndex;
+        if (isSameDot) return; // Early exit for performance
 
         // Check if we need to shift the window (approaching edge)
         let needsWindowShift = false;
@@ -177,17 +194,16 @@
         // Enforce boundaries
         index = Math.max(0, Math.min(flipCards.length - 1, index));
 
-        // COMPREHENSIVE FIX: Reset all possible scroll positions
-
-        // 1. Reset all card backs
-        flipCards.forEach(card => {
-            const cardBack = card.querySelector('.flip-card-back');
+        // OPTIMIZATION: Only reset scroll on cards that need it
+        // Don't loop through ALL cards - just the currently flipped one
+        if (CardSystem.currentlyFlippedCard) {
+            const cardBack = CardSystem.currentlyFlippedCard.querySelector('.flip-card-back');
             if (cardBack) {
                 // Force scroll reset with !important style
                 cardBack.style.cssText += '; overflow-y: hidden !important;';
                 cardBack.scrollTop = 0;
 
-                // Also reset any content containers inside the card back
+                // Reset only visible content containers
                 const contentContainers = cardBack.querySelectorAll('.flip-card-back-content, div, section');
                 contentContainers.forEach(container => {
                     if (container.scrollTop) container.scrollTop = 0;
@@ -197,19 +213,6 @@
                 setTimeout(() => {
                     cardBack.style.cssText = cardBack.style.cssText.replace('overflow-y: hidden !important;', 'overflow-y: auto !important;');
                 }, 50);
-            }
-        });
-
-        // 2. If we're using an overlay approach, reset that too
-        if (overlayContent) {
-            overlayContent.scrollTop = 0;
-        }
-
-        // 3. Reset any currently flipped card
-        if (CardSystem.currentlyFlippedCard) {
-            const currentBack = CardSystem.currentlyFlippedCard.querySelector('.flip-card-back');
-            if (currentBack) {
-                currentBack.scrollTop = 0;
             }
         }
 
@@ -234,7 +237,9 @@
         // Apply smooth scroll animation if requested
         if (shouldAnimate) {
             container.style.scrollBehavior = 'smooth';
-            container.style.transition = `all ${TRANSITION_DURATION}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+
+            // Use a more refined, smoother transition for recentering
+            container.style.transition = `all ${TRANSITION_DURATION}ms ${RECENTERING_EASING}`;
             isAnimating = true;
             swipeInProgress = true; // Prevent new swipes until animation completes
         } else {
@@ -333,62 +338,90 @@
         // Only proceed if touch is active and not on a flipped card
         if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
 
-        // Allow movement even during animation - makes it interruptible
-        // Remove the swipeInProgress check here
-
-        // Update current touch position
-        touchCurrentX = e.touches[0].clientX;
-
-        // Calculate velocity for momentum scrolling
-        const now = Date.now();
-        const timeDelta = now - lastDragTimestamp;
-        if (timeDelta > 0) {
-            dragVelocity = (touchCurrentX - lastDragX) / timeDelta;
-        }
-        lastDragX = touchCurrentX;
-        lastDragTimestamp = now;
-
-        // Calculate drag distance with 1:1 mapping (MUCH more responsive)
-        const touchDistance = touchCurrentX - touchStartX;
-
-        // Determine current swipe direction
-        const currentDirection = touchDistance > 0 ? 1 : touchDistance < 0 ? -1 : 0;
-
-        // Only apply edge resistance (not general resistance)
-        let effectiveDistance = touchDistance;
-        if ((CardSystem.activeCardIndex === 0 && touchDistance > 0) ||
-            (CardSystem.activeCardIndex === flipCards.length - 1 && touchDistance < 0)) {
-            // Apply resistance only at the edges (first and last card)
-            effectiveDistance = touchDistance * 0.3;
+        // OPTIMIZATION: Use requestAnimationFrame for smoother dragging
+        if (this._touchMoveRAF) {
+            cancelAnimationFrame(this._touchMoveRAF);
         }
 
-        // Apply the drag immediately with no artificial resistance
-        currentDragOffset = effectiveDistance;
-        container.scrollLeft = initialScrollLeft - currentDragOffset;
+        this._touchMoveRAF = requestAnimationFrame(() => {
+            // Update current touch position
+            touchCurrentX = e.touches[0].clientX;
 
-        // Highlight cards during swipe
-        const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
-        const progress = Math.abs(effectiveDistance) / (cardWidth * POSITION_THRESHOLD);
-
-        // If we're swiping past the threshold and the direction is valid
-        if (progress > 0.5) {
-            // Give visual feedback about which card will be activated
-            if (currentDirection < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
-                // Highlight next card
-                const nextCard = flipCards[CardSystem.activeCardIndex + 1];
-                highlightTargetCard(nextCard);
-            } else if (currentDirection > 0 && CardSystem.activeCardIndex > 0) {
-                // Highlight previous card
-                const prevCard = flipCards[CardSystem.activeCardIndex - 1];
-                highlightTargetCard(prevCard);
+            // Calculate velocity less frequently - only every 60ms
+            const now = Date.now();
+            if (now - lastDragTimestamp > 60) {
+                const timeDelta = now - lastDragTimestamp;
+                if (timeDelta > 0) {
+                    dragVelocity = (touchCurrentX - lastDragX) / timeDelta;
+                }
+                lastDragX = touchCurrentX;
+                lastDragTimestamp = now;
             }
-        }
+
+            // Calculate drag distance with 1:1 mapping
+            const touchDistance = touchCurrentX - touchStartX;
+
+            // Determine current swipe direction - use simple math operation
+            const currentDirection = Math.sign(touchDistance); // -1, 0, or 1
+
+            // Only apply edge resistance (not general resistance)
+            let effectiveDistance = touchDistance;
+            if ((CardSystem.activeCardIndex === 0 && touchDistance > 0) ||
+                (CardSystem.activeCardIndex === flipCards.length - 1 && touchDistance < 0)) {
+                // Apply resistance only at the edges (first and last card)
+                effectiveDistance = touchDistance * 0.3;
+            }
+
+            // Apply the drag immediately with no artificial resistance
+            currentDragOffset = effectiveDistance;
+            container.scrollLeft = initialScrollLeft - currentDragOffset;
+
+            // OPTIMIZATION: Only calculate card width once per drag
+            if (!this._currentCardWidth) {
+                this._currentCardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
+            }
+            const cardWidth = this._currentCardWidth;
+
+            // Calculate progress towards activating next/prev card
+            const progress = Math.abs(effectiveDistance) / (cardWidth * POSITION_THRESHOLD);
+
+            // OPTIMIZATION: Cache DOM queries
+            const targetedCard = document.querySelector('.card-targeted');
+
+            // IMPORTANT: If we've moved below the threshold, reset card highlights
+            if (progress < 0.5) {
+                // We've moved back enough to reset to the original card
+                if (targetedCard) {
+                    resetCardHighlights();
+                }
+            } else {
+                // We're above the threshold - show preview of next/prev card
+                if (currentDirection < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
+                    // Highlight next card
+                    const nextCard = flipCards[CardSystem.activeCardIndex + 1];
+                    highlightTargetCard(nextCard);
+                } else if (currentDirection > 0 && CardSystem.activeCardIndex > 0) {
+                    // Highlight previous card
+                    const prevCard = flipCards[CardSystem.activeCardIndex - 1];
+                    highlightTargetCard(prevCard);
+                }
+            }
+        });
 
         // Prevent default to disable native scrolling
         e.preventDefault();
     };
 
     container._touchendHandler = function(e) {
+        // BUGFIX: Clean up requestAnimationFrame to prevent memory leaks
+        if (this._touchMoveRAF) {
+            cancelAnimationFrame(this._touchMoveRAF);
+            this._touchMoveRAF = null;
+        }
+
+        // Reset cached card width
+        this._currentCardWidth = null;
+
         // Only proceed if touch is active and not on a flipped card
         if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
 
@@ -398,19 +431,26 @@
         const touchDistance = touchEndX - touchStartX;
         const absTouchDistance = Math.abs(touchDistance);
 
-        // Get card width to calculate threshold
+        // Get card width for threshold calculations
         const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
         const thresholdDistance = cardWidth * POSITION_THRESHOLD;
 
-        // Determine whether to move to next/prev card or snap back
+        // Check if there's a preactivated/targeted card
+        if (document.querySelector('.card-targeted')) {
+            // Handle the preactivated card with our improved function
+            console.log("Touch end with targeted card - finalizing activation");
+            finalizeCardActivation();
+            isTouchActive = false;
+            return;
+        }
+
+        // If no card is highlighted but we have a swipe, handle it with normal navigation
         let targetIndex = CardSystem.activeCardIndex;
 
-        // If we've moved far enough OR swipe was fast enough
-        // Remove the swipeInProgress check to make transitions interruptible
         if (absTouchDistance > thresholdDistance ||
             (touchDuration < SWIPE_TIMEOUT && absTouchDistance > SWIPE_THRESHOLD)) {
 
-            // Direction based on touch distance
+            // Determine swipe direction and target
             if (touchDistance > 0 && CardSystem.activeCardIndex > 0) {
                 // Right swipe - previous card
                 targetIndex = CardSystem.activeCardIndex - 1;
@@ -423,11 +463,11 @@
         // Reset all card highlights
         resetCardHighlights();
 
-        // IMMEDIATE feedback - start animation right away
+        // Apply improved transition for smoother recentering
         container.style.scrollBehavior = 'smooth';
-        container.style.transition = `all ${TRANSITION_DURATION}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
 
-        // Move to target card (will snap back if same as current)
+        // Use a more natural easing curve for recentering
+        container.style.transition = `all ${TRANSITION_DURATION}ms ${RECENTERING_EASING}`;
         moveToCard(targetIndex);
 
         isTouchActive = false;
@@ -435,7 +475,15 @@
 
     // Function to highlight the target card
     function highlightTargetCard(card) {
-        // Reset all cards first (but preserve proper active index from CardSystem)
+        if (!card || card.classList.contains('active')) return;
+
+        // Store the previously active card before changing
+        previouslyActiveCard = document.querySelector('.card.active');
+
+        // Track this card as preactivated
+        preactivatedCard = card;
+
+        // Reset all cards but preserve proper active index
         resetCardHighlights();
 
         // Add highlight effect to target card
@@ -444,60 +492,84 @@
         // Get current active card and card we're moving to
         const currentCard = flipCards[CardSystem.activeCardIndex];
 
-        // CRITICAL: Make the target card FULLY VISIBLE like an active card
-        // Set explicit styles with !important to override any potential conflicts
-        if (card.querySelector('.flip-card-front')) {
-            // Force full opacity with !important
-            card.querySelector('.flip-card-front').style.cssText = `
+        // Prepare cached styles with beautiful scaling
+        if (!highlightTargetCard.activeStyle) {
+            highlightTargetCard.activeStyle = `
                 opacity: 1 !important;
                 background-color: var(--primary-color, #0078e7) !important;
                 border-color: var(--primary-color-dark, #005bb1) !important;
-                padding-bottom: 0px !important;
-                transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+                padding-bottom: 20px !important;
+                transform: scale(1) !important;
+                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
-        }
 
-        // Make the current card visually inactive (reduced opacity, lighter blue)
-        if (currentCard !== card && currentCard.querySelector('.flip-card-front')) {
-            currentCard.querySelector('.flip-card-front').style.cssText = `
+            highlightTargetCard.inactiveStyle = `
                 opacity: 0.7 !important;
                 background-color: var(--secondary-color, #76b5e7) !important;
                 border-color: var(--secondary-color-dark, #5090c9) !important;
-                transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+                padding-bottom: 20px !important;
+                transform: scale(0.95) !important;
+                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
+        }
+
+        // Apply cached styles to card front
+        if (card.querySelector('.flip-card-front')) {
+            card.querySelector('.flip-card-front').style.cssText = highlightTargetCard.activeStyle;
+        }
+
+        // Make the current card visually inactive
+        if (currentCard !== card && currentCard.querySelector('.flip-card-front')) {
+            currentCard.querySelector('.flip-card-front').style.cssText = highlightTargetCard.inactiveStyle;
         }
     }
 
     // Function to reset all card highlights
     function resetCardHighlights() {
+        // Cache the style strings if not already cached
+        if (!resetCardHighlights.activeStyle) {
+            resetCardHighlights.activeStyle = `
+                opacity: 1 !important;
+                background-color: var(--primary-color, #0078e7) !important;
+                border-color: var(--primary-color-dark, #005bb1) !important;
+                padding-bottom: 20px !important;
+                transform: scale(1) !important;
+                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+            `;
+
+            resetCardHighlights.inactiveStyle = `
+                opacity: 0.7 !important;
+                background-color: var(--secondary-color, #76b5e7) !important;
+                border-color: var(--secondary-color-dark, #5090c9) !important;
+                padding-bottom: 20px !important;
+                transform: scale(0.95) !important;
+                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+            `;
+        }
+
         // Reset temporary visual styles
         flipCards.forEach(card => {
             card.classList.remove('card-targeted');
         });
 
-        // Ensure proper active/inactive states based on CardSystem.activeCardIndex
-        flipCards.forEach((card, index) => {
+        // Calculate range of visible cards (active +/- 2)
+        const activeIndex = CardSystem.activeCardIndex;
+        const startIdx = Math.max(0, activeIndex - 2);
+        const endIdx = Math.min(flipCards.length - 1, activeIndex + 2);
+
+        // Only apply styles to cards in the visible range
+        for (let i = startIdx; i <= endIdx; i++) {
+            const card = flipCards[i];
             if (card.querySelector('.flip-card-front')) {
-                if (index === CardSystem.activeCardIndex) {
-                    // Active card - full opacity, primary color
-                    card.querySelector('.flip-card-front').style.cssText = `
-                        opacity: 1 !important;
-                        background-color: var(--primary-color, #0078e7) !important;
-                        border-color: var(--primary-color-dark, #005bb1) !important;
-                        padding-bottom: 20px !important;
-                        transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
-                    `;
-                } else {
-                    // Inactive card - reduced opacity, secondary color
-                    card.querySelector('.flip-card-front').style.cssText = `
-                        opacity: 0.7 !important;
-                        background-color: var(--secondary-color, #76b5e7) !important;
-                        border-color: var(--secondary-color-dark, #5090c9) !important;
-                        transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
-                    `;
-                }
+                card.querySelector('.flip-card-front').style.cssText =
+                    (i === activeIndex) ?
+                    resetCardHighlights.activeStyle :
+                    resetCardHighlights.inactiveStyle;
             }
-        });
+        }
+
+        // Clear preactivation when all highlights are reset
+        preactivatedCard = null;
     }
 
     // Add the event listeners
@@ -567,8 +639,10 @@
         // Set flags
         CardSystem.isManuallyFlipping = true;
 
-        // If we're on Safari Mobile, use the overlay approach
-        if (document.body.classList.contains('safari-mobile')) {
+        // Check for both Safari Mobile AND Chrome on mobile browsers
+        if (document.body.classList.contains('safari-mobile') ||
+            document.body.classList.contains('chrome-android') ||
+            document.body.classList.contains('chrome-ios')) {
             if (shouldFlip) {
                 // Show in overlay instead of flipping
                 openOverlay(card);
@@ -578,10 +652,10 @@
                 closeOverlay();
                 return; // Exit early, don't do regular flip
             }
+            return; // Important: Exit here to prevent any default flip behavior
         }
 
-        // Regular flip behavior for non-Safari-mobile continues here
-        // (Keep your existing toggleCardFlip code for other browsers)
+        // Regular flip behavior for desktop browsers only
         if (shouldFlip) {
             // Force a reflow before adding the flipped class
             CardSystem.adjustCardHeight(card, true);
@@ -589,18 +663,13 @@
             card.classList.add('flipped');
             CardSystem.currentlyFlippedCard = card;
 
-            // Hide indicators when card is flipped on mobile
+            // Hide indicators when card is flipped
             document.querySelector('.card-indicator').style.opacity = '0';
             document.querySelector('.card-indicator').style.pointerEvents = 'none';
 
             // Make card larger and hide header banner
             expandCardForMobile(card);
             toggleHeaderBanner(false);
-
-            // Add swipe-down-to-close event listeners
-            card.addEventListener('touchstart', handleFlippedCardTouchStart, { passive: true });
-            card.addEventListener('touchmove', handleFlippedCardTouchMove, { passive: true });
-            card.addEventListener('touchend', handleFlippedCardTouchEnd);
 
             // When a card is flipped:
             isAnyCardFlipped = true;
@@ -619,25 +688,18 @@
             restoreCardForMobile(card);
             toggleHeaderBanner(true);
 
-            // Remove swipe-to-close event listeners
-            card.removeEventListener('touchstart', handleFlippedCardTouchStart);
-            card.removeEventListener('touchmove', handleFlippedCardTouchMove);
-            card.removeEventListener('touchend', handleFlippedCardTouchEnd);
-
             // When a card is unflipped:
             isAnyCardFlipped = false;
 
             // Wait for the header to become visible before showing the logo
             setTimeout(() => {
                 toggleLogoVisibility(true);
-                // Update logo position after it's visible
-                setTimeout(updateLogoPosition, 100);
             }, 100);
         }
 
         // Reset manual flipping flag after a delay
         setTimeout(() => {
-            CardSystem.isManuallyFlipping = false;
+            CardSystem.isManuallyFlipped = false;
         }, TRANSITION_DURATION);
     }
 
@@ -747,6 +809,8 @@
             moveToCard(CardSystem.activeCardIndex);
         }
         // For vertical movements, we do nothing - let native scrolling handle it
+
+        finalizeCardActivation();
     }
 
     // Function to expand card for mobile view
@@ -933,18 +997,25 @@
         .card-targeted {
             box-shadow: 0 5px 20px rgba(0,0,0,0.2) !important;
             transform: scale(1.05) !important;
-            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            transition: transform 0.28s ease, box-shadow 0.25s ease !important;
             z-index: 10 !important;
         }
 
         /* CRITICAL FIX: Override the :not(.active) selector with higher specificity */
         .flip-card.card-targeted:not(.active) {
             opacity: 1 !important;
+            transform: scale(1.05) !important;
         }
 
         /* Apply smooth transitions to card front styles */
         .flip-card-front {
-            transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease !important;
+            transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+            transform-origin: center center !important;
+        }
+
+        /* Inactive card scale effect */
+        .flip-card:not(.active):not(.card-targeted) .flip-card-front {
+            transform: scale(0.95) !important;
         }
 
         /* Just keep the performance hint without transition */
@@ -1005,32 +1076,30 @@
 
     // Function to ensure the first card is properly centered initially
     function centerFirstCardOnLoad() {
-        // Make sure we have valid measurements before trying to center
-        if (container && flipCards && flipCards.length > 0) {
-            // Force proper initial state
-            CardSystem.activeCardIndex = 0;
+        // Make cards initially invisible
+        flipCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transition = 'none';
+        });
 
-            // Calculate exact center position - don't rely on current scrollLeft
-            const firstCard = flipCards[0];
-            const containerWidth = container.offsetWidth;
-            const cardWidth = firstCard.offsetWidth;
+        // Calculate and set position immediately without any animation
+        const firstCardPosition = getCardScrollPosition(0);
+        container.style.scrollBehavior = 'auto';
+        container.style.transition = 'none';
+        container.scrollLeft = firstCardPosition;
 
-            // Calculate the ideal scrollLeft to center the first card
-            const targetScrollLeft = firstCard.offsetLeft - (containerWidth - cardWidth) / 2;
+        // Force reflow to ensure position is applied
+        void container.offsetWidth;
 
-            // Apply positioning immediately (no animation)
-            container.style.scrollBehavior = 'auto';
-            container.style.transition = 'none';
-            container.scrollLeft = targetScrollLeft;
-
-            // Force reflow to ensure the position applies immediately
-            void container.offsetWidth;
-
-            // Update UI to reflect initial state
-            CardSystem.updateUI();
-
-            console.log("First card centered with scrollLeft:", targetScrollLeft);
-        }
+        // After positioning is complete, make cards visible with a transition
+        setTimeout(() => {
+            flipCards.forEach(card => {
+                card.style.transition = 'opacity 0.3s ease';
+                card.style.opacity = '';
+            });
+            container.style.transition = '';
+            container.style.scrollBehavior = '';
+        }, 50);
     }
 
     // Function to toggle logo visibility with smoother transitions
@@ -1058,127 +1127,315 @@
         }
     }
 
-    // Improved function to precisely position the logo between header and active card
+    // Modify updateLogoPosition to use the stored position if available
     function updateLogoPosition() {
+        // Only use the stored position
         const logoContainer = document.querySelector('.logo-container');
-        const header = document.querySelector('header');
-        const activeCard = document.querySelector('.flip-card.active');
-
-        if (!logoContainer || !header || !activeCard) {
-            console.log("Missing elements for logo positioning");
-            return;
+        if (logoContainer && finalLogoPosition !== null) {
+            logoContainer.style.position = 'fixed';
+            logoContainer.style.top = `${finalLogoPosition}px`;
+            logoContainer.style.left = '50%';
+            logoContainer.style.transform = 'translateX(-50%)';
         }
-
-        // Only update position if logo is visible
-        if (logoContainer.style.visibility === 'hidden') {
-            return;
-        }
-
-        // Get precise measurements
-        const headerRect = header.getBoundingClientRect();
-        const cardRect = activeCard.getBoundingClientRect();
-
-        // Ensure we have valid measurements
-        if (headerRect.height === 0 || cardRect.height === 0) {
-            console.log("Invalid element dimensions for logo positioning");
-            return;
-        }
-
-        // Calculate the exact midpoint between header bottom and card top
-        const headerBottom = headerRect.bottom;
-        const cardTop = cardRect.top;
-
-        // Ensure there's actually space between header and card
-        if (cardTop <= headerBottom) {
-            console.log("No space between header and card for logo");
-            return;
-        }
-
-        const availableSpace = cardTop - headerBottom;
-        const midPoint = headerBottom + (availableSpace / 2);
-
-        // Center the logo at this midpoint
-        const logoHeight = logoContainer.offsetHeight;
-        const adjustedPosition = midPoint - (logoHeight / 2);
-
-        // Apply the positioning with fixed position
-        logoContainer.style.position = 'fixed';
-        logoContainer.style.top = `${Math.max(0, adjustedPosition)}px`; // Prevent negative values
-        logoContainer.style.left = '50%';
-        logoContainer.style.transform = 'translateX(-50%)';
-
-        // For debugging
-        console.log(`Logo positioning: Header bottom: ${headerBottom}, Card top: ${cardTop}, Midpoint: ${midPoint}, Logo position: ${adjustedPosition}`);
     }
 
-    // Make sure we call this function at the right times
+    // Update the initLogoVisibility function
     function initLogoVisibility() {
+        // Initially hide the logo to prevent the "flying" effect
+        const logoContainer = document.querySelector('.logo-container');
+        if (logoContainer) {
+            // Start with logo invisible
+            logoContainer.style.opacity = '0';
+            logoContainer.style.visibility = 'hidden';
+        }
+
         // Check if any card is already flipped (page refresh case)
         isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null;
 
-        // Show logo initially if no card is flipped
-        toggleLogoVisibility(!isAnyCardFlipped);
-
-        // Position the logo after a short delay to ensure all elements are properly rendered
-        setTimeout(() => {
+        if (!isAnyCardFlipped) {
+            // Position the logo first while it's invisible
             updateLogoPosition();
-        }, 200);
+
+            // Then make it visible with a fade in
+            setTimeout(() => {
+                if (logoContainer) {
+                    logoContainer.style.transition = 'opacity 0.3s ease';
+                    logoContainer.style.visibility = 'visible';
+                    logoContainer.style.opacity = '1';
+                }
+            }, 100); // Small delay to ensure position is set
+        }
     }
 
-    // Add these calls to the initialize function
-    function initialize() {
+    // Enhanced initialization function with proper waitForCardMeasurements
+    async function initialize() {
         console.log("Initializing mobile card system...");
 
-        // Add padding and fix positioning first
-        addEdgeCardPadding();
-        fixVerticalPositioning();
+        // Define waitForCardMeasurements function with timeout and faster polling
+        function waitForCardMeasurements() {
+            return new Promise((resolve, reject) => {
+                // OPTIMIZATION: Check immediately first
+                if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
+                    resolve();
+                    return;
+                }
 
-        // Initialize card states (active/inactive styles)
-        resetCardHighlights();
+                let attempts = 0;
+                const checkCards = setInterval(() => {
+                    if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
+                        clearInterval(checkCards);
+                        resolve();
+                    } else if (attempts >= 25) { // Reduced timeout to 2.5 seconds
+                        clearInterval(checkCards);
+                        // Fallback to basic initialization if measurement fails
+                        console.warn('Card measurement timed out, using fallback initialization');
+                        resolve();
+                    }
+                    attempts++;
+                }, 100);
+            });
+        }
 
-        // First ensure proper centering
-        centerFirstCardOnLoad();
+        // Add initial CSS to hide cards until positioned
+        const style = document.createElement('style');
+        style.textContent = `
+            .card-container {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.5s ease;
+            }
+            .initialized .card-container {
+                visibility: visible;
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
 
-        // Initialize logo visibility and position
-        initLogoVisibility();
+        // Completely revised initializeSequence
+        async function initializeSequence() {
+            try {
+                // STEP 1: Add a CSS blocker to prevent ANY rendering of cards until we're ready
+                const styleBlocker = document.createElement('style');
+                styleBlocker.id = 'init-blocker';
+                styleBlocker.textContent = `
+                    .flip-cards-container {
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                    }
+                    .logo-container {
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                    }
+                    .card-indicator {
+                        opacity: 0 !important;
+                    }
+                `;
+                document.head.appendChild(styleBlocker);
 
-        // Center the active card with a slight delay to ensure measurements are complete
-        setTimeout(() => {
-            // Double-check centering after everything has fully rendered
-            centerFirstCardOnLoad();
+                // Set inline styles to reinforce our CSS blocking
+                container.style.visibility = 'hidden';
+                container.style.opacity = '0';
 
-            // Ensure card states are correctly set
-            resetCardHighlights();
+                // Handle logo and indicators
+                const logoContainer = document.querySelector('.logo-container');
+                if (logoContainer) {
+                    logoContainer.style.visibility = 'hidden';
+                    logoContainer.style.opacity = '0';
+                }
 
-            // Update logo position again after cards are positioned
-            updateLogoPosition();
-        }, 100);
+                const cardIndicator = document.querySelector('.card-indicator');
+                if (cardIndicator) {
+                    cardIndicator.style.opacity = '0';
+                }
 
-        // Add event listeners for responsive positioning
-        window.addEventListener('resize', updateLogoPosition);
-        window.addEventListener('orientationchange', updateLogoPosition);
-        window.addEventListener('scroll', updateLogoPosition);
+                // STEP 2: Wait for cards to be measurable
+                await waitForCardMeasurements();
 
-        // Create overlay for Safari Mobile
-        createOverlay();
+                // STEP 3: Configure card container with transitions disabled
+                // Absolutely prevent transitions during setup
+                container.style.transition = 'none !important';
+                container.style.webkitTransition = 'none !important';
+                container.style.scrollBehavior = 'auto';
 
-        console.log("Mobile card initialization complete");
+                // Add left/right padding
+                addEdgeCardPadding();
+
+                // Fix vertical positioning
+                fixVerticalPositioning();
+
+                // Set initial card state
+                CardSystem.activeCardIndex = 0;
+                CardSystem.updateUI();
+
+                // Position the first card in center - CRITICAL STEP
+                const firstCard = flipCards[0];
+                const containerWidth = container.offsetWidth;
+                const cardWidth = firstCard.offsetWidth;
+                const targetScrollLeft = firstCard.offsetLeft - (containerWidth - cardWidth) / 2;
+
+                // Explicitly position without animation
+                container.scrollLeft = targetScrollLeft;
+
+                // Apply highlight states
+                resetCardHighlights();
+
+                // STEP 4: Force reflows to ensure all layout calculations are complete
+                void document.body.offsetHeight;
+                void container.offsetHeight;
+
+                // CRITICAL FIX: Add an absolute position container that covers everything
+                // while we finalize positioning
+                const positionBlocker = document.createElement('div');
+                positionBlocker.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: white;
+                    z-index: 9999;
+                    opacity: 1;
+                    transition: opacity 0.5s ease;
+                `;
+                document.body.appendChild(positionBlocker);
+
+                // Show header
+                toggleHeaderBanner(true);
+
+                // Force another layout calculation
+                await new Promise(resolve => setTimeout(resolve, 50));
+                void document.documentElement.offsetHeight;
+
+                // STEP 5: Calculate logo position
+                const header = document.querySelector('header');
+                const activeCard = flipCards[CardSystem.activeCardIndex];
+
+                if (header && activeCard && logoContainer) {
+                    // Force reflow for accurate measurements
+                    void header.offsetHeight;
+                    void activeCard.offsetHeight;
+
+                    // Get precise measurements
+                    const headerRect = header.getBoundingClientRect();
+                    const cardRect = activeCard.getBoundingClientRect();
+
+                    // Calculate available space
+                    const headerBottom = headerRect.bottom;
+                    const cardTop = cardRect.top;
+
+                    // Set CSS variables for logo positioning
+                    document.documentElement.style.setProperty('--header-bottom', `${headerBottom}px`);
+                    document.documentElement.style.setProperty('--card-top', `${cardTop}px`);
+
+                    // Update or create style element for logo positioning
+                    let styleEl = document.getElementById('logo-position-style');
+                    if (!styleEl) {
+                        styleEl = document.createElement('style');
+                        styleEl.id = 'logo-position-style';
+                        document.head.appendChild(styleEl);
+                    }
+
+                    styleEl.textContent = `
+                        .logo-container {
+                            position: fixed !important;
+                            top: calc((var(--header-bottom) + var(--card-top)) / 2) !important;
+                            left: 50% !important;
+                            transform: translate(-50%, -50%) !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                    `;
+
+                    // Store the position for later reference
+                    finalLogoPosition = headerBottom + ((cardTop - headerBottom) / 2);
+
+                    // Log for debugging
+                    console.log(`LAYOUT READY - measurements complete:`);
+                    console.log(`Header bottom: ${headerBottom}px`);
+                    console.log(`Card top: ${cardTop}px`);
+                    console.log(`Available space: ${cardTop - headerBottom}px`);
+                    console.log(`Vertical midpoint: ${headerBottom + ((cardTop - headerBottom) / 2)}px`);
+                }
+
+                // STEP 6: Set up fade-in transitions BEFORE making elements visible
+                // We set these while elements are still hidden
+                if (logoContainer) {
+                    logoContainer.style.transition = 'opacity 0.5s ease';
+                }
+
+                if (cardIndicator) {
+                    cardIndicator.style.transition = 'opacity 0.5s ease';
+                }
+
+                container.style.transition = 'opacity 0.5s ease';
+
+                // STEP 7: Remove the style blocker but keep the position blocker
+                if (styleBlocker && styleBlocker.parentNode) {
+                    styleBlocker.parentNode.removeChild(styleBlocker);
+                }
+
+                // STEP 8: NOW make everything visible underneath the position blocker
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+
+                if (logoContainer) {
+                    logoContainer.style.visibility = 'visible';
+                    logoContainer.style.opacity = '1';
+                }
+
+                if (cardIndicator) {
+                    cardIndicator.style.opacity = '1';
+                }
+
+                // STEP 9: Once everything is completely positioned AND visible underneath,
+                // fade out the position blocker to reveal the perfectly positioned content
+                await new Promise(resolve => setTimeout(resolve, 50));
+                positionBlocker.style.opacity = '0';
+
+                // Remove the position blocker after the fade
+                setTimeout(() => {
+                    if (positionBlocker.parentNode) {
+                        positionBlocker.parentNode.removeChild(positionBlocker);
+                    }
+                }, 500);
+
+                console.log("Initialization complete - clean fade-in with no sliding effect");
+
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                console.error('Error details:', error.message);
+
+                // If initialization fails, at least make everything visible
+                // Remove the blocker style in case of error
+                const styleBlocker = document.getElementById('init-blocker');
+                if (styleBlocker && styleBlocker.parentNode) {
+                    styleBlocker.parentNode.removeChild(styleBlocker);
+                }
+
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+
+                const logoContainer = document.querySelector('.logo-container');
+                if (logoContainer) {
+                    logoContainer.style.visibility = 'visible';
+                    logoContainer.style.opacity = '1';
+                }
+
+                const cardIndicator = document.querySelector('.card-indicator');
+                if (cardIndicator) {
+                    cardIndicator.style.opacity = '1';
+                }
+            }
+        }
+
+        // Start initialization
+        initializeSequence();
     }
 
-    // Also call updateLogoPosition whenever the active card changes
-    const originalMoveToCard = moveToCard;
-    moveToCard = function(index, shouldAnimate = true) {
-        originalMoveToCard(index, shouldAnimate);
-
-        // Update logo position after card transition completes
-        setTimeout(updateLogoPosition, TRANSITION_DURATION + 50);
-    };
-
-    // Run initialization when everything is fully loaded
+    // Replace the current initialization code with this enhanced version
     if (document.readyState === 'complete') {
         initialize();
     } else {
-        // For safety, use both DOMContentLoaded and window.onload
         window.addEventListener('load', initialize);
     }
 
@@ -1190,11 +1447,6 @@
 
     // Function to create the overlay
     function createOverlay() {
-        // Only create if we're on Safari Mobile
-        if (!document.body.classList.contains('safari-mobile')) {
-            return;
-        }
-
         // Create overlay elements if they don't exist
         if (!cardOverlay) {
             // Create main overlay
@@ -1245,11 +1497,6 @@
         currentOverlayCard = card;
         CardSystem.currentlyFlippedCard = card;
 
-        // Get the card's position for animation
-        const cardRect = card.getBoundingClientRect();
-        const cardCenterX = cardRect.left + cardRect.width / 2;
-        const cardCenterY = cardRect.top + cardRect.height / 2;
-
         // Get the card back content
         const cardBack = card.querySelector('.flip-card-back');
 
@@ -1271,7 +1518,7 @@
 
         // Clone and append the content
         const contentClone = cardBack.cloneNode(true);
-        contentClone.style.transform = 'none';
+        contentClone.style.transform = 'none'; // Remove rotation
         contentClone.style.position = 'relative';
         contentClone.style.top = '0';
         contentClone.style.left = '0';
@@ -1298,9 +1545,6 @@
         document.querySelector('.card-indicator').style.pointerEvents = 'none';
         toggleLogoVisibility(false);
 
-        // Mark card as "flipped" for state tracking
-        card.classList.add('flipped');
-
         // Prevent body scrolling
         document.body.style.overflow = 'hidden';
     }
@@ -1311,11 +1555,9 @@
             cardOverlay.classList.remove('active');
             isOverlayActive = false;
 
-            // Unmark the card
-            if (currentOverlayCard) {
-                currentOverlayCard.classList.remove('flipped');
-                CardSystem.currentlyFlippedCard = null;
-            }
+            // Reset the current card reference
+            CardSystem.currentlyFlippedCard = null;
+            currentOverlayCard = null;
 
             // Show header and indicators
             toggleHeaderBanner(true);
@@ -1325,11 +1567,7 @@
             // Show logo after a delay
             setTimeout(() => {
                 toggleLogoVisibility(true);
-                setTimeout(updateLogoPosition, 100);
             }, 100);
-
-            // Reset current card
-            currentOverlayCard = null;
 
             // Re-enable body scrolling
             document.body.style.overflow = '';
@@ -1382,6 +1620,45 @@
                     // Don't automatically open the new card's overlay
                 }, 50);
             }
+        }
+    }
+
+    // Add this debugging function to help identify the issue
+    function debugCardActivation(message, data = {}) {
+        const debug = true; // Set to false to disable debugging
+        if (!debug) return;
+
+        console.group(`Card Activation Debug: ${message}`);
+        console.log(data);
+        console.groupEnd();
+    }
+
+    // Update the finalizeCardActivation function to properly check visibility
+    function finalizeCardActivation() {
+        // Find the preactivated card
+        const targetedCard = document.querySelector('.card-targeted');
+
+        console.log("ACTIVATION DEBUG:");
+        console.log("- Targeted card found:", !!targetedCard);
+
+        if (!targetedCard) {
+            console.log("- No targeted card found");
+            return;
+        }
+
+        // Get the index of the targeted card
+        const targetedIndex = Array.from(flipCards).indexOf(targetedCard);
+
+        // BUGFIX: Only move if the index is valid
+        if (targetedIndex >= 0) {
+            // Use a slightly longer animation for smoother card transitions
+            container.style.transition = `all ${TRANSITION_DURATION}ms ${RECENTERING_EASING}`;
+            moveToCard(targetedIndex, true);
+
+            // Reset highlights after the transition is complete
+            setTimeout(() => {
+                resetCardHighlights();
+            }, TRANSITION_DURATION);
         }
     }
 })();
@@ -1472,3 +1749,48 @@
   // Uncomment this line to add debug info
   // window.addEventListener('load', addDebugInfo);
 })();
+
+// Let's add a debugging version of updateLogoPosition that logs all relevant values
+function debugLogoPosition(caller) {
+    const logoContainer = document.querySelector('.logo-container');
+    const header = document.querySelector('header');
+    const activeCard = document.querySelector('.flip-card.active') || flipCards[CardSystem.activeCardIndex];
+
+    if (!logoContainer || !header || !activeCard) {
+        console.log(`[${caller}] Missing elements for logo positioning`);
+        return null;
+    }
+
+    // Force a reflow on both header and card to ensure measurements are accurate
+    void header.offsetHeight;
+    void activeCard.offsetHeight;
+
+    // Get precise measurements after forcing reflow
+    const headerRect = header.getBoundingClientRect();
+    const cardRect = activeCard.getBoundingClientRect();
+    const logoRect = logoContainer.getBoundingClientRect();
+
+    // Calculate the exact midpoint between header bottom and card top
+    const headerBottom = headerRect.bottom;
+    const cardTop = cardRect.top;
+    const availableSpace = cardTop - headerBottom;
+    const midPoint = headerBottom + (availableSpace / 2);
+    const logoHeight = logoContainer.offsetHeight;
+    const adjustedPosition = midPoint - (logoHeight / 2);
+
+    // Debug info
+    console.log(`[${caller}] LOGO POSITION DEBUG:`);
+    console.log(`  Header: top=${headerRect.top.toFixed(2)}, bottom=${headerBottom.toFixed(2)}, height=${headerRect.height.toFixed(2)}`);
+    console.log(`  Active Card: top=${cardTop.toFixed(2)}, height=${cardRect.height.toFixed(2)}`);
+    console.log(`  Logo: height=${logoHeight}, current top=${logoRect.top.toFixed(2)}`);
+    console.log(`  Space: available=${availableSpace.toFixed(2)}, midPoint=${midPoint.toFixed(2)}, adjustedPos=${adjustedPosition.toFixed(2)}`);
+    console.log(`  Card computed styles:`, window.getComputedStyle(activeCard));
+    console.log(`  Header computed styles:`, window.getComputedStyle(header));
+
+    return {
+        headerBottom,
+        cardTop,
+        midPoint,
+        adjustedPosition
+    };
+}
