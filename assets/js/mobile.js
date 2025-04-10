@@ -2659,6 +2659,16 @@
       return 'chrome-desktop';
     }
 
+    // Add WebView detection for iOS
+    if (/iphone|ipad|ipod/.test(userAgent) && /wkwebview/.test(userAgent)) {
+        return 'wkwebview';
+    }
+
+    // Add WebView detection for Android
+    if (/android/.test(userAgent) && /wv/.test(userAgent)) {
+        return 'webview';
+    }
+
     // Default fallback
     return 'other-browser';
   }
@@ -2671,17 +2681,18 @@
     document.body.classList.remove(
       'safari-mobile', 'chrome-ios', 'chrome-android',
       'safari-desktop', 'chrome-desktop', 'other-browser',
-      'safari-browser', 'chrome-browser'
+      'safari-browser', 'chrome-browser',
+      'wkwebview', 'webview'  // Add these to the removal list
     );
 
     // Add detected browser class
     document.body.classList.add(browserType);
 
     // Also add the general browser family class for backward compatibility
-    if (browserType.includes('safari')) {
-      document.body.classList.add('safari-browser');
-    } else if (browserType.includes('chrome')) {
-      document.body.classList.add('chrome-browser');
+    if (browserType.includes('safari') || browserType === 'wkwebview') {
+        document.body.classList.add('safari-browser');
+    } else if (browserType.includes('chrome') || browserType === 'webview') {
+        document.body.classList.add('chrome-browser');
     }
 
     // Log for debugging

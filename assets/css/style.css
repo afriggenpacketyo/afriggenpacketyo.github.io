@@ -666,7 +666,8 @@ body {
 
 /* Safari-specific logo padding with higher specificity */
 body.safari-browser .site-logo,
-body.safari-mobile .site-logo {
+body.safari-mobile .site-logo,
+body.wkwebview .site-logo {
   padding: 10px !important;
   margin: 10px !important;
   display: inline-block !important;
@@ -686,12 +687,14 @@ body.safari-mobile .site-logo img {
 /* safari specific properties for  */
 
 /* Reduce bottom padding for container in Safari mobile */
-body.safari-mobile .container.with-coverflow {
-  padding-bottom: 25px !important; /* Reduced from 40px to 10px */
+body.safari-mobile .container.with-coverflow,
+body.wkwebview .container.with-coverflow {
+  padding-bottom: 25px !important;
 }
 
 /* Add padding to active card in Safari mobile */
-body.safari-mobile .flip-card.active {
+body.safari-mobile .flip-card.active,
+body.wkwebview .flip-card.active {
   padding-top: 8px !important;
 }
 
@@ -879,7 +882,8 @@ body.safari-mobile .card-overlay.active ~ header {
 
 /* Chrome Mobile Overlay Styles */
 body.chrome-android .card-overlay,
-body.chrome-ios .card-overlay {
+body.chrome-ios .card-overlay,
+body.webview .card-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -895,13 +899,15 @@ body.chrome-ios .card-overlay {
 }
 
 body.chrome-android .card-overlay.active,
-body.chrome-ios .card-overlay.active {
+body.chrome-ios .card-overlay.active,
+body.webview .card-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
 body.chrome-android .overlay-content,
-body.chrome-ios .overlay-content {
+body.chrome-ios .overlay-content,
+body.webview .overlay-content {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -923,7 +929,8 @@ body.chrome-ios .overlay-content {
 
 /* Update Chrome flip-card-back to work with sticky indicator */
 body.chrome-android .overlay-content .flip-card-back,
-body.chrome-ios .overlay-content .flip-card-back {
+body.chrome-ios .overlay-content .flip-card-back,
+body.webview .overlay-content .flip-card-back {
   position: relative !important;
   overflow: visible !important;
   height: auto !important;
@@ -936,20 +943,23 @@ body.chrome-ios .overlay-content .flip-card-back {
 
 /* Also ensure the flip-card-back-content doesn't scroll independently */
 body.chrome-android .overlay-content .flip-card-back-content,
-body.chrome-ios .overlay-content .flip-card-back-content {
+body.chrome-ios .overlay-content .flip-card-back-content,
+body.webview .overlay-content .flip-card-back-content {
   overflow: visible;
   height: auto;
 }
 
 /* Hide original flipped card when overlay is active in Chrome */
 body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
-body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped {
+body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped,
+body.webview .card-overlay.active ~ .container .flip-card.flipped {
   visibility: hidden;
 }
 
 /* Remove or modify the sticky swipe indicator for Chrome */
 body.chrome-android .swipe-indicator,
-body.chrome-ios .swipe-indicator {
+body.chrome-ios .swipe-indicator,
+body.webview .swipe-indicator {
   position: sticky !important;
   bottom: 0 !important;
   left: 0;
@@ -1006,19 +1016,22 @@ body.chrome-ios .swipe-indicator {
 
 /* Add margin to the last element inside flip-card-back for Chrome */
 body.chrome-android .overlay-content .flip-card-back > *:last-child,
-body.chrome-ios .overlay-content .flip-card-back > *:last-child {
+body.chrome-ios .overlay-content .flip-card-back > *:last-child,
+body.webview .overlay-content .flip-card-back > *:last-child {
   margin-bottom: 65px !important; /* Add enough space for the swipe indicator */
 }
 
 /* Ensure the swipe indicator doesn't cover the last element */
 body.chrome-android .swipe-indicator,
-body.chrome-ios .swipe-indicator {
+body.chrome-ios .swipe-indicator,
+body.webview .swipe-indicator {
   margin-top: -45px !important; /* Pull the indicator up to overlap with the margin */
 }
 
 /* Update the swipe indicator text styling */
 body.chrome-android .swipe-indicator .scroll-text,
-body.chrome-ios .swipe-indicator .scroll-text {
+body.chrome-ios .swipe-indicator .scroll-text,
+body.webview .swipe-indicator .scroll-text {
   transition: opacity 0.3s ease;
 }
 
