@@ -678,6 +678,36 @@ body {
   .swipe-indicator {
     margin-top: -45px !important;
   }
+
+  /* Default mobile positioning - active card is lower */
+  .flip-card.active {
+    padding-bottom: 40px !important; /* Push active card down */
+    margin-bottom: -20px !important; /* Adjust spacing for other cards */
+  }
+
+  /* Override for Chrome and Safari */
+  body.chrome-android .flip-card.active,
+  body.chrome-ios .flip-card.active,
+  body.safari-mobile .flip-card.active,
+  body.webview .flip-card.active,
+  body.wkwebview .flip-card.active {
+    padding-bottom: 20px !important; /* Reset to original padding */
+    margin-bottom: 0 !important; /* Reset margin */
+  }
+
+  /* Container adjustment for the new positioning */
+  .container {
+    padding-bottom: 70px !important; /* Increase bottom padding to accommodate lower cards */
+  }
+
+  /* Reset container padding for Chrome and Safari */
+  body.chrome-android .container,
+  body.chrome-ios .container,
+  body.safari-mobile .container,
+  body.webview .container,
+  body.wkwebview .container {
+    padding-bottom: 50px !important; /* Reset to original padding */
+  }
 }
 
 /* ================== JAVASCRIPT-CONTROLLED STYLES ================== */
