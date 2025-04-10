@@ -690,6 +690,11 @@ body.safari-mobile .container.with-coverflow {
   padding-bottom: 25px !important; /* Reduced from 40px to 10px */
 }
 
+/* Add padding to active card in Safari mobile */
+body.safari-mobile .flip-card.active {
+  padding-top: 8px !important;
+}
+
 /* Safari Mobile Overlay Styles */
 body.safari-mobile .card-overlay {
   position: fixed;
