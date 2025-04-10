@@ -441,25 +441,12 @@ body {
 
 /* ================== MOBILE SPECIFIC STYLES ================== */
 @media (max-width: 768px) {
-  /* Mobile container styles */
+  /* Default mobile container with minimal padding */
   .container {
-    /* These are the key settings for bounce */
+    padding-top: 70px !important;
+    padding-bottom: 20px !important; /* Minimal padding for default case */
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
-
-    /* Remove the padding from container - we'll use padding elements instead */
-    padding-left: 0;
-    padding-right: 0;
-
-    /* Turn off snap, but keep gap between cards */
-    scroll-snap-type: none;
-    gap: 30px;
-
-    /* REPLACE with better centering */
-    padding-top: 70px !important;
-    padding-bottom: 50px !important;
-
-    /* Basic setup */
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
@@ -468,6 +455,23 @@ body {
     height: 100vh;
     align-items: center;
     min-height: 600px;
+  }
+
+  /* Restore original padding ONLY for Safari */
+  body.safari-mobile .container,
+  body.safari-browser .container,
+  body.wkwebview .container {
+    padding-top: 70px !important;
+    padding-bottom: 50px !important; /* Original Safari padding */
+  }
+
+  /* Chrome-specific padding */
+  body.chrome-android .container,
+  body.chrome-ios .container,
+  body.chrome-browser .container,
+  body.webview .container {
+    padding-top: 70px !important;
+    padding-bottom: 100px !important; /* Chrome's extra padding */
   }
 
   /* Hide scrollbar for mobile */
