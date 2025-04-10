@@ -441,10 +441,10 @@ body {
 
 /* ================== MOBILE SPECIFIC STYLES ================== */
 @media (max-width: 768px) {
-  /* Default mobile container with minimal padding */
+  /* Default mobile container */
   .container {
     padding-top: 70px !important;
-    padding-bottom: 20px !important; /* Minimal padding for default case */
+    padding-bottom: 20px !important;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
     display: flex;
@@ -455,14 +455,37 @@ body {
     height: 100vh;
     align-items: center;
     min-height: 600px;
+    /* Add margin-top to respect logo space */
+    margin-top: 80px !important; /* Add space for logo */
   }
 
-  /* Restore original padding ONLY for Safari */
+  /* Ensure cards don't get cut off */
+  .flip-card {
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
+    margin: 0 15px !important;
+    /* Ensure card is fully visible */
+    display: flex !important;
+    flex-shrink: 0 !important;
+  }
+
+  .flip-card.active {
+    /* Prevent active card from being cut off */
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
+    /* Ensure proper vertical alignment */
+    align-self: center !important;
+  }
+
+  /* Restore original padding for Safari */
   body.safari-mobile .container,
   body.safari-browser .container,
   body.wkwebview .container {
     padding-top: 70px !important;
-    padding-bottom: 50px !important; /* Original Safari padding */
+    padding-bottom: 50px !important;
+    margin-top: 0 !important; /* Reset margin for Safari */
   }
 
   /* Chrome-specific padding */
@@ -471,7 +494,8 @@ body {
   body.chrome-browser .container,
   body.webview .container {
     padding-top: 70px !important;
-    padding-bottom: 100px !important; /* Chrome's extra padding */
+    padding-bottom: 100px !important;
+    margin-top: 0 !important; /* Reset margin for Chrome */
   }
 
   /* Hide scrollbar for mobile */
@@ -711,6 +735,15 @@ body {
   body.webview .container,
   body.wkwebview .container {
     padding-bottom: 50px !important; /* Reset to original padding */
+  }
+
+  /* Ensure logo container is properly positioned */
+  .logo-container {
+    position: fixed !important;
+    top: max(20vh, env(safe-area-inset-top) + 20vh) !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 100 !important;
   }
 }
 
