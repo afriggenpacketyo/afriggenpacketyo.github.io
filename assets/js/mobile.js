@@ -2849,6 +2849,4 @@ function openOverlay(card) {
     overlayContent.addEventListener('scroll', () => {
         updateScrollIndicator(overlayContent);
     });
-
-    // ... rest of existing code ...
 }

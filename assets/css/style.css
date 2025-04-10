@@ -179,7 +179,7 @@ body {
   justify-content: center;
   align-items: center;
   gap: 0;
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   left: 0;
   right: 0;
@@ -638,7 +638,7 @@ body {
 /* Logo container styles (shared across mobile and desktop) */
 .logo-container {
   position: fixed;
-  top: var(--logo-top);
+  top: max(20vh, env(safe-area-inset-top) + 20vh);
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 100;
