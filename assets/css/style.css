@@ -28,16 +28,15 @@ body {
   will-change: transform, opacity;
   transform-origin: center center;
   z-index: 1;
-  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   scroll-snap-align: center;
-  overflow: visible !important;
-  box-shadow: none;
 }
 
 .flip-card.active {
   opacity: 1;
   transform: scale(1);
   z-index: 2;
+  padding-bottom: 0px !important;
 }
 
 .flip-card:not(.active) {
@@ -73,7 +72,6 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .flip-card-front {
@@ -82,6 +80,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px 20px 30px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   filter: saturate(1.1);
   position: relative;
 }
@@ -338,7 +337,6 @@ body {
     scroll-behavior: smooth;
     padding-bottom: 80px;
     min-height: 600px;
-    padding: 10px;
   }
 
   /* Desktop flipped card style */
@@ -443,12 +441,25 @@ body {
 
 /* ================== MOBILE SPECIFIC STYLES ================== */
 @media (max-width: 768px) {
-  /* Default mobile container */
+  /* Mobile container styles */
   .container {
-    padding-top: 70px !important;
-    padding-bottom: 20px !important;
+    /* These are the key settings for bounce */
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
+
+    /* Remove the padding from container - we'll use padding elements instead */
+    padding-left: 0;
+    padding-right: 0;
+
+    /* Turn off snap, but keep gap between cards */
+    scroll-snap-type: none;
+    gap: 30px;
+
+    /* REPLACE with better centering */
+    padding-top: 70px !important;
+    padding-bottom: 50px !important;
+
+    /* Basic setup */
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
@@ -457,48 +468,6 @@ body {
     height: 100vh;
     align-items: center;
     min-height: 600px;
-    /* Add margin-top to respect logo space */
-    margin-top: 80px !important; /* Add space for logo */
-    padding: 10px;
-  }
-
-  /* Ensure cards don't get cut off */
-  .flip-card {
-    height: 400px !important;
-    min-height: 400px !important;
-    max-height: 400px !important;
-    margin: 0 15px !important;
-    /* Ensure card is fully visible */
-    display: flex !important;
-    flex-shrink: 0 !important;
-  }
-
-  .flip-card.active {
-    /* Prevent active card from being cut off */
-    height: 400px !important;
-    min-height: 400px !important;
-    max-height: 400px !important;
-    /* Ensure proper vertical alignment */
-    align-self: center !important;
-  }
-
-  /* Restore original padding for Safari */
-  body.safari-mobile .container,
-  body.safari-browser .container,
-  body.wkwebview .container {
-    padding-top: 70px !important;
-    padding-bottom: 50px !important;
-    margin-top: 0 !important; /* Reset margin for Safari */
-  }
-
-  /* Chrome-specific padding */
-  body.chrome-android .container,
-  body.chrome-ios .container,
-  body.chrome-browser .container,
-  body.webview .container {
-    padding-top: 70px !important;
-    padding-bottom: 100px !important;
-    margin-top: 0 !important; /* Reset margin for Chrome */
   }
 
   /* Hide scrollbar for mobile */
@@ -708,45 +677,6 @@ body {
 
   .swipe-indicator {
     margin-top: -45px !important;
-  }
-
-  /* Default mobile positioning - active card is lower */
-  .flip-card.active {
-    padding-bottom: 40px !important; /* Push active card down */
-    margin-bottom: -20px !important; /* Adjust spacing for other cards */
-  }
-
-  /* Override for Chrome and Safari */
-  body.chrome-android .flip-card.active,
-  body.chrome-ios .flip-card.active,
-  body.safari-mobile .flip-card.active,
-  body.webview .flip-card.active,
-  body.wkwebview .flip-card.active {
-    padding-bottom: 20px !important; /* Reset to original padding */
-    margin-bottom: 0 !important; /* Reset margin */
-  }
-
-  /* Container adjustment for the new positioning */
-  .container {
-    padding-bottom: 70px !important; /* Increase bottom padding to accommodate lower cards */
-  }
-
-  /* Reset container padding for Chrome and Safari */
-  body.chrome-android .container,
-  body.chrome-ios .container,
-  body.safari-mobile .container,
-  body.webview .container,
-  body.wkwebview .container {
-    padding-bottom: 50px !important; /* Reset to original padding */
-  }
-
-  /* Ensure logo container is properly positioned */
-  .logo-container {
-    position: fixed !important;
-    top: max(20vh, env(safe-area-inset-top) + 20vh) !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 100 !important;
   }
 }
 
@@ -1189,19 +1119,5 @@ body.chrome-android .swipe-indicator .scroll-text,
 body.chrome-ios .swipe-indicator .scroll-text,
 body.webview .swipe-indicator .scroll-text {
   transition: opacity 0.3s ease;
-}
-
-/* Add smooth transitions for all transformations */
-.flip-card, .flip-card-inner, .flip-card.active, .flip-card:not(.active) {
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    will-change: transform, opacity;
-}
-
-/* Remove browser-specific overrides for active cards */
-/* Instead, handle positioning through container */
-.container {
-    padding-bottom: 50px !important; /* Consistent padding */
-    display: flex;
-    align-items: center; /* This ensures vertical centering */
 }
 
