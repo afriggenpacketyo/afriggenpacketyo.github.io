@@ -669,20 +669,27 @@
         // Set flags
         CardSystem.isManuallyFlipping = true;
 
-        // Check for both Safari Mobile AND Chrome on mobile browsers
-        if (document.body.classList.contains('safari-mobile') ||
+        // Check if we're on mobile/tablet using a more comprehensive check
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                              window.matchMedia("(max-width: 768px)").matches ||
+                              ('ontouchstart' in window);
+
+        // If it's a mobile device OR specifically Safari Mobile/Chrome Mobile, use overlay
+        if (isMobileDevice || 
+            document.body.classList.contains('safari-mobile') ||
             document.body.classList.contains('chrome-android') ||
-            document.body.classList.contains('chrome-ios')) {
+            document.body.classList.contains('chrome-ios') ||
+            document.body.classList.contains('webview') ||
+            document.body.classList.contains('wkwebview')) {
+            
             if (shouldFlip) {
                 // Show in overlay instead of flipping
                 openOverlay(card);
-                return; // Exit early, don't do regular flip
             } else if (isOverlayActive) {
                 // Close overlay instead of unflipping
                 closeOverlay();
-                return; // Exit early, don't do regular flip
             }
-            return; // Important: Exit here to prevent any default flip behavior
+            return; // Exit early, don't do regular flip
         }
 
         // Regular flip behavior for desktop browsers only
