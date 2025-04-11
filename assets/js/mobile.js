@@ -2641,68 +2641,70 @@
   function detectBrowser() {
     const userAgent = navigator.userAgent.toLowerCase();
 
-    // iOS Safari detection
-    if (/iphone|ipad|ipod/.test(userAgent) && /safari/.test(userAgent) && !(/crios/.test(userAgent)) && !(/fxios/.test(userAgent))) {
-      return 'safari-mobile';
+    // iOS Detection
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+        // iOS WKWebView (must check first)
+        if ((/wkwebview/.test(userAgent)) || 
+            (/^mozilla\/.*applewebkit.*mobile.*$/i.test(userAgent) && !/safari/.test(userAgent))) {
+            return 'wkwebview';
+        }
+        // Chrome iOS
+        if (/crios/.test(userAgent)) {
+            return 'chrome-ios';
+        }
+        // iOS Safari
+        if (/safari/.test(userAgent) && !(/crios/.test(userAgent)) && !(/fxios/.test(userAgent))) {
+            return 'safari-mobile';
+        }
     }
 
-    // Chrome on iOS detection
-    if (/crios/.test(userAgent)) {
-      return 'chrome-ios';
+    // Android Detection
+    if (/android/.test(userAgent)) {
+        // Android WebView
+        if (/wv/.test(userAgent) || 
+            (/version\//.test(userAgent) && /chrome/.test(userAgent))) {
+            return 'webview';
+        }
+        // Regular Chrome Android
+        if (/chrome/.test(userAgent) && !(/firefox/.test(userAgent))) {
+            return 'chrome-android';
+        }
     }
 
-    // Android Chrome detection
-    if (/android/.test(userAgent) && /chrome/.test(userAgent) && !(/firefox/.test(userAgent))) {
-      return 'chrome-android';
+    // Desktop browsers
+    if (!(/android|iphone|ipad|ipod/.test(userAgent))) {
+        if (/safari/.test(userAgent) && !(/chrome/.test(userAgent))) {
+            return 'safari-desktop';
+        }
+        if (/chrome/.test(userAgent) && !(/edge|edg|firefox/.test(userAgent))) {
+            return 'chrome-desktop';
+        }
     }
 
-    // Desktop Safari
-    if (!(/android|iphone|ipad|ipod/.test(userAgent)) && /safari/.test(userAgent) && !(/chrome/.test(userAgent))) {
-      return 'safari-desktop';
-    }
-
-    // Desktop Chrome
-    if (!(/android|iphone|ipad|ipod/.test(userAgent)) && /chrome/.test(userAgent) && !(/edge|edg|firefox/.test(userAgent))) {
-      return 'chrome-desktop';
-    }
-
-    // Add WebView detection for iOS
-    if (/iphone|ipad|ipod/.test(userAgent) && /wkwebview/.test(userAgent)) {
-        return 'wkwebview';
-    }
-
-    // Add WebView detection for Android
-    if (/android/.test(userAgent) && /wv/.test(userAgent)) {
-        return 'webview';
-    }
-
-    // Default fallback
     return 'other-browser';
   }
 
-  // Apply the appropriate class to the body element
+  // Update applyBrowserClass to handle WebView classes
   function applyBrowserClass() {
     const browserType = detectBrowser();
 
     // Remove all browser classes first
     document.body.classList.remove(
-      'safari-mobile', 'chrome-ios', 'chrome-android',
-      'safari-desktop', 'chrome-desktop', 'other-browser',
-      'safari-browser', 'chrome-browser',
-      'wkwebview', 'webview'  // Add these to the removal list
+        'safari-mobile', 'chrome-ios', 'chrome-android',
+        'safari-desktop', 'chrome-desktop', 'other-browser',
+        'safari-browser', 'chrome-browser', 'webview', 'wkwebview'
     );
 
     // Add detected browser class
     document.body.classList.add(browserType);
 
-    // Also add the general browser family class for backward compatibility
+    // Add the general browser family class
     if (browserType.includes('safari') || browserType === 'wkwebview') {
         document.body.classList.add('safari-browser');
     } else if (browserType.includes('chrome') || browserType === 'webview') {
         document.body.classList.add('chrome-browser');
     }
 
-    // Log for debugging
     console.log('Browser detected:', browserType);
   }
 
