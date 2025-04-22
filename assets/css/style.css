@@ -448,22 +448,7 @@
       transform: scale(1.2);
       width: 100%;
     }
-    .card-overlay,
-    .overlay-content,
-    body.chrome-android .card-overlay,
-    body.chrome-android .overlay-content,
-    body.chrome-ios .card-overlay,
-    body.chrome-ios .overlay-content,
-    body.webview .card-overlay,
-    body.webview .overlay-content,
-    body.wkwebview .card-overlay,
-    body.wkwebview .overlay-content {
-      touch-action: none !important;
-      user-select: none;
-      -webkit-user-drag: none;
-      overscroll-behavior: contain;
-      pointer-events: auto;
-    }
+    
   }
 
   /* =============================================================
