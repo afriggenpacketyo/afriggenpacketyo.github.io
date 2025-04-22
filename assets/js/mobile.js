@@ -69,9 +69,6 @@
     let currentOverlayCard = null;
     let isOverlayActive = false;
 
-    // Add a global variable to store the final logo position
-    let finalLogoPosition = null;
-
     // Add these variables at an appropriate scope level
     let preactivatedCard = null;
     let previouslyActiveCard = null;
@@ -81,9 +78,6 @@
     let resizeDebounceTimer = null;
     let layoutRecalculationInProgress = false;
     let wasLandscape = window.innerWidth > window.innerHeight;
-
-    // Add this variable at the top with other state variables
-    let initialLogoPosition = null;
 
     // Function to update dot sizes based on active index
     function updateInstagramStyleDots(activeIndex) {
@@ -528,7 +522,6 @@
                 opacity: 1 !important;
                 background-color: var(--primary-color, #0078e7) !important;
                 border-color: var(--primary-color-dark, #005bb1) !important;
-                padding-bottom: 20px !important;
                 transform: scale(1) !important;
                 transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
@@ -537,7 +530,6 @@
                 opacity: 0.7 !important;
                 background-color: var(--secondary-color, #76b5e7) !important;
                 border-color: var(--secondary-color-dark, #5090c9) !important;
-                padding-bottom: 20px !important;
                 transform: scale(0.95) !important;
                 transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
@@ -562,7 +554,6 @@
                 opacity: 1 !important;
                 background-color: var(--primary-color, #0078e7) !important;
                 border-color: var(--primary-color-dark, #005bb1) !important;
-                padding-bottom: 20px !important;
                 transform: scale(1) !important;
                 transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
@@ -571,7 +562,6 @@
                 opacity: 0.7 !important;
                 background-color: var(--secondary-color, #76b5e7) !important;
                 border-color: var(--secondary-color-dark, #5090c9) !important;
-                padding-bottom: 20px !important;
                 transform: scale(0.95) !important;
                 transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
             `;
@@ -1093,6 +1083,28 @@
         }
     }
 
+    function centerFirstCardAfterPadding() {
+        const firstCard = flipCards[0];
+        if (!firstCard) return;
+        const containerWidth = container.offsetWidth;
+        const cardWidth = firstCard.offsetWidth;
+        // Center the first card, accounting for the new left padding
+        const targetScrollLeft = firstCard.offsetLeft - (containerWidth - cardWidth) / 2;
+        container.scrollLeft = targetScrollLeft;
+    }
+
+    // Ensure edge card padding is added during initialization
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            addEdgeCardPadding();
+            // Use setTimeout to ensure DOM updates before measuring
+            setTimeout(centerFirstCardAfterPadding, 0);
+        });
+    } else {
+        addEdgeCardPadding();
+        setTimeout(centerFirstCardAfterPadding, 0);
+    }
+
     // Fix vertical positioning for better appearance
     function fixVerticalPositioning() {
         // Adjust container's vertical padding
@@ -1143,7 +1155,7 @@
     function toggleLogoVisibility(show) {
         const logoContainer = document.querySelector('.logo-container');
         if (!logoContainer) return;
-
+    // Add this function for consistent aspect ratio detectionn    function isPhoneLandscape() {n        const mediaQuery = window.matchMedia("(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)");n        return mediaQuery.matches;n    }n
         // Only hide if it's a phone in landscape or we're explicitly hiding
         if (isPhoneLandscape() || !show) {
             logoContainer.style.opacity = '0';
@@ -1156,97 +1168,10 @@
 
     // Function to set appropriate logo position class
     function setLogoPositionClass() {
-        const logoContainer = document.querySelector('.logo-container');
-        if (!logoContainer) return;
-
-        // Remove any existing position classes
-        logoContainer.classList.remove(
-            'logo-position-safari-mobile',
-            'logo-position-chrome-ios',
-            'logo-position-chrome-android',
-            'logo-position-default'
-        );
-
-        // Add the appropriate class based on browser detection
-        if (document.body.classList.contains('safari-mobile')) {
-            logoContainer.classList.add('logo-position-safari-mobile');
-        } else if (document.body.classList.contains('chrome-ios')) {
-            logoContainer.classList.add('logo-position-chrome-ios');
-        } else if (document.body.classList.contains('chrome-android')) {
-            logoContainer.classList.add('logo-position-chrome-android');
-        } else {
-            logoContainer.classList.add('logo-position-default');
-        }
-
-        // Ensure basic position properties are always set
-        logoContainer.style.position = 'fixed';
-        logoContainer.style.left = '50%';
-
-        // Store current calculated position for future reference
-        const computedStyle = window.getComputedStyle(logoContainer);
-        finalLogoPosition = parseFloat(computedStyle.top);
-
-        console.log("Logo position class set:",
-                    Array.from(logoContainer.classList)
-                        .filter(cls => cls.startsWith('logo-position')),
-                    "Final position:", finalLogoPosition);
-    }
-
-    // Replace the current updateLogoPosition with this simpler version
-    function updateLogoPosition() {
-        setLogoPositionClass();
-
-        // For debugging - log current measurements but don't use them for positioning
-        debugLogoPosition('updateLogoPosition');
-    }
-
-    // Modify updateLogoPosition to use the stored position if available
-    function updateLogoPosition() {
-        const logoContainer = document.querySelector('.logo-container');
-        const header = document.querySelector('header');
-        const activeCard = flipCards[CardSystem.activeCardIndex];
-
-        if (!logoContainer || !header || !activeCard) return;
-
-        // Force reflow to ensure accurate measurements
-        void header.offsetHeight;
-        void activeCard.offsetHeight;
-
-        // Get precise measurements
-        const headerRect = header.getBoundingClientRect();
-        const cardRect = activeCard.getBoundingClientRect();
-
-        // Calculate the midpoint between the bottom of the header and the top of the card
-        const headerBottom = headerRect.bottom;
-        const cardTop = cardRect.top;
-        const availableSpace = cardTop - headerBottom;
-        const midPoint = headerBottom + (availableSpace / 2);
-
-        // Adjust for logo height and any padding/margin to center it vertically
-        const logoHeight = logoContainer.offsetHeight;
-        const logoStyles = window.getComputedStyle(logoContainer);
-        const paddingTop = parseFloat(logoStyles.paddingTop);
-        const paddingBottom = parseFloat(logoStyles.paddingBottom);
-        const marginTop = parseFloat(logoStyles.marginTop);
-        const marginBottom = parseFloat(logoStyles.marginBottom);
-
-        // Calculate the adjusted position
-        const adjustedPosition = midPoint - (logoHeight / 2) - (paddingTop + paddingBottom) / 2 - (marginTop + marginBottom) / 2;
-
-        // Apply the calculated position
-        logoContainer.style.position = 'fixed';
-        logoContainer.style.top = `${adjustedPosition}px`;
-        logoContainer.style.left = '50%';
-        logoContainer.style.transform = 'translateX(-50%)';
-
-        // Update stored position
-        finalLogoPosition = adjustedPosition;
-    }
-
-    // Add this function for consistent aspect ratio detection
-    function isPhoneLandscape() {
-        const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
-        return mediaQuery.matches;
+        // Logo positioning logic removed as requested
+        // We're keeping the function to maintain any references to it
+        // but removing all the actual positioning logic
+        return;
     }
 
     // Update the initLogoVisibility function to check for landscape mode on load
@@ -1302,465 +1227,62 @@
 
     // Add this function to completely recalculate logo position from scratch
     function calculateAndPositionLogo(forceHideFirst = false) {
-        const logoContainer = document.querySelector('.logo-container');
-        const header = document.querySelector('header');
-        const activeCard = flipCards[CardSystem.activeCardIndex];
-
-        if (!logoContainer || !header || !activeCard) return false;
-
-        // First, ensure the logo is hidden during calculation
-        if (forceHideFirst) {
-            logoContainer.style.cssText = `
-                opacity: 0 !important;
-                visibility: hidden !important;
-                transition: none !important;
-            `;
-        }
-
-        // Force reflows for accurate measurements
-        void document.documentElement.offsetHeight;
-        void header.offsetHeight;
-        void activeCard.offsetHeight;
-
-        // Get precise measurements
-        const headerRect = header.getBoundingClientRect();
-        const cardRect = activeCard.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-
-        // Calculate the ideal position
-        const headerBottom = headerRect.bottom;
-        const cardTop = cardRect.top;
-        const availableSpace = cardTop - headerBottom;
-
-        // Use CSS custom properties for consistent positioning
-        document.documentElement.style.setProperty('--header-bottom', `${headerBottom}px`);
-        document.documentElement.style.setProperty('--card-top', `${cardTop}px`);
-        document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
-
-        // Calculate the midpoint with viewport-relative fallback
-        const midPoint = headerBottom + (availableSpace / 2);
-        const viewportRelativePosition = `max(${midPoint}px, calc(var(--viewport-height) * 0.2))`;
-
-        // Apply position using CSS custom properties
-        logoContainer.style.cssText = `
-            position: fixed !important;
-            top: ${viewportRelativePosition} !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            margin: 0 !important;
-            z-index: 100 !important;
-            transition: opacity 0.3s ease !important;
-            ${!forceHideFirst ? 'opacity: 1 !important; visibility: visible !important;' : ''}
-        `;
-
-        return midPoint;
-    }
-
-    // Add this function to create a "phantom" logo for consistent layout calculations
-    function ensureConsistentLayout() {
-        const logoContainer = document.querySelector('.logo-container');
-        if (!logoContainer) return;
-
-        // Get or create a phantom logo that will be used for layout calculations
-        let phantomLogo = document.getElementById('phantom-logo-spacer');
-        if (!phantomLogo) {
-            phantomLogo = document.createElement('div');
-            phantomLogo.id = 'phantom-logo-spacer';
-            phantomLogo.style.cssText = `
-                position: fixed;
-                width: ${logoContainer.offsetWidth}px;
-                height: ${logoContainer.offsetHeight}px;
-                visibility: hidden;
-                pointer-events: none;
-                z-index: -1;
-            `;
-            document.body.appendChild(phantomLogo);
-        }
-
-        // Always ensure the phantom logo has the same dimensions as the real logo
-        phantomLogo.style.width = `${logoContainer.offsetWidth}px`;
-        phantomLogo.style.height = `${logoContainer.offsetHeight}px`;
-
-        // Position the phantom logo at the correct spot
-        const header = document.querySelector('header');
-        const activeCard = flipCards[CardSystem.activeCardIndex];
-
-        if (header && activeCard) {
-            // Force reflows for accurate measurements
-            void header.offsetHeight;
-            void activeCard.offsetHeight;
-
-            // Get positions
-            const headerRect = header.getBoundingClientRect();
-            const cardRect = activeCard.getBoundingClientRect();
-            const headerBottom = headerRect.bottom;
-            const cardTop = cardRect.top;
-
-            // Calculate the midpoint
-            const midPoint = headerBottom + ((cardTop - headerBottom) / 2);
-
-            // Position the phantom logo
-            phantomLogo.style.top = `${midPoint}px`;
-            phantomLogo.style.left = '50%';
-            phantomLogo.style.transform = 'translate(-50%, -50%)';
-
-            // Store this position for the real logo
-            if (!isPhoneLandscape()) {
-                // Update the real logo position to match exactly
-                logoContainer.style.position = 'fixed';
-                logoContainer.style.top = `${midPoint}px`;
-                logoContainer.style.left = '50%';
-                logoContainer.style.transform = 'translate(-50%, -50%)';
-                finalLogoPosition = midPoint;
-            }
-
-            return midPoint;
-        }
-
-        return null;
-    }
-
-    // Add this new function for consistent card positioning
-    function enforceCardPosition(index, isLandscape) {
-        // Disable all transitions temporarily
-        container.style.transition = 'none';
-        container.style.scrollBehavior = 'auto';
-
-        // Force reflow
-        void container.offsetHeight;
-
-        // Get target card and its dimensions
-        const targetCard = flipCards[index];
-        const containerWidth = container.offsetWidth;
-        const cardWidth = targetCard.offsetWidth;
-
-        // Calculate center position with landscape-specific adjustments
-        let targetScrollLeft;
-        if (isLandscape) {
-            // In landscape, we want to ensure the card is perfectly centered
-            targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
-            // Add additional adjustment for landscape mode if needed
-            // targetScrollLeft += someAdjustment; // Uncomment and adjust if needed
-        } else {
-            // Normal portrait positioning
-            targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
-        }
-
-        // Apply position immediately without animation
-        container.scrollLeft = targetScrollLeft;
-
-        // Force another reflow
-        void container.offsetHeight;
-
-        return targetScrollLeft;
-    }
-
-    // Add this function to handle header visibility based on orientation
-    function updateHeaderVisibility() {
-        const header = document.querySelector('header');
-        if (!header) return;
-
-        if (isPhoneLandscape()) {
-            // Hide header in landscape mode
-            header.style.cssText = `
-                opacity: 0 !important;
-                visibility: hidden !important;
-                display: none !important;
-                transition: none !important;
-            `;
-        } else {
-            // Show header in portrait mode (unless a card is flipped)
-            if (!isAnyCardFlipped && !isOverlayActive) {
-                header.style.cssText = '';
-                header.style.opacity = '1';
-                header.style.visibility = 'visible';
-                header.style.display = '';
-            }
-        }
+        // Logo positioning calculation logic removed as requested
+        // We're keeping the function to maintain any references to it
+        // but removing all the actual positioning logic
+        return false;
     }
 
     // Update the orientation change handler
     window.addEventListener('orientationchange', function() {
-        // Hide logo immediately during transition
-        const logoContainer = document.querySelector('.logo-container');
-        if (logoContainer) {
-            logoContainer.style.cssText = `
-                opacity: 0 !important;
-                visibility: hidden !important;
-                transition: none !important;
-            `;
-        }
-
-        // Wait for orientation change to complete
+        console.log("Orientation change detected");
+        
+        // Delay recalculation to ensure measurements are accurate after rotation
         setTimeout(() => {
-            const isInLandscape = isPhoneLandscape();
-            const header = document.querySelector('header');
-
-            // Update header visibility first
-            if (!isInLandscape && !isOverlayActive) {
-                // Show header when rotating to portrait if no overlay is active
-                if (header) {
-                    header.style.cssText = '';
-                    header.style.visibility = 'visible';
-                    header.style.opacity = '1';
-                    header.style.display = '';
-                }
-            } else {
-                // Hide header in landscape or when overlay is active
-                if (header) {
-                    header.style.cssText = `
-                        opacity: 0 !important;
-                        visibility: hidden !important;
-                        display: none !important;
-                        transition: none !important;
-                    `;
-                }
+            const isCurrentlyLandscape = isPhoneLandscape();
+            console.log("Is landscape after orientation change:", isCurrentlyLandscape);
+            
+            // Update header visibility based on orientation
+            updateHeaderVisibility();
+            
+            // Update logo visibility based on orientation
+            if (isCurrentlyLandscape) {
+                toggleLogoVisibility(false);
+            } else if (!isAnyCardFlipped && !isOverlayActive) {
+                toggleLogoVisibility(true);
             }
-
-            // Recalculate card positions
-            enforceCardPosition(CardSystem.activeCardIndex, isInLandscape);
-
-            // Then handle logo visibility and positioning
-            if (!isInLandscape && !isAnyCardFlipped && !isOverlayActive) {
-                updateLogoPosition();
-
-                requestAnimationFrame(() => {
-                    if (logoContainer) {
-                        logoContainer.style.transition = 'opacity 0.3s ease';
-                        logoContainer.style.opacity = '1';
-                        logoContainer.style.visibility = 'visible';
-                    }
-                });
-            }
+            
+            // Force card positioning
+            enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
+            
+            // Update wasLandscape state for next orientation change
+            wasLandscape = isCurrentlyLandscape;
         }, 150);
     });
 
     // Update fixChromeLogoPosition to use active card position
     function fixChromeLogoPosition() {
-        return calculateAndPositionLogo(false);
+        // Chrome-specific logo positioning logic removed as requested
+        // We're keeping the function to maintain any references to it
+        // but removing all the actual positioning logic
+        return false;
     }
 
     // Update measureAndPositionLogo to use same active card logic
     function measureAndPositionLogo(forceVisible = false) {
-        return calculateAndPositionLogo(!forceVisible);
+        // Logo positioning logic removed as requested
+        // We're keeping the function to maintain any references to it
+        // but removing all the actual positioning logic
+        return false;
     }
 
     // Update positionLogo to ONLY handle positioning
     function positionLogo() {
-        const logoContainer = document.querySelector('.logo-container');
-        const header = document.querySelector('header');
-        const activeCard = flipCards[CardSystem.activeCardIndex];
-
-        if (!logoContainer || !header || !activeCard) return null;
-
-        // Force multiple reflows for Safari consistency
-        void document.documentElement.offsetHeight;
-        void header.offsetHeight;
-        void activeCard.offsetHeight;
-        void logoContainer.offsetHeight;
-
-        // Get measurements after forced reflow
-        const headerRect = header.getBoundingClientRect();
-        const cardRect = activeCard.getBoundingClientRect();
-
-        const headerBottom = headerRect.bottom;
-        const cardTop = cardRect.top;
-        const availableSpace = cardTop - headerBottom;
-
-        // Validate measurements
-        if (cardTop <= headerBottom || availableSpace < 0) {
-            console.warn("positionLogo: Invalid measurements detected.", {headerBottom, cardTop});
-            return null;
-        }
-
-        const midPoint = headerBottom + (availableSpace / 2);
-
-        // Store initial position if needed
-        if (!initialLogoPosition && midPoint > 0) {
-            initialLogoPosition = midPoint;
-        }
-
-        // Apply ONLY position-related properties
-        logoContainer.style.position = 'fixed';
-        logoContainer.style.top = `${midPoint}px`;
-        logoContainer.style.left = '50%';
-        logoContainer.style.transform = 'translate(-50%, -50%)';
-        logoContainer.style.margin = '0';
-        logoContainer.style.zIndex = '100';
-        logoContainer.style.webkitTransform = 'translate(-50%, -50%)';
-        logoContainer.style.webkitBackfaceVisibility = 'hidden';
-        logoContainer.style.webkitPerspective = '1000px';
-
-        finalLogoPosition = midPoint;
-        return midPoint;
+        // Logo positioning logic removed as requested
+        // We're keeping the function to maintain any references to it
+        // but removing all the actual positioning logic
+        return null;
     }
-
-    // Update toggleLogoVisibility to handle ONLY visibility
-    function toggleLogoVisibility(show) {
-        const logoContainer = document.querySelector('.logo-container');
-        if (!logoContainer) return;
-
-        if (isPhoneLandscape()) {
-            logoContainer.style.opacity = '0';
-            logoContainer.style.visibility = 'hidden';
-            logoContainer.style.display = 'none';
-            logoContainer.style.transition = 'none';
-            return;
-        }
-
-        if (show) {
-            logoContainer.style.opacity = '1';
-            logoContainer.style.visibility = 'visible';
-            logoContainer.style.display = '';
-            logoContainer.style.transition = 'opacity 0.3s ease';
-        } else {
-        logoContainer.style.opacity = '0';
-        logoContainer.style.visibility = 'hidden';
-            logoContainer.style.transition = 'opacity 0.3s ease, visibility 0s linear 0.3s';
-        }
-    }
-
-    // Update recalculateEntireLayout
-    function recalculateEntireLayout(showLogoAfterRecalc = true) {
-        if (layoutRecalculationInProgress) return;
-        layoutRecalculationInProgress = true;
-
-        const isLandscape = isPhoneLandscape();
-        enforceCardPosition(CardSystem.activeCardIndex, isLandscape);
-
-        let calculatedPosition = null;
-        if (!isLandscape) {
-            calculatedPosition = positionLogo();
-        }
-
-        if (!isLandscape && showLogoAfterRecalc && calculatedPosition !== null) {
-            requestAnimationFrame(() => {
-                toggleLogoVisibility(true);
-            });
-        } else if (isLandscape) {
-            toggleLogoVisibility(false);
-        }
-
-        layoutRecalculationInProgress = false;
-    }
-
-    // Remove the old positioning functions
-    // Remove: fixSafariLogoPosition, fixChromeLogoPosition, calculateAndPositionLogo, etc.
-
-    // Update initialize to use positionLogo
-    async function initialize() {
-        console.log("Initializing mobile card system...");
-
-        const startInLandscape = isPhoneLandscape();
-        const logoContainer = document.querySelector('.logo-container');
-
-        if (logoContainer) {
-            // Hide logo during initialization
-            logoContainer.style.cssText = `
-                opacity: 0 !important;
-                visibility: hidden !important;
-                transition: none !important;
-            `;
-        }
-
-        // Wait for cards to be measurable
-        await new Promise(resolve => {
-            if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
-                resolve();
-            } else {
-                const checkInterval = setInterval(() => {
-                    if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 50);
-            }
-        });
-
-        // Force immediate positioning first
-        enforceCardPosition(CardSystem.activeCardIndex, startInLandscape);
-
-        // Critical: Wait for layout to settle
-        await new Promise(resolve => setTimeout(resolve, 50));
-
-        if (!startInLandscape && logoContainer) {
-            // Calculate and store initial position
-            const position = positionLogo();
-            console.log('Initial logo position set to:', position);
-
-            requestAnimationFrame(() => {
-                logoContainer.style.transition = 'opacity 0.3s ease';
-                logoContainer.style.opacity = '1';
-                logoContainer.style.visibility = 'visible';
-            });
-        }
-
-        // Rest of initialization...
-    }
-
-    // Update any other functions that were using the old positioning methods to use positionLogo instead
-
-    // Modify the recalculateEntireLayout function to use phantom logo
-    function recalculateEntireLayout(showLogoAfterRecalc = true) {
-        if (layoutRecalculationInProgress) return;
-        layoutRecalculationInProgress = true;
-
-        // Force immediate positioning first
-        const isLandscape = isPhoneLandscape();
-        enforceCardPosition(CardSystem.activeCardIndex, isLandscape);
-
-        if (!isLandscape && showLogoAfterRecalc) {
-            positionLogo();
-        }
-
-        layoutRecalculationInProgress = false;
-    }
-
-    // Update the toggleLogoVisibility to preserve position but control visibility
-    function toggleLogoVisibility(show) {
-        const logoContainer = document.querySelector('.logo-container');
-        if (!logoContainer) return;
-
-        // Always maintain layout with phantom logo
-        ensureConsistentLayout();
-
-        // Use our shared function for consistent detection
-        if (isPhoneLandscape()) {
-            // Just hide the logo without changing its position
-            logoContainer.style.visibility = 'hidden';
-            logoContainer.style.opacity = '0';
-            logoContainer.style.display = 'none';
-            logoContainer.style.transition = 'none';
-            console.log("toggleLogoVisibility - hiding logo for landscape");
-            return;
-        }
-
-        // Normal behavior for portrait or tablets/desktops
-        if (show) {
-            // Show the logo
-            logoContainer.style.visibility = 'visible';
-            logoContainer.style.opacity = '1';
-            logoContainer.style.display = '';
-            logoContainer.style.transition = 'opacity 0.3s ease';
-        } else {
-            // Hide the logo
-            logoContainer.style.visibility = 'hidden';
-            logoContainer.style.opacity = '0';
-            logoContainer.style.transition = 'opacity 0.3s ease';
-        }
-    }
-
-    // Add CSS for the phantom logo
-    const phantomLogoStyle = document.createElement('style');
-    phantomLogoStyle.textContent = `
-        #phantom-logo-spacer {
-            position: fixed;
-            visibility: hidden;
-            pointer-events: none;
-            z-index: -1;
-        }
-    `;
-    document.head.appendChild(phantomLogoStyle);
 
     // Add this function to ensure logo positioning is correct when coming from landscape
     function forceLogoRepositioning() {
@@ -1775,7 +1297,6 @@
         // First hide the logo
         logoContainer.style.transition = 'none';
         logoContainer.style.opacity = '0';
-        logoContainer.style.visibility = 'hidden';
 
         // Force reflow
         void document.documentElement.offsetHeight;
@@ -1835,8 +1356,8 @@
             // Check for landscape mode status
             const inLandscape = isPhoneLandscape();
 
-        const logoContainer = document.querySelector('.logo-container');
-        if (!logoContainer) return;
+            const logoContainer = document.querySelector('.logo-container');
+            if (!logoContainer) return;
 
             if (inLandscape) {
                 // Hide logo in landscape
@@ -1907,16 +1428,13 @@
         if (logoContainer) {
             // Just control visibility, not position calculations
             if (startInLandscape) {
-                logoContainer.style.visibility = 'hidden';
                 logoContainer.style.opacity = '0';
-                logoContainer.style.display = 'none';
-            } else {
-                // Keep it visible for portrait
-                logoContainer.style.visibility = 'visible';
-                logoContainer.style.opacity = '1';
-                logoContainer.style.display = '';
+                logoContainer.style.visibility = 'hidden';
             }
         }
+
+        // Always run fixChromeLogoPosition for debugging/consistency
+        fixChromeLogoPosition();
 
         // Create phantom logo early in initialization
         ensureConsistentLayout();
@@ -2214,10 +1732,10 @@
         initializeSequence();
 
         // After all initialization is complete, apply browser-specific fixes
-    if (document.body.classList.contains('chrome-android') ||
-        document.body.classList.contains('chrome-ios')) {
-        fixChromeLogoPosition();
-    }
+        if (document.body.classList.contains('chrome-android') ||
+            document.body.classList.contains('chrome-ios')) {
+            fixChromeLogoPosition();
+        }
     }
 
     // Replace the current initialization code with this enhanced version
@@ -2642,15 +2160,197 @@
         }, 150);
     });
 
-    // Remove all other logo positioning functions:
-    // - calculateAndPositionLogo
-    // - fixChromeLogoPosition
-    // - positionLogo
-    // - forceLogoRepositioning
-    // - setLogoPositionClass
-    // etc.
+    // Add this function to recalculate layout without logo positioning
+    function recalculateEntireLayout(showLogoAfterRecalc = true) {
+        if (layoutRecalculationInProgress) return;
+        layoutRecalculationInProgress = true;
 
-    // Replace their calls with updateLogoPositionVariables
+        const isLandscape = isPhoneLandscape();
+        enforceCardPosition(CardSystem.activeCardIndex, isLandscape);
+
+        if (!isLandscape && showLogoAfterRecalc) {
+            requestAnimationFrame(() => {
+                toggleLogoVisibility(true);
+            });
+        } else if (isLandscape) {
+            toggleLogoVisibility(false);
+        }
+
+        layoutRecalculationInProgress = false;
+    }
+
+    // Add this function for consistent card positioning
+    function enforceCardPosition(index, isLandscape) {
+        // Disable all transitions temporarily
+        container.style.transition = 'none';
+        container.style.scrollBehavior = 'auto';
+
+        // Force reflow
+        void container.offsetHeight;
+
+        // Get target card and its dimensions
+        const targetCard = flipCards[index];
+        const containerWidth = container.offsetWidth;
+        const cardWidth = targetCard.offsetWidth;
+
+        // Calculate center position with landscape-specific adjustments
+        let targetScrollLeft;
+        if (isLandscape) {
+            // In landscape, we want to ensure the card is perfectly centered
+            targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
+        } else {
+            // Normal portrait positioning
+            targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
+        }
+
+        // Apply position immediately without animation
+        container.scrollLeft = targetScrollLeft;
+
+        // Force another reflow
+        void container.offsetHeight;
+
+        return targetScrollLeft;
+    }
+
+    // Update the orientation change handler
+    window.addEventListener('orientationchange', function() {
+        console.log("Orientation change detected");
+        
+        // Delay recalculation to ensure measurements are accurate after rotation
+        setTimeout(() => {
+            const isCurrentlyLandscape = isPhoneLandscape();
+            console.log("Is landscape after orientation change:", isCurrentlyLandscape);
+            
+            // Update header visibility based on orientation
+            updateHeaderVisibility();
+            
+            // Update logo visibility based on orientation
+            if (isCurrentlyLandscape) {
+                toggleLogoVisibility(false);
+            } else if (!isAnyCardFlipped && !isOverlayActive) {
+                toggleLogoVisibility(true);
+            }
+            
+            // Force card positioning
+            enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
+            
+            // Update wasLandscape state for next orientation change
+            wasLandscape = isCurrentlyLandscape;
+        }, 150);
+    });
+
+    // Update the updateScrollIndicator function
+    function updateScrollIndicator(overlayContent) {
+        const indicator = overlayContent.querySelector('.swipe-indicator');
+        if (!indicator) return;
+
+        // Create text element if it doesn't exist
+        if (!indicator.querySelector('.scroll-text')) {
+            const textEl = document.createElement('span');
+            textEl.className = 'scroll-text';
+            textEl.textContent = 'scroll for more';
+            indicator.appendChild(textEl);
+        }
+
+        const textEl = indicator.querySelector('.scroll-text');
+        const isOverflowing = overlayContent.scrollHeight > overlayContent.clientHeight;
+        const isAtBottom = Math.abs(overlayContent.scrollHeight - overlayContent.scrollTop - overlayContent.clientHeight) < 1;
+
+        // Update text based on conditions
+        const isSafari = document.body.classList.contains('safari-mobile') ||
+                        document.body.classList.contains('safari-desktop');
+
+        if (!isOverflowing || isAtBottom) {
+            textEl.textContent = 'end';
+        } else {
+            textEl.textContent = 'scroll for more';
+        }
+    }
+
+    // Add this function to handle header visibility based on orientation
+    function updateHeaderVisibility() {
+        const header = document.querySelector('header');
+        if (!header) return;
+
+        if (isPhoneLandscape()) {
+            // Hide header in landscape mode
+            header.style.cssText = `
+                opacity: 0 !important;
+                visibility: hidden !important;
+                display: none !important;
+                transition: none !important;
+            `;
+        } else {
+            // Show header in portrait mode (unless a card is flipped)
+            if (!isAnyCardFlipped && !isOverlayActive) {
+                header.style.cssText = '';
+                header.style.opacity = '1';
+                header.style.visibility = 'visible';
+                header.style.display = '';
+            }
+        }
+    }
+
+    // Update the orientation change handler
+    window.addEventListener('orientationchange', function() {
+        console.log("Orientation change detected");
+        
+        // Delay recalculation to ensure measurements are accurate after rotation
+        setTimeout(() => {
+            const isCurrentlyLandscape = isPhoneLandscape();
+            console.log("Is landscape after orientation change:", isCurrentlyLandscape);
+            
+            // Update header visibility based on orientation
+            updateHeaderVisibility();
+            
+            // Update logo visibility based on orientation
+            if (isCurrentlyLandscape) {
+                toggleLogoVisibility(false);
+            } else if (!isAnyCardFlipped && !isOverlayActive) {
+                toggleLogoVisibility(true);
+            }
+            
+            // Force card positioning
+            enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
+            
+            // Update wasLandscape state for next orientation change
+            wasLandscape = isCurrentlyLandscape;
+        }, 150);
+    });
+
+    // Update the updateScrollIndicator function
+    function updateScrollIndicator(overlayContent) {
+        const indicator = overlayContent.querySelector('.swipe-indicator');
+        if (!indicator) return;
+
+        // Create text element if it doesn't exist
+        if (!indicator.querySelector('.scroll-text')) {
+            const textEl = document.createElement('span');
+            textEl.className = 'scroll-text';
+            textEl.textContent = 'scroll for more';
+            indicator.appendChild(textEl);
+        }
+
+        const textEl = indicator.querySelector('.scroll-text');
+        const isOverflowing = overlayContent.scrollHeight > overlayContent.clientHeight;
+        const isAtBottom = Math.abs(overlayContent.scrollHeight - overlayContent.scrollTop - overlayContent.clientHeight) < 1;
+
+        // Update text based on conditions
+        const isSafari = document.body.classList.contains('safari-mobile') ||
+                        document.body.classList.contains('safari-desktop');
+
+        if (!isOverflowing || isAtBottom) {
+            textEl.textContent = 'end';
+        } else {
+            textEl.textContent = 'scroll for more';
+        }
+    }
+
+    // Add this function for consistent aspect ratio detection
+    function isPhoneLandscape() {
+        const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
+        return mediaQuery.matches;
+    }
 })();
 
 // Browser detection for Safari vs Chrome positioning
@@ -2755,126 +2455,16 @@
 
 // Let's add a debugging version of updateLogoPosition that logs all relevant values
 function debugLogoPosition(caller) {
-    const logoContainer = document.querySelector('.logo-container');
-    const header = document.querySelector('header');
-    const activeCard = document.querySelector('.flip-card.active') || flipCards[CardSystem.activeCardIndex];
-
-    if (!logoContainer || !header || !activeCard) {
-        console.log(`[${caller}] Missing elements for logo positioning`);
-        return null;
-    }
-
-    // Force a reflow on both header and card to ensure measurements are accurate
-    void header.offsetHeight;
-    void activeCard.offsetHeight;
-
-    // Get precise measurements after forcing reflow
-    const headerRect = header.getBoundingClientRect();
-    const cardRect = activeCard.getBoundingClientRect();
-    const logoRect = logoContainer.getBoundingClientRect();
-
-    // Calculate the exact midpoint between header bottom and card top
-    const headerBottom = headerRect.bottom;
-    const cardTop = cardRect.top;
-    const availableSpace = cardTop - headerBottom;
-    const midPoint = headerBottom + (availableSpace / 2);
-    const logoHeight = logoContainer.offsetHeight;
-    const adjustedPosition = midPoint - (logoHeight / 2);
-
-    // Debug info
-    console.log(`[${caller}] LOGO POSITION DEBUG:`);
-    console.log(`  Header: top=${headerRect.top.toFixed(2)}, bottom=${headerBottom.toFixed(2)}, height=${headerRect.height.toFixed(2)}`);
-    console.log(`  Active Card: top=${cardTop.toFixed(2)}, height=${cardRect.height.toFixed(2)}`);
-    console.log(`  Logo: height=${logoHeight}, current top=${logoRect.top.toFixed(2)}`);
-    console.log(`  Space: available=${availableSpace.toFixed(2)}, midPoint=${midPoint.toFixed(2)}, adjustedPos=${adjustedPosition.toFixed(2)}`);
-    console.log(`  Card computed styles:`, window.getComputedStyle(activeCard));
-    console.log(`  Header computed styles:`, window.getComputedStyle(header));
-
-    return {
-        headerBottom,
-        cardTop,
-        midPoint,
-        adjustedPosition
-    };
+    // Logo positioning debug logic removed as requested
+    // We're keeping the function to maintain any references to it
+    // but removing all the actual positioning logic
+    return null;
 }
 
-// Add this after the debugLogoPosition function
-
-// Chrome-specific logo positioning fix
+// Update fixChromeLogoPosition to use active card position
 function fixChromeLogoPosition() {
-    const logoContainer = document.querySelector('.logo-container');
-    const header = document.querySelector('header');
-    const activeCard = flipCards[CardSystem.activeCardIndex];
-
-    if (!logoContainer || !header || !activeCard) return false;
-
-    // Force reflows for accurate measurements
-    void document.documentElement.offsetHeight;
-    void header.offsetHeight;
-    void activeCard.offsetHeight;
-
-    const headerRect = header.getBoundingClientRect();
-    const cardRect = activeCard.getBoundingClientRect();
-
-    // Calculate the exact midpoint between header and active card
-    const headerBottom = headerRect.bottom;
-    const cardTop = cardRect.top;
-    const availableSpace = cardTop - headerBottom;
-    const midPoint = headerBottom + (availableSpace / 2);
-
-    // Apply position with important flags and transform
-    logoContainer.style.cssText = `
-        position: fixed !important;
-        top: ${midPoint}px !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        margin: 0 !important;
-        z-index: 100 !important;
-        transition: opacity 0.3s ease !important;
-        -webkit-transform: translate(-50%, -50%) !important;
-        -webkit-backface-visibility: hidden !important;
-        -webkit-perspective: 1000px !important;
-        will-change: transform !important;
-    `;
-
-    return midPoint;
-}
-
-function updateScrollIndicator(overlayContent) {
-    const indicator = overlayContent.querySelector('.swipe-indicator');
-    if (!indicator) return;
-
-    // Create text element if it doesn't exist
-    if (!indicator.querySelector('.scroll-text')) {
-        const textEl = document.createElement('span');
-        textEl.className = 'scroll-text';
-        textEl.textContent = 'scroll for more';
-        indicator.appendChild(textEl);
-    }
-
-    const textEl = indicator.querySelector('.scroll-text');
-    const isOverflowing = overlayContent.scrollHeight > overlayContent.clientHeight;
-    const isAtBottom = Math.abs(overlayContent.scrollHeight - overlayContent.scrollTop - overlayContent.clientHeight) < 1;
-
-    // Update text based on conditions
-    const isSafari = document.body.classList.contains('safari-mobile') ||
-                    document.body.classList.contains('safari-desktop');
-
-    if (!isOverflowing || isAtBottom) {
-        textEl.textContent = 'end';
-    } else {
-        textEl.textContent = 'scroll for more';
-    }
-}
-
-// Add scroll event listener in your openOverlay function
-function openOverlay(card) {
-    // ... existing code ...
-
-    const overlayContent = overlay.querySelector('.overlay-content');
-    updateScrollIndicator(overlayContent);
-
-    overlayContent.addEventListener('scroll', () => {
-        updateScrollIndicator(overlayContent);
-    });
+    // Chrome-specific logo positioning logic removed as requested
+    // We're keeping the function to maintain any references to it
+    // but removing all the actual positioning logic
+    return false;
 }
