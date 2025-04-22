@@ -1236,53 +1236,29 @@
     // Update the orientation change handler
     window.addEventListener('orientationchange', function() {
         console.log("Orientation change detected");
-        
+
         // Delay recalculation to ensure measurements are accurate after rotation
         setTimeout(() => {
             const isCurrentlyLandscape = isPhoneLandscape();
             console.log("Is landscape after orientation change:", isCurrentlyLandscape);
-            
+
             // Update header visibility based on orientation
             updateHeaderVisibility();
-            
+
             // Update logo visibility based on orientation
             if (isCurrentlyLandscape) {
                 toggleLogoVisibility(false);
             } else if (!isAnyCardFlipped && !isOverlayActive) {
                 toggleLogoVisibility(true);
             }
-            
+
             // Force card positioning
             enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
-            
+
             // Update wasLandscape state for next orientation change
             wasLandscape = isCurrentlyLandscape;
         }, 150);
     });
-
-    // Update fixChromeLogoPosition to use active card position
-    function fixChromeLogoPosition() {
-        // Chrome-specific logo positioning logic removed as requested
-        // We're keeping the function to maintain any references to it
-        // but removing all the actual positioning logic
-        return false;
-    }
-
-    // Update measureAndPositionLogo to use same active card logic
-    function measureAndPositionLogo(forceVisible = false) {
-        // Logo positioning logic removed as requested
-        // We're keeping the function to maintain any references to it
-        // but removing all the actual positioning logic
-        return false;
-    }
-
-    // Update positionLogo to ONLY handle positioning
-    function positionLogo() {
-        // Logo positioning logic removed as requested
-        // We're keeping the function to maintain any references to it
-        // but removing all the actual positioning logic
-        return null;
-    }
 
     // Add this function to ensure logo positioning is correct when coming from landscape
     function forceLogoRepositioning() {
@@ -1372,28 +1348,7 @@
                 // Special handling for landscape to portrait rotation through resize
                 if (wasLandscape && nowPortrait) {
                     // Handle landscape to portrait via resize
-                    // First recalculate layout without showing logo
-                    recalculateEntireLayout(false);
 
-                    // Then position logo with our dedicated function
-                    const success = calculateAndPositionLogo(true);
-
-                    if (success) {
-                        // Fade in the correctly positioned logo
-                        setTimeout(() => {
-                            logoContainer.style.transition = 'opacity 0.3s ease';
-                            logoContainer.style.opacity = '1';
-                            logoContainer.style.visibility = 'visible';
-                            logoContainer.style.display = '';
-                            console.log("Showing positioned logo after landscape->portrait resize");
-                        }, 100);
-                    } else {
-                        // Fallback display
-                        logoContainer.style.cssText = '';
-                        logoContainer.style.opacity = '1';
-                        logoContainer.style.visibility = 'visible';
-                        logoContainer.style.display = '';
-                    }
                 } else {
                     // Standard resize in portrait mode - normal logo display
                     logoContainer.style.cssText = '';
@@ -1433,11 +1388,6 @@
             }
         }
 
-        // Always run fixChromeLogoPosition for debugging/consistency
-        fixChromeLogoPosition();
-
-        // Create phantom logo early in initialization
-        ensureConsistentLayout();
 
         // Define waitForCardMeasurements function with timeout and faster polling
         function waitForCardMeasurements() {
@@ -1694,12 +1644,6 @@
                 const isLandscape = isPhoneLandscape();
                 enforceCardPosition(CardSystem.activeCardIndex, isLandscape);
 
-                // Apply Chrome fix at the end of initialization sequence
-                if (document.body.classList.contains('chrome-android') ||
-                    document.body.classList.contains('chrome-ios')) {
-                    fixChromeLogoPosition();
-                }
-
                 console.log("Core initialization complete - clean fade-in.");
             } catch (error) {
                 console.error('Initialization failed:', error);
@@ -1730,12 +1674,6 @@
 
         // Start initialization
         initializeSequence();
-
-        // After all initialization is complete, apply browser-specific fixes
-        if (document.body.classList.contains('chrome-android') ||
-            document.body.classList.contains('chrome-ios')) {
-            fixChromeLogoPosition();
-        }
     }
 
     // Replace the current initialization code with this enhanced version
@@ -2215,25 +2153,25 @@
     // Update the orientation change handler
     window.addEventListener('orientationchange', function() {
         console.log("Orientation change detected");
-        
+
         // Delay recalculation to ensure measurements are accurate after rotation
         setTimeout(() => {
             const isCurrentlyLandscape = isPhoneLandscape();
             console.log("Is landscape after orientation change:", isCurrentlyLandscape);
-            
+
             // Update header visibility based on orientation
             updateHeaderVisibility();
-            
+
             // Update logo visibility based on orientation
             if (isCurrentlyLandscape) {
                 toggleLogoVisibility(false);
             } else if (!isAnyCardFlipped && !isOverlayActive) {
                 toggleLogoVisibility(true);
             }
-            
+
             // Force card positioning
             enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
-            
+
             // Update wasLandscape state for next orientation change
             wasLandscape = isCurrentlyLandscape;
         }, 150);
@@ -2294,25 +2232,25 @@
     // Update the orientation change handler
     window.addEventListener('orientationchange', function() {
         console.log("Orientation change detected");
-        
+
         // Delay recalculation to ensure measurements are accurate after rotation
         setTimeout(() => {
             const isCurrentlyLandscape = isPhoneLandscape();
             console.log("Is landscape after orientation change:", isCurrentlyLandscape);
-            
+
             // Update header visibility based on orientation
             updateHeaderVisibility();
-            
+
             // Update logo visibility based on orientation
             if (isCurrentlyLandscape) {
                 toggleLogoVisibility(false);
             } else if (!isAnyCardFlipped && !isOverlayActive) {
                 toggleLogoVisibility(true);
             }
-            
+
             // Force card positioning
             enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
-            
+
             // Update wasLandscape state for next orientation change
             wasLandscape = isCurrentlyLandscape;
         }, 150);
@@ -2459,12 +2397,4 @@ function debugLogoPosition(caller) {
     // We're keeping the function to maintain any references to it
     // but removing all the actual positioning logic
     return null;
-}
-
-// Update fixChromeLogoPosition to use active card position
-function fixChromeLogoPosition() {
-    // Chrome-specific logo positioning logic removed as requested
-    // We're keeping the function to maintain any references to it
-    // but removing all the actual positioning logic
-    return false;
 }
