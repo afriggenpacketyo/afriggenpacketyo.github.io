@@ -670,18 +670,18 @@
         CardSystem.isManuallyFlipping = true;
 
         // Check if we're on mobile/tablet using a more comprehensive check
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                               window.matchMedia("(max-width: 768px)").matches ||
                               ('ontouchstart' in window);
 
         // If it's a mobile device OR specifically Safari Mobile/Chrome Mobile, use overlay
-        if (isMobileDevice || 
+        if (isMobileDevice ||
             document.body.classList.contains('safari-mobile') ||
             document.body.classList.contains('chrome-android') ||
             document.body.classList.contains('chrome-ios') ||
             document.body.classList.contains('webview') ||
             document.body.classList.contains('wkwebview')) {
-            
+
             if (shouldFlip) {
                 // Show in overlay instead of flipping
                 openOverlay(card);
@@ -2361,6 +2361,24 @@
         overlayContent.addEventListener('scroll', () => {
             updateScrollIndicator(overlayContent);
         });
+        // Attach swipe handlers to both overlayContent and cardOverlay for Chrome mobile compatibility
+        if (cardOverlay && overlayContent) {
+            // Remove existing listeners first to avoid duplicates
+            cardOverlay.removeEventListener('touchstart', handleOverlayTouchStart);
+            cardOverlay.removeEventListener('touchmove', handleOverlayTouchMove);
+            cardOverlay.removeEventListener('touchend', handleOverlayTouchEnd);
+            overlayContent.removeEventListener('touchstart', handleOverlayTouchStart);
+            overlayContent.removeEventListener('touchmove', handleOverlayTouchMove);
+            overlayContent.removeEventListener('touchend', handleOverlayTouchEnd);
+
+            // Add listeners
+            cardOverlay.addEventListener('touchstart', handleOverlayTouchStart, { passive: false });
+            cardOverlay.addEventListener('touchmove', handleOverlayTouchMove, { passive: false });
+            cardOverlay.addEventListener('touchend', handleOverlayTouchEnd, { passive: false });
+            overlayContent.addEventListener('touchstart', handleOverlayTouchStart, { passive: false });
+            overlayContent.addEventListener('touchmove', handleOverlayTouchMove, { passive: false });
+            overlayContent.addEventListener('touchend', handleOverlayTouchEnd, { passive: false });
+        }
     }
 
     // Function to close the overlay
@@ -2644,7 +2662,7 @@
     // iOS Detection
     if (/iphone|ipad|ipod/.test(userAgent)) {
         // iOS WKWebView (must check first)
-        if ((/wkwebview/.test(userAgent)) || 
+        if ((/wkwebview/.test(userAgent)) ||
             (/^mozilla\/.*applewebkit.*mobile.*$/i.test(userAgent) && !/safari/.test(userAgent))) {
             return 'wkwebview';
         }
@@ -2661,7 +2679,7 @@
     // Android Detection
     if (/android/.test(userAgent)) {
         // Android WebView
-        if (/wv/.test(userAgent) || 
+        if (/wv/.test(userAgent) ||
             (/version\//.test(userAgent) && /chrome/.test(userAgent))) {
             return 'webview';
         }
@@ -2842,20 +2860,10 @@ function updateScrollIndicator(overlayContent) {
     const isSafari = document.body.classList.contains('safari-mobile') ||
                     document.body.classList.contains('safari-desktop');
 
-    if (!isSafari) {
-        // Chrome-specific text
-        if (!isOverflowing || isAtBottom) {
-            textEl.textContent = '—end—';
-        } else {
-            textEl.textContent = '—scroll for more—';
-        }
+    if (!isOverflowing || isAtBottom) {
+        textEl.textContent = 'end';
     } else {
-        // Non-Chrome text
-        if (!isOverflowing || isAtBottom) {
-            textEl.textContent = 'end';
-        } else {
-            textEl.textContent = 'scroll for more';
-        }
+        textEl.textContent = 'scroll for more';
     }
 }
 

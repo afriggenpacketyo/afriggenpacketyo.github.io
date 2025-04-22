@@ -1,1047 +1,678 @@
-/* Common styles for both mobile and desktop */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #f5f5f7;
-}
-
-/* Common card styles (shared between mobile and desktop) */
-.flip-card {
-  flex: 0 0 300px;
-  height: 400px;
-  min-height: 400px;
-  margin: 0 15px;
-  cursor: pointer;
-  will-change: transform, opacity;
-  transform-origin: center center;
-  z-index: 1;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  scroll-snap-align: center;
-}
-
-.flip-card.active {
-  opacity: 1;
-  transform: scale(1);
-  z-index: 2;
-  padding-bottom: 0px !important;
-}
-
-.flip-card:not(.active) {
-  opacity: 0.65;
-  transform: scale(0.9);
-  z-index: 1;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform-style: preserve-3d;
-  will-change: transform;
-  display: flex;
-}
-
-.flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg) !important;
-  /* No other transforms! */
-}
-
-.flip-card-front, .flip-card-back {
-  position: absolute;
-  width: 100%;
-  min-height: 100%;
-  height: auto;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.flip-card-front {
-  background: linear-gradient(45deg, #2c3e50, #3498db);
-  color: white;
-  justify-content: center;
-  align-items: center;
-  padding: 20px 20px 30px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  filter: saturate(1.1);
-  position: relative;
-}
-
-.flip-card-back {
-  background-color: white;
-  color: #333;
-  transform: rotateY(180deg);
-  padding: 20px;
-  text-align: left;
-  overflow-y: auto;
-  max-height: 400px;
-  justify-content: flex-start;
-  height: auto;
-  min-height: 100%;
-  position: absolute;
-  width: 100%;
-  backface-visibility: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.flip-card-front h2 {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  white-space: pre-wrap;
-  word-break: keep-all;
-  max-width: 260px;
-  width: 260px;
-  overflow-wrap: normal;
-  hyphens: none;
-  contain: layout;
-}
-
-.flip-card-back h3 {
-  color: #3498db;
-  margin: 10px 0 5px;
-}
-
-.flip-card-back-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.flip-card-back p {
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-.flip-card-back a {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: bold;
-  display: inline-block;
-  width: fit-content;
-  white-space: nowrap;
-  padding: 5px 10px;
-  line-height: 1;
-  border-radius: 20px;
-  background-color: rgba(52, 152, 219, 0.1);
-  transition: all 0.2s ease;
-}
-
-.flip-card-back a:hover {
-  text-decoration: none;
-  background-color: rgba(52, 152, 219, 0.2);
-  transform: scale(1.05);
-}
-
-/* Common UI elements */
-.optimism-score {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: white;
-}
-
-.score-high {
-  background-color: #27ae60;
-}
-
-.score-medium {
-  background-color: #f39c12;
-}
-
-.score-low {
-  background-color: #e74c3c;
-}
-
-/* Card indicators (used in both mobile and desktop) */
-.card-indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  position: fixed;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  transition: opacity 0.3s ease;
-  /* padding: 10px 0; */
-  line-height: 0;
-}
-
-/* Hide indicator when card is flipped */
-.flip-card.flipped .card-indicator {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Indicator dots styling */
-.indicator-dot {
-  background-color: #3498db;
-  border-radius: 50%;
-  transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1); /* Faster transition */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 8px;
-  width: 20px;
-  height: 20px;
-  box-sizing: content-box;
-  transform-origin: center center;
-  position: relative;
-  vertical-align: middle;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.indicator-dot.visible {
-  display: flex;
-}
-
-/* Dot sizes - used by both mobile and desktop */
-.indicator-dot.size-small {
-  transform: scale(1.2);
-  opacity: 0.4;
-  margin: 0 3px;
-}
-
-.indicator-dot.size-mid {
-  transform: scale(1.5);
-  opacity: 0.6;
-  margin: 0 6.5px;
-}
-
-.indicator-dot.size-large {
-  transform: scale(1.8);
-  opacity: 0.8;
-  margin: 0 10px;
-}
-
-.indicator-dot.size-active {
-  transform: scale(2);
-  opacity: 1;
-  margin: 0 12px;
-  background-color: #2980b9;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  /* border: 1.5px solid #222; */
-}
-
-/* Common page elements */
-.page-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 10px 20px;
-  text-align: center;
-  z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #2c3e50;
-}
-
-.last-updated {
-  font-size: 0.8rem;
-  color: #7f8c8d;
-  margin-top: 5px;
-}
-
-.section-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.source-text {
-  font-size: 0.9em;
-  margin-top: 5px;
-  color: #666;
-}
-
-/* Summary text styling for both modes */
-.flip-card-back .summary {
-  /* Force consistent width in all states */
-  width: 260px;
-  display: block;
-
-  /* Preserve line breaks */
-  white-space: pre-wrap;
-  word-break: keep-all;
-
-  /* Use transform instead of font-size changes */
-  transform-origin: left top;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* When flipped, scale the entire summary instead of changing font size */
-.flip-card.flipped .flip-card-back .summary {
-  /* Scale up by 12.5% without changing dimensions/line breaks */
-  transform: scale(1.125);
-
-  /* Adjust container to accommodate the scaling */
-  width: 260px;
-  margin-bottom: 0.5em;
-}
-
-/* ================== DESKTOP/PC SPECIFIC STYLES ================== */
-@media (min-width: 769px) {
-  /* Hide scrollbar for desktop */
-  .container::-webkit-scrollbar {
-    display: none;
+/* =============================================================
+   GLOBAL VARIABLES & RESET
+   ============================================================= */
+   :root {
+    --primary-blue: #3498db;
+    --primary-blue-dark: #2c3e50;
+    --primary-green: #27ae60;
+    --primary-orange: #f39c12;
+    --primary-red: #e74c3c;
+    --card-width: 300px;
+    --card-height: 400px;
+    --card-radius: 10px;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition-medium: 0.3s ease;
+    --transition-flip: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
+    --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
+    --header-bg: rgba(255, 255, 255, 0.9);
+    --header-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    --indicator-dot: #3498db;
+    --indicator-dot-active: #2980b9;
+    --logo-max-width: 80px;
+    --logo-max-width-mobile: 60px;
   }
 
-  /* Basic container setup for desktop */
-  .container {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 20px;
-    width: 100%;
-    max-width: 100vw;
-    height: 100vh;
-    align-items: center;
-    padding-left: calc(50vw - 150px);
-    padding-right: calc(50vw - 150px);
-    -webkit-overflow-scrolling: touch;
-    gap: 30px;
-    padding-top: 80px;
-    scroll-behavior: smooth;
-    padding-bottom: 80px;
-    min-height: 600px;
-  }
-
-  /* Desktop flipped card style */
-  .flip-card.flipped {
-    /* Keep in normal document flow */
-    position: relative !important;
-
-    /* Center horizontally with auto margins */
-    margin-left: auto !important;
-    margin-right: auto !important;
-
-    /* Make it wider */
-    width: 90vw !important;
-
-    /* CRITICAL: Don't add any transforms except the rotation! */
-    /* Let the flip-card-inner handle ONLY the rotation */
-  }
-
-  /* Navigation arrows for desktop only */
-  .nav-arrow {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
-    background-color: rgba(52, 152, 219, 0.9);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 100;
-    font-size: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    user-select: none;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .nav-arrow:hover {
-    background-color: rgba(52, 152, 219, 1);
-    transform: translateY(-50%) scale(1.1);
-  }
-
-  .nav-arrow.disabled {
-    opacity: 0.3;
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .nav-left {
-    left: 20px;
-  }
-
-  .nav-right {
-    right: 20px;
-  }
-
-  /* iPod classic style scrolling effect for desktop */
-  .container.with-coverflow {
-    perspective: none;
-    height: 100vh;
-    align-items: center;
-    justify-content: flex-start;
-    scroll-behavior: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .container.with-coverflow .flip-card {
-    flex: 0 0 300px;
-    height: auto;
-    min-height: 400px;
-    max-height: 80vh;
+  * {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
 
-  .container.with-coverflow .flip-card-inner {
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f5f5f7;
+  }
+
+  /* =============================================================
+     CARD STYLES (shared)
+     ============================================================= */
+  .flip-card {
+    flex: 0 0 var(--card-width);
+    height: var(--card-height);
+    min-height: var(--card-height);
+    margin: 0 15px;
+    cursor: pointer;
+    will-change: transform, opacity;
+    transform-origin: center center;
+    z-index: 1;
+    transition: transform var(--transition-medium), opacity var(--transition-medium);
+    scroll-snap-align: center;
+  }
+  .flip-card.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 2;
+  }
+  .flip-card:not(.active) {
+    opacity: 0.65;
+    transform: scale(0.9);
+    z-index: 1;
+  }
+  .flip-card-inner {
+    position: relative;
+    width: 100%;
     height: 100%;
-    min-height: 400px;
+    text-align: center;
+    transition: transform var(--transition-flip);
+    transform-style: preserve-3d;
+    will-change: transform;
+    display: flex;
   }
-
-  .container.with-coverflow .flip-card-front,
-  .container.with-coverflow .flip-card-back {
+  .flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg) !important;
+  }
+  .flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
     min-height: 100%;
     height: auto;
-  }
-
-  .container.with-coverflow .flip-card.flipped .flip-card-inner {
-    transform: rotateY(180deg) !important;
-    height: auto;
-    min-height: 400px;
-  }
-
-  /* Simple highlight for active card in desktop mode */
-  .container.with-coverflow .flip-card.active .flip-card-front {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-}
-
-/* ================== MOBILE SPECIFIC STYLES ================== */
-@media (max-width: 768px) {
-  /* Mobile container styles */
-  .container {
-    /* These are the key settings for bounce */
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: auto;
-
-    /* Remove the padding from container - we'll use padding elements instead */
-    padding-left: 0;
-    padding-right: 0;
-
-    /* Turn off snap, but keep gap between cards */
-    scroll-snap-type: none;
-    gap: 30px;
-
-    /* REPLACE with better centering */
-    padding-top: 70px !important;
-    padding-bottom: 50px !important;
-
-    /* Basic setup */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
     display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
-    max-width: 100vw;
-    height: 100vh;
+    flex-direction: column;
+  }
+  .flip-card-front {
+    background: linear-gradient(45deg, var(--primary-blue-dark), var(--primary-blue));
+    color: #fff;
+    justify-content: center;
     align-items: center;
-    min-height: 600px;
+    padding: 20px 20px 30px;
+    box-shadow: var(--box-shadow-strong);
+    filter: saturate(1.1);
+    position: relative;
   }
-
-  /* Hide scrollbar for mobile */
-  .container::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Override any previous card styling that might interfere */
-  .flip-card {
-    margin: 0 15px !important;
-    /* Fix: Preserve original card height */
-    height: 400px;
-    min-height: 400px;
-  }
-
-  .flip-card-inner {
-    transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-    will-change: transform;
-  }
-
   .flip-card-back {
-    height: auto;
-    max-height: 400px; /* Restore original max height */
+    background: #fff;
+    color: #333;
+    transform: rotateY(180deg);
+    padding: 20px;
+    text-align: left;
+    overflow-y: auto;
+    max-height: var(--card-height);
+    justify-content: flex-start;
+    min-height: 100%;
+    position: absolute;
+    width: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .flip-card-front h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    max-width: 260px;
+    width: 260px;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+  .flip-card-back h3 {
+    color: var(--primary-blue);
+    margin: 10px 0 5px;
+  }
+  .flip-card-back-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .flip-card-back p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+  .flip-card-back a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    width: fit-content;
+    white-space: nowrap;
+    padding: 5px 10px;
+    line-height: 1;
+    border-radius: 20px;
+    background: rgba(52, 152, 219, 0.1);
+    transition: all var(--transition-fast);
+  }
+  .flip-card-back a:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: scale(1.05);
   }
 
-  /* Mobile navigation */
-  .nav-arrow {
-    display: none;
+  /* =============================================================
+     UI ELEMENTS
+     ============================================================= */
+  .optimism-score {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #fff;
   }
+  .score-high { background: var(--primary-green); }
+  .score-medium { background: var(--primary-orange); }
+  .score-low { background: var(--primary-red); }
 
-  /* Mobile header */
-  .page-header h1 {
-    font-size: 1.2rem;
-  }
-
-  /* Z-index handling for mobile */
-  header {
-    z-index: 999;
-  }
-
-  /* This is important - we need these paddings to be respected */
-  #left-scroll-padding, #right-scroll-padding {
-    flex-shrink: 0;
-    height: 1px;
-    visibility: visible !important;
-    opacity: 0;
-  }
-
-  /* FIX POSITIONING FOR FLIPPED CARD */
-  .flip-card.flipped {
-    /* Don't change position in the flow */
-    position: relative !important;
-
-    /* Keep exact original dimensions */
-    width: 300px !important;
-    height: 400px !important;
-
-    /* Keep exact original margins */
-    margin: 0 15px !important;
-
-    /* Higher z-index */
-    z-index: 100 !important;
-  }
-
-  /* The back face expands from the original card position */
-  .flip-card.flipped .flip-card-back {
-    /* Position fixed relative to viewport */
-    position: fixed !important;
-    /* top value will be set by JavaScript based on browser detection */
-    left: 50% !important;
-    transform: translate(-50%, -50%) rotateY(180deg) !important;
-
-    /* Expanded size */
-    width: 90vw !important;
-    height: auto !important;
-    min-height: 70vh !important;
-    max-height: 80vh !important;
-
-    /* Scrollable content */
-    overflow-y: auto !important;
-
-    /* Improved styling */
-    padding: 25px !important;
-    z-index: 1000 !important;
-  }
-
-  /* Safari-specific positioning class - will be added by JS */
-  .safari-browser .flip-card.flipped .flip-card-back {
-    top: 19.9vh !important;
-  }
-
-  /* Chrome-specific positioning class - will be added by JS */
-  .chrome-browser .flip-card.flipped .flip-card-back {
-    top: 21vh !important;
-  }
-  .chrome-browser .container {
-    padding-bottom: 100px !important;
-  }
-
-
-  /* Make sure other cards are visible but slightly faded */
-  .flip-card.flipped ~ .flip-card:not(.flipped) {
-    opacity: 0.7 !important;
-  }
-
-  .flip-card.flipped .flip-card-back .summary {
-    font-size: 1.2rem;
-    line-height: 1.4;
-  }
-
-  /* Card indicator should be below flipped cards */
   .card-indicator {
-    z-index: 998;
-  }
-
-  /* Mobile summary scaling */
-  .flip-card-back .summary {
-    width: 100%;
-  }
-
-  .flip-card.flipped .flip-card-back .summary {
-    transform: scale(1.2);
-    width: 100%;
-  }
-}
-
-/* ================== JAVASCRIPT-CONTROLLED STYLES ================== */
-/* These are styles that might be manipulated by JavaScript */
-
-/* Add smooth scrolling override for dot clicks */
-.container.dot-navigation {
-  scroll-behavior: auto !important; /* Override smooth scrolling during dot navigation */
-}
-
-/* Force expanded styles - controlled by JS */
-.flip-card.force-expanded {
-  z-index: 1000 !important;
-  width: calc(100vw - 20px) !important;
-  max-width: calc(100vw - 20px) !important;
-  margin: 0 !important;
-}
-
-.flip-card.force-expanded .flip-card-back {
-  max-height: none !important;
-  min-height: 90vh !important;
-  padding: 30px 25px !important;
-  overflow-y: auto !important;
-}
-
-.flip-card.force-expanded .flip-card-back .summary {
-  font-size: calc(1.3rem + 1vw) !important;
-  line-height: 1.4 !important;
-  margin-bottom: 20px !important;
-}
-
-.flip-card.force-expanded .flip-card-back p:not(.summary) {
-  font-size: calc(1.1rem + 0.5vw) !important;
-  line-height: 1.5 !important;
-  margin-bottom: 20px !important;
-}
-
-.flip-card.force-expanded .flip-card-back h3 {
-  font-size: calc(1.2rem + 0.8vw) !important;
-  margin-top: 25px !important;
-  margin-bottom: 15px !important;
-}
-
-/* Logo container styles (shared across mobile and desktop) */
-.logo-container {
-  position: fixed;
-  top: max(20vh, env(safe-area-inset-top) + 20vh);
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 100;
-  opacity: 1;
-  visibility: visible;
-  display: block;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  will-change: opacity;
-}
-
-.site-logo {
-  max-width: 80px;
-  height: auto;
-  opacity: 0.9;
-  pointer-events: auto;
-}
-
-/* Mobile-specific logo positioning */
-@media (max-width: 768px) {
-
-  .site-logo {
-    max-width: 60px;
-  }
-}
-
-/* Safari-specific logo padding with higher specificity */
-body.safari-browser .site-logo,
-body.safari-mobile .site-logo {
-  padding: 10px !important;
-  margin: 10px !important;
-  display: inline-block !important;
-  box-sizing: content-box !important;
-  z-index: 2 !important;
-}
-
-/* Target the img element directly if site-logo is a container */
-body.safari-browser .site-logo img,
-body.safari-mobile .site-logo img {
-  /* padding: 100px !important; */
-  /* margin: 10px !important; */
-  display: inline-block !important;
-  box-sizing: content-box !important;
-}
-
-/* safari specific properties for  */
-
-/* Reduce bottom padding for container in Safari mobile */
-body.safari-mobile .container.with-coverflow {
-  padding-bottom: 25px !important; /* Reduced from 40px to 10px */
-}
-
-/* Safari Mobile Overlay Styles */
-body.safari-mobile .card-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.75);
-  z-index: 999;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-body.safari-mobile .card-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-body.safari-mobile .overlay-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 90vw;
-  height: auto;
-  max-height: 85vh;
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  overflow-y: auto;
-  padding: 25px;
-  z-index: 1000;
-}
-
-body.safari-mobile .overlay-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 30px;
-  height: 30px;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1001;
-  transition: background-color 0.2s ease;
-}
-
-body.safari-mobile .overlay-close:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-body.safari-mobile .overlay-close:before,
-body.safari-mobile .overlay-close:after {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 2px;
-  background-color: #333;
-}
-
-body.safari-mobile .overlay-close:before {
-  transform: rotate(45deg);
-}
-
-body.safari-mobile .overlay-close:after {
-  transform: rotate(-45deg);
-}
-
-/* Hide original flipped card when overlay is active */
-body.safari-mobile .card-overlay.active ~ .container .flip-card.flipped {
-  visibility: hidden;
-}
-
-/* Add safe area insets for iOS devices */
-@supports (padding-top: env(safe-area-inset-top)) {
-  body.safari-mobile .overlay-content {
-    padding-top: max(25px, env(safe-area-inset-top));
-    padding-bottom: max(25px, env(safe-area-inset-bottom));
-    padding-left: max(25px, env(safe-area-inset-left));
-    padding-right: max(25px, env(safe-area-inset-right));
-  }
-}
-
-/* Updated swipe indicator styles with completely solid bottom gradient */
-body.safari-mobile .swipe-indicator {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(0, 0, 0, 0.5);
-  font-size: 14px;
-  opacity: 0.7;
-  padding: 15px 0;
-  margin-top: 20px;
-  /* Ensure gradient starts solid and extends all the way to the bottom */
-  background: linear-gradient(to top,
-                             white 0%,        /* Completely solid at bottom */
-                             white 70%,       /* Stay solid for most of the element */
-                             rgba(255,255,255,0.9) 85%,  /* Start fading */
-                             rgba(255,255,255,0) 100%);  /* Completely transparent at top */
-  /* Increase padding for more coverage */
-  padding-top: 40px;
-  padding-bottom: 20px;
-  /* Ensure it's above content */
-  z-index: 5;
-}
-
-/* Make sure the indicator extends to the edges */
-body.safari-mobile .overlay-content {
-  padding-bottom: 0 !important; /* Remove bottom padding */
-}
-
-body.safari-mobile .swipe-indicator:before,
-body.safari-mobile .swipe-indicator:after {
-  content: '';
-  width: 20px;
-  height: 2px;
-  background-color: rgba(0, 0, 0, 0.3);
-  position: relative;
-  margin: 0 8px;
-}
-
-body.safari-mobile .swipe-indicator:before {
-  transform: translateX(5px);
-}
-
-body.safari-mobile .swipe-indicator:after {
-  transform: translateX(-5px);
-}
-
-/* Animation for overlay appearance */
-@keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes contentSlideUp {
-  from { transform: translate(-50%, -40%); opacity: 0; }
-  to { transform: translate(-50%, -50%); opacity: 1; }
-}
-
-body.safari-mobile .card-overlay.active {
-  animation: overlayFadeIn 0.3s ease forwards;
-}
-
-body.safari-mobile .card-overlay.active .overlay-content {
-  animation: contentSlideUp 0.3s ease forwards;
-}
-
-/* Ensure content is properly styled */
-body.safari-mobile .overlay-content .flip-card-back {
-  position: relative !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform: none !important;
-  width: 100% !important;
-  height: auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  padding: 20px !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-}
-
-/* Ensure the header is properly hidden */
-body.safari-mobile .card-overlay.active ~ header {
-  visibility: hidden !important;
-  opacity: 0 !important;
-  transition: opacity 0.3s ease, visibility 0.3s ease !important;
-}
-
-/* Chrome Mobile Overlay Styles */
-body.chrome-android .card-overlay,
-body.chrome-ios .card-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.75);
-  z-index: 999;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-body.chrome-android .card-overlay.active,
-body.chrome-ios .card-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-body.chrome-android .overlay-content,
-body.chrome-ios .overlay-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 90vw;
-  height: 85vh;
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  overflow-y: auto;
-  padding: 25px 25px 0 25px;
-  z-index: 1000;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Update Chrome flip-card-back to work with sticky indicator */
-body.chrome-android .overlay-content .flip-card-back,
-body.chrome-ios .overlay-content .flip-card-back {
-  position: relative !important;
-  overflow: visible !important;
-  height: auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  transform: none !important;
-  padding-bottom: 0 !important;
-  flex: 1;
-}
-
-/* Also ensure the flip-card-back-content doesn't scroll independently */
-body.chrome-android .overlay-content .flip-card-back-content,
-body.chrome-ios .overlay-content .flip-card-back-content {
-  overflow: visible;
-  height: auto;
-}
-
-/* Hide original flipped card when overlay is active in Chrome */
-body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
-body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped {
-  visibility: hidden;
-}
-
-/* Remove or modify the sticky swipe indicator for Chrome */
-body.chrome-android .swipe-indicator,
-body.chrome-ios .swipe-indicator {
-  position: sticky !important;
-  bottom: 0 !important;
-  left: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(0, 0, 0, 0.7);
-  font-size: 14px;
-  opacity: 0.87;
-  padding: 15px 0;
-  margin-top: auto;
-  background: linear-gradient(to top,
-                           white 0%,
-                           white 70%,
-                           rgba(255,255,255,0.9) 85%,
-                           rgba(255,255,255,0) 100%);
-  padding-top: 40px;
-  padding-bottom: 20px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-/* Add these CSS custom properties to :root */
-:root {
-    --header-bottom: 0px;
-    --card-top: 100vh; /* Default to avoid errors if not set */
-    --logo-top: calc((var(--header-bottom) + var(--card-top)) / 2);
-}
-
-/* Update logo container positioning to use CSS variables */
-.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
     position: fixed;
-    top: var(--logo-top); /* Driven by JS-updated variables */
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    transition: opacity var(--transition-medium);
+    line-height: 0;
+  }
+  .flip-card.flipped .card-indicator {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .indicator-dot {
+    background: var(--indicator-dot);
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 8px;
+    width: 20px;
+    height: 20px;
+    box-sizing: content-box;
+    transform-origin: center center;
+    position: relative;
+    vertical-align: middle;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .indicator-dot.visible { display: flex; }
+  .indicator-dot.size-small { transform: scale(1.2); opacity: 0.4; margin: 0 3px; }
+  .indicator-dot.size-mid { transform: scale(1.5); opacity: 0.6; margin: 0 6.5px; }
+  .indicator-dot.size-large { transform: scale(1.8); opacity: 0.8; margin: 0 10px; }
+  .indicator-dot.size-active {
+    transform: scale(2);
+    opacity: 1;
+    margin: 0 12px;
+    background: var(--indicator-dot-active);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  /* =============================================================
+     PAGE HEADER
+     ============================================================= */
+  .page-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--header-bg);
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: var(--header-shadow);
+  }
+  .page-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-blue-dark);
+  }
+  .last-updated {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin-top: 5px;
+  }
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .source-text {
+    font-size: 0.9em;
+    margin-top: 5px;
+    color: #666;
+  }
+
+  /* =============================================================
+     SUMMARY TEXT
+     ============================================================= */
+  .flip-card-back .summary,
+  .flip-card.flipped .flip-card-back .summary {
+    width: 260px;
+    display: block;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    transform-origin: left top;
+    transition: transform var(--transition-flip);
+  }
+  .flip-card.flipped .flip-card-back .summary {
+    transform: scale(1.125);
+    margin-bottom: 0.5em;
+  }
+
+  /* =============================================================
+     DESKTOP/PC STYLES
+     ============================================================= */
+  @media (min-width: 769px) {
+    .container::-webkit-scrollbar { display: none; }
+    .container {
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-padding: 0 20px;
+      width: 100%;
+      max-width: 100vw;
+      height: 100vh;
+      align-items: center;
+      padding-left: calc(50vw - 150px);
+      padding-right: calc(50vw - 150px);
+      -webkit-overflow-scrolling: touch;
+      gap: 30px;
+      padding-top: 80px;
+      scroll-behavior: smooth;
+      padding-bottom: 80px;
+      min-height: 600px;
+    }
+    .flip-card.flipped {
+      position: relative !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      width: 90vw !important;
+    }
+    .nav-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(52, 152, 219, 0.9);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all var(--transition-medium);
+      user-select: none;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .nav-arrow:hover {
+      background: var(--primary-blue);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .nav-arrow.disabled {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
+    .nav-left { left: 20px; }
+    .nav-right { right: 20px; }
+    .container.with-coverflow {
+      perspective: none;
+      height: 100vh;
+      align-items: center;
+      justify-content: flex-start;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .container.with-coverflow .flip-card {
+      flex: 0 0 var(--card-width);
+      height: auto;
+      min-height: var(--card-height);
+      max-height: 80vh;
+      margin: 0;
+    }
+    .container.with-coverflow .flip-card-inner {
+      height: 100%;
+      min-height: var(--card-height);
+    }
+    .container.with-coverflow .flip-card-front,
+    .container.with-coverflow .flip-card-back {
+      min-height: 100%;
+      height: auto;
+    }
+    .container.with-coverflow .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg) !important;
+      height: auto;
+      min-height: var(--card-height);
+    }
+    .container.with-coverflow .flip-card.active .flip-card-front {
+      box-shadow: var(--box-shadow-highlight);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+  }
+
+  /* =============================================================
+     MOBILE STYLES
+     ============================================================= */
+  @media (max-width: 768px) {
+    .container {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: auto;
+      padding-left: 0;
+      padding-right: 0;
+      scroll-snap-type: none;
+      gap: 30px;
+      padding-top: 70px !important;
+      padding-bottom: 50px !important;
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+      max-width: 100vw;
+      height: 100vh;
+      align-items: center;
+      min-height: 600px;
+    }
+    .container::-webkit-scrollbar { display: none; }
+    .flip-card {
+      margin: 0 15px !important;
+      height: var(--card-height);
+      min-height: var(--card-height);
+    }
+    .flip-card-inner {
+      transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+      will-change: transform;
+    }
+    .flip-card-back {
+      height: auto;
+      max-height: var(--card-height);
+    }
+    .nav-arrow { display: none; }
+    .page-header h1 { font-size: 1.2rem; }
+    header { z-index: 999; }
+    #left-scroll-padding, #right-scroll-padding {
+      flex-shrink: 0;
+      height: 1px;
+      visibility: visible !important;
+      opacity: 0;
+    }
+    .flip-card.flipped {
+      position: relative !important;
+      width: var(--card-width) !important;
+      height: var(--card-height) !important;
+      margin: 0 15px !important;
+      z-index: 100 !important;
+    }
+    .flip-card.flipped .flip-card-back {
+      position: fixed !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) rotateY(180deg) !important;
+      width: 90vw !important;
+      height: auto !important;
+      min-height: 70vh !important;
+      max-height: 80vh !important;
+      overflow-y: auto !important;
+      padding: 25px !important;
+      z-index: 1000 !important;
+    }
+    .safari-browser .flip-card.flipped .flip-card-back { top: 19.9vh !important; }
+    .chrome-browser .flip-card.flipped .flip-card-back { top: 21vh !important; }
+    .chrome-browser .container { padding-bottom: 100px !important; }
+    .flip-card.flipped ~ .flip-card:not(.flipped) { opacity: 0.7 !important; }
+    .flip-card.flipped .flip-card-back .summary { font-size: 1.2rem; line-height: 1.4; }
+    .card-indicator { z-index: 998; }
+    .flip-card-back .summary, .flip-card.flipped .flip-card-back .summary {
+      width: 100%;
+    }
+    .flip-card.flipped .flip-card-back .summary {
+      transform: scale(1.2);
+      width: 100%;
+    }
+    .card-overlay,
+    .overlay-content,
+    body.chrome-android .card-overlay,
+    body.chrome-android .overlay-content,
+    body.chrome-ios .card-overlay,
+    body.chrome-ios .overlay-content,
+    body.webview .card-overlay,
+    body.webview .overlay-content,
+    body.wkwebview .card-overlay,
+    body.wkwebview .overlay-content {
+      touch-action: none !important;
+      user-select: none;
+      -webkit-user-drag: none;
+      overscroll-behavior: contain;
+      pointer-events: auto;
+    }
+  }
+
+  /* =============================================================
+     JS-CONTROLLED STYLES
+     ============================================================= */
+  .container.dot-navigation { scroll-behavior: auto !important; }
+  .flip-card.force-expanded {
+    z-index: 1000 !important;
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 0 !important;
+  }
+  .flip-card.force-expanded .flip-card-back {
+    max-height: none !important;
+    min-height: 90vh !important;
+    padding: 30px 25px !important;
+    overflow-y: auto !important;
+  }
+  .flip-card.force-expanded .flip-card-back .summary {
+    font-size: calc(1.3rem + 1vw) !important;
+    line-height: 1.4 !important;
+    margin-bottom: 20px !important;
+  }
+  .flip-card.force-expanded .flip-card-back p:not(.summary) {
+    font-size: calc(1.1rem + 0.5vw) !important;
+    line-height: 1.5 !important;
+    margin-bottom: 20px !important;
+  }
+  .flip-card.force-expanded .flip-card-back h3 {
+    font-size: calc(1.2rem + 0.8vw) !important;
+    margin-top: 25px !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* =============================================================
+     LOGO STYLES
+     ============================================================= */
+  .logo-container {
+    position: fixed;
+    top: var(--logo-top, 80px);
     left: 50%;
-    transform: translate(-50%, -50%); /* THE ONLY TRANSFORM RULE */
+    transform: translateX(-50%);
     z-index: 100;
     opacity: 1;
     visibility: visible;
     display: block;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    will-change: opacity; /* transform is static, only top changes via var */
-}
-
-/* Keep landscape hiding rule */
-@media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  .site-logo {
+    max-width: var(--logo-max-width, 80px);
+    height: auto;
+    opacity: 0.9;
+  }
+  @media (max-width: 768px) {
+    .site-logo { max-width: var(--logo-max-width-mobile, 60px); }
+  }
+  @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
     .logo-container {
-        opacity: 0 !important;
-        visibility: hidden !important;
-        display: none !important;
-        transition: none !important;
+      opacity: 0;
+      visibility: hidden;
+      display: none;
+      transition: none;
     }
-}
+  }
 
-/* Add margin to the last element inside flip-card-back for Chrome */
-body.chrome-android .overlay-content .flip-card-back > *:last-child,
-body.chrome-ios .overlay-content .flip-card-back > *:last-child {
-  margin-bottom: 65px !important; /* Add enough space for the swipe indicator */
-}
+  /* =============================================================
+     OVERLAY & WEBVIEW/SPECIAL BROWSER STYLES
+     (Grouped, deduplicated, and comments added for clarity)
+     ============================================================= */
 
-/* Ensure the swipe indicator doesn't cover the last element */
-body.chrome-android .swipe-indicator,
-body.chrome-ios .swipe-indicator {
-  margin-top: -45px !important; /* Pull the indicator up to overlap with the margin */
-}
-
-/* Update the swipe indicator text styling */
-body.chrome-android .swipe-indicator .scroll-text,
-body.chrome-ios .swipe-indicator .scroll-text {
-  transition: opacity 0.3s ease;
-}
-
-/* WebView Overlay Styles - Add after the Chrome and Safari overlay styles */
-body.webview .card-overlay,
-body.wkwebview .card-overlay {
+  /* === Base Overlay Styles === */
+  .card-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.75);
     z-index: 999;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-medium);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-}
-
-body.webview .card-overlay.active,
-body.wkwebview .card-overlay.active {
+  }
+  .card-overlay.active {
     opacity: 1;
     visibility: visible;
-}
+  }
+  .overlay-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 90vw;
+    height: auto;
+    max-height: 85vh;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    padding: 25px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+  .overlay-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background 0.2s ease;
+  }
+  .overlay-close:hover {
+    background: rgba(0,0,0,0.2);
+  }
+  .overlay-close:before,
+  .overlay-close:after {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 2px;
+    background: #333;
+  }
+  .overlay-close:before { transform: rotate(45deg); }
+  .overlay-close:after { transform: rotate(-45deg); }
 
-body.webview .overlay-content,
-body.wkwebview .overlay-content {
+  /* Hide original flipped card when overlay is active */
+  .card-overlay.active ~ .container .flip-card.flipped {
+    visibility: hidden;
+  }
+
+  /* === Swipe Indicator Styles === */
+  .swipe-indicator {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0,0,0,0.7);
+    font-size: 14px;
+    opacity: 0.87;
+    padding: 15px 0;
+    margin-top: 20px;
+    background: linear-gradient(to top, #fff 0%, #fff 70%, rgba(255,255,255,0.9) 85%, rgba(255,255,255,0) 100%);
+    padding-top: 40px;
+    padding-bottom: 20px;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .swipe-indicator:before, .swipe-indicator:after {
+    content: '';
+    width: 20px;
+    height: 2px;
+    background: rgba(0,0,0,0.3);
+    position: relative;
+    margin: 0 8px;
+  }
+  .swipe-indicator:before { transform: translateX(5px); }
+  .swipe-indicator:after { transform: translateX(-5px); }
+  .swipe-indicator .scroll-text { transition: opacity var(--transition-medium); }
+
+  /* Ensure overlay-content does not have extra bottom padding */
+  .overlay-content { padding-bottom: 0 !important; }
+
+  /* === Browser-Specific Styles === */
+  body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
+  body.safari-mobile .card-overlay,
+  body.chrome-android .card-overlay,
+  body.chrome-ios .card-overlay,
+  body.webview .card-overlay,
+  body.wkwebview .card-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-medium);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  body.safari-mobile .card-overlay.active,
+  body.chrome-android .card-overlay.active,
+  body.chrome-ios .card-overlay.active,
+  body.webview .card-overlay.active,
+  body.wkwebview .card-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  body.safari-mobile .overlay-content,
+  body.chrome-android .overlay-content,
+  body.chrome-ios .overlay-content,
+  body.webview .overlay-content,
+  body.wkwebview .overlay-content {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1049,9 +680,9 @@ body.wkwebview .overlay-content {
     width: 90%;
     max-width: 90vw;
     height: 85vh;
-    background-color: white;
+    background: #fff;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     overflow-y: auto;
     padding: 25px 25px 0 25px;
     z-index: 1000;
@@ -1059,11 +690,12 @@ body.wkwebview .overlay-content {
     overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
-}
-
-/* Update WebView flip-card-back to work with sticky indicator */
-body.webview .overlay-content .flip-card-back,
-body.wkwebview .overlay-content .flip-card-back {
+  }
+  body.safari-mobile .overlay-content .flip-card-back,
+  body.chrome-android .overlay-content .flip-card-back,
+  body.chrome-ios .overlay-content .flip-card-back,
+  body.webview .overlay-content .flip-card-back,
+  body.wkwebview .overlay-content .flip-card-back {
     position: relative !important;
     overflow: visible !important;
     height: auto !important;
@@ -1072,24 +704,27 @@ body.wkwebview .overlay-content .flip-card-back {
     transform: none !important;
     padding-bottom: 0 !important;
     flex: 1;
-}
-
-/* Ensure the flip-card-back-content doesn't scroll independently */
-body.webview .overlay-content .flip-card-back-content,
-body.wkwebview .overlay-content .flip-card-back-content {
+  }
+  body.safari-mobile .overlay-content .flip-card-back-content,
+  body.chrome-android .overlay-content .flip-card-back-content,
+  body.chrome-ios .overlay-content .flip-card-back-content,
+  body.webview .overlay-content .flip-card-back-content,
+  body.wkwebview .overlay-content .flip-card-back-content {
     overflow: visible;
     height: auto;
-}
-
-/* Hide original flipped card when overlay is active */
-body.webview .card-overlay.active ~ .container .flip-card.flipped,
-body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
+  }
+  body.safari-mobile .card-overlay.active ~ .container .flip-card.flipped,
+  body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
+  body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped,
+  body.webview .card-overlay.active ~ .container .flip-card.flipped,
+  body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
     visibility: hidden;
-}
-
-/* Swipe indicator for WebView */
-body.webview .swipe-indicator,
-body.wkwebview .swipe-indicator {
+  }
+  body.safari-mobile .swipe-indicator,
+  body.chrome-android .swipe-indicator,
+  body.chrome-ios .swipe-indicator,
+  body.webview .swipe-indicator,
+  body.wkwebview .swipe-indicator {
     position: sticky !important;
     bottom: 0 !important;
     left: 0;
@@ -1097,37 +732,70 @@ body.wkwebview .swipe-indicator {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(0, 0, 0, 0.7);
+    color: rgba(0,0,0,0.7);
     font-size: 14px;
     opacity: 0.87;
     padding: 15px 0;
     margin-top: auto;
-    background: linear-gradient(to top,
-                           white 0%,
-                           white 70%,
-                           rgba(255,255,255,0.9) 85%,
-                           rgba(255,255,255,0) 100%);
+    background: linear-gradient(to top, #fff 0%, #fff 70%, rgba(255,255,255,0.9) 85%, rgba(255,255,255,0) 100%);
     padding-top: 40px;
     padding-bottom: 20px;
     z-index: 5;
     pointer-events: none;
-}
-
-/* Add margin to the last element inside flip-card-back for WebView */
-body.webview .overlay-content .flip-card-back > *:last-child,
-body.wkwebview .overlay-content .flip-card-back > *:last-child {
+  }
+  body.safari-mobile .overlay-content .flip-card-back > *:last-child,
+  body.chrome-android .overlay-content .flip-card-back > *:last-child,
+  body.chrome-ios .overlay-content .flip-card-back > *:last-child,
+  body.webview .overlay-content .flip-card-back > *:last-child,
+  body.wkwebview .overlay-content .flip-card-back > *:last-child {
     margin-bottom: 65px !important;
-}
-
-/* Ensure the swipe indicator doesn't cover the last element */
-body.webview .swipe-indicator,
-body.wkwebview .swipe-indicator {
+  }
+  body.safari-mobile .swipe-indicator,
+  body.chrome-android .swipe-indicator,
+  body.chrome-ios .swipe-indicator,
+  body.webview .swipe-indicator,
+  body.wkwebview .swipe-indicator {
     margin-top: -45px !important;
-}
+  }
+  body.safari-mobile .swipe-indicator .scroll-text,
+  body.chrome-android .swipe-indicator .scroll-text,
+  body.chrome-ios .swipe-indicator .scroll-text,
+  body.webview .swipe-indicator .scroll-text,
+  body.wkwebview .swipe-indicator .scroll-text {
+    transition: opacity var(--transition-medium);
+  }
+  @supports (padding-top: env(safe-area-inset-top)) {
+    body.safari-mobile .overlay-content {
+      padding-top: max(25px, env(safe-area-inset-top));
+      padding-bottom: max(25px, env(safe-area-inset-bottom));
+      padding-left: max(25px, env(safe-area-inset-left));
+      padding-right: max(25px, env(safe-area-inset-right));
+    }
+  }
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes contentSlideUp {
+    from { transform: translate(-50%, -40%); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+  }
+  body.safari-mobile .card-overlay.active { animation: overlayFadeIn 0.3s ease forwards; }
+  body.safari-mobile .card-overlay.active .overlay-content { animation: contentSlideUp 0.3s ease forwards; }
+  body.safari-mobile .card-overlay.active ~ header {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transition: opacity var(--transition-medium), visibility var(--transition-medium) !important;
+  }
+  @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    .logo-container {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      display: none !important;
+      transition: none !important;
+    }
+  }
 
-/* Update the swipe indicator text styling */
-body.webview .swipe-indicator .scroll-text,
-body.wkwebview .swipe-indicator .scroll-text {
-    transition: opacity 0.3s ease;
-}
-
+  /* =============================================================
+     END OF STYLE.CSS
+     ============================================================= */
