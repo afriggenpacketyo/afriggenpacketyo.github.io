@@ -650,6 +650,8 @@
         });
     });
 
+    // (Removed: this is not needed with correct CSS-only solution)
+
     // Function to toggle card flip state
     function toggleCardFlip(card) {
         // Get current state
@@ -1215,13 +1217,13 @@
             logoContainer.style.opacity = '1';
             logoContainer.style.visibility = 'visible';
             logoContainer.style.display = '';
-            logoContainer.style.transition = 'opacity 0.3s ease, visibility 0.3s ease';
+            logoContainer.style.transition = 'opacity 0.3s ease';
         } else {
             // Reset any !important styles first
             logoContainer.style.cssText = '';
             logoContainer.style.opacity = '0';
             logoContainer.style.visibility = 'hidden';
-            logoContainer.style.transition = 'opacity 0.3s ease, visibility 0.3s ease';
+            logoContainer.style.transition = 'opacity 0.3s ease';
         }
     }
 

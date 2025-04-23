@@ -55,11 +55,16 @@
     z-index: 1;
     transition: transform var(--transition-medium), opacity var(--transition-medium);
     scroll-snap-align: center;
+    background: transparent !important;
+    border-radius: var(--card-radius);
   }
   .flip-card.active {
     opacity: 1;
     transform: scale(1);
     z-index: 2;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: var(--card-radius);
   }
   .flip-card:not(.active) {
     opacity: 0.65;
@@ -154,9 +159,12 @@
     background: rgba(52, 152, 219, 0.1);
     transition: all var(--transition-fast);
   }
-  .flip-card-back a:hover {
-    background: rgba(52, 152, 219, 0.2);
-    transform: scale(1.05);
+
+  @media (hover: hover) and (pointer: fine) {
+    .flip-card-back a:hover {
+      background: rgba(52, 152, 219, 0.2);
+      transform: scale(1.05);
+    }
   }
 
   /* =============================================================
@@ -779,6 +787,21 @@
       visibility: hidden !important;
       display: none !important;
       transition: none !important;
+    }
+  }
+
+  /* =============================================================
+     Remove tap/click highlight on mobile links
+     ============================================================= */
+  a, a:active, a:focus {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    a:hover, a:focus-visible {
+      background: rgba(52, 152, 219, 0.2);
+      border: 2px solid var(--primary-blue);
+      transition: all var(--transition-fast);
     }
   }
 
