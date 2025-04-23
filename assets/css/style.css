@@ -41,6 +41,47 @@
     background-color: #f5f5f7;
   }
 
+  /* --- Chrome Idle/Restore Robustness Fixes --- */
+  /* Ensure all flex/grid children can shrink properly */
+  .container, .container.with-coverflow {
+    min-height: 100vh;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* Fix for logo/header layout jumping */
+  .logo-container {
+    contain: layout paint;
+    will-change: transform, opacity;
+  }
+  .site-logo {
+    display: block;
+    max-width: var(--logo-max-width, 80px);
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+  .page-header {
+    contain: layout paint;
+    will-change: opacity, transform;
+  }
+  /* Ensure flip-card and children don't jump on Chrome idle/restore */
+  .flip-card, .flip-card-inner, .flip-card-front, .flip-card-back {
+    min-width: 0;
+    min-height: 0;
+  }
+  /* Force hardware acceleration for critical elements */
+  .container, .logo-container, .page-header {
+    transform: translateZ(0);
+  }
+  /* Prevent Chrome from miscalculating heights */
+  body, html {
+    min-height: 100vh;
+    height: 100vh;
+    width: 100vw;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
   /* =============================================================
      CARD STYLES (shared)
      ============================================================= */
@@ -567,11 +608,11 @@
   }
   .overlay-close {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 30px;
-    height: 30px;
-    background: rgba(0,0,0,0.1);
+    top: 25px;
+    right: 25px;
+    width: 44px;
+    height: 44px;
+    background: rgba(0,0,0,0.08);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -579,9 +620,18 @@
     cursor: pointer;
     z-index: 1001;
     transition: background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+    box-sizing: content-box;
   }
-  .overlay-close:hover {
-    background: rgba(0,0,0,0.2);
+  @media (max-width: 600px) {
+    .overlay-close {
+      width: 40px;
+      height: 40px;
+      top: 15px;
+      right: 15px;
+    }
   }
   .overlay-close:before,
   .overlay-close:after {
