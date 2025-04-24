@@ -2302,6 +2302,25 @@
             }
         }
     }, { passive: false });
+
+    // --- Overlay Scroll Bleed Prevention ---
+    function preventScrollBleed(overlay, overlayContent) {
+        overlay.addEventListener('touchmove', function(e) {
+            // If overlayContent does not overflow, prevent scroll
+            if (overlayContent.scrollHeight <= overlayContent.clientHeight) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    }
+
+    // Patch into overlay open logic
+    const originalOpenOverlay = openOverlay;
+    openOverlay = function(card) {
+        originalOpenOverlay(card);
+        if (typeof cardOverlay !== 'undefined' && typeof overlayContent !== 'undefined') {
+            preventScrollBleed(cardOverlay, overlayContent);
+        }
+    }
 })();
 
 // Browser detection for Safari vs Chrome positioning
