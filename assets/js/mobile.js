@@ -2321,6 +2321,69 @@
             preventScrollBleed(cardOverlay, overlayContent);
         }
     }
+
+    // === PROFESSIONAL MOBILE LAYOUT FIXES ===
+    // 1. Viewport Height CSS Variable Patch (100vh bug)
+    function setVhVar() {
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    }
+    setVhVar();
+
+    // 2. Debounced Layout Recalculation
+    function recalcLayout() {
+        setVhVar();
+        // 3. Card Re-centering on Resume
+        if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+            window.CardSystem.updateUI();
+        }
+        // Optionally, force a reflow
+        document.body.offsetHeight;
+    }
+    let resizeDebounceTimerPro = null;
+    function recalcLayoutDebounced() {
+        clearTimeout(resizeDebounceTimerPro);
+        resizeDebounceTimerPro = setTimeout(recalcLayout, 80);
+    }
+    window.addEventListener('resize', recalcLayoutDebounced);
+    window.addEventListener('orientationchange', recalcLayoutDebounced);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) recalcLayout();
+    });
+    // === END PROFESSIONAL MOBILE LAYOUT FIXES ===
+
+    // === DYNAMIC HEADER/LOGO LAYOUT SYNC FIX ===
+    function updateContainerPaddingAndCenterCards() {
+        const header = document.querySelector('.page-header');
+        const logo = document.querySelector('.logo-container');
+        const container = document.querySelector('.container');
+        if (!header || !logo || !container) return;
+
+        // Get actual heights
+        const headerHeight = header.offsetHeight;
+        const logoHeight = logo.offsetHeight;
+        const totalOffset = headerHeight + logoHeight + 16; // 16px for spacing
+
+        // Set container padding-top dynamically
+        container.style.paddingTop = totalOffset + 'px';
+
+        // Now recenter cards
+        if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+            window.CardSystem.updateUI();
+        }
+    }
+
+    // Ensure logo image is loaded before measuring
+    const logoImg = document.querySelector('.site-logo');
+    if (logoImg && !logoImg.complete) {
+        logoImg.addEventListener('load', updateContainerPaddingAndCenterCards);
+    } else {
+        updateContainerPaddingAndCenterCards();
+    }
+
+    // Also run on resize/orientationchange
+    window.addEventListener('resize', updateContainerPaddingAndCenterCards);
+    window.addEventListener('orientationchange', updateContainerPaddingAndCenterCards);
+    // === END DYNAMIC HEADER/LOGO LAYOUT SYNC FIX ===
 })();
 
 // Browser detection for Safari vs Chrome positioning
