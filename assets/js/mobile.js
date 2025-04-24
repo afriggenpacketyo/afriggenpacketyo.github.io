@@ -2291,6 +2291,17 @@
         const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
         return mediaQuery.matches;
     }
+
+    // Prevent touchmove events from scrolling outside the overlay when overlay is open
+    window.addEventListener('touchmove', function(e) {
+        const overlayActive = document.querySelector('.card-overlay.active');
+        if (overlayActive) {
+            // If the event target is not inside the overlay-content, prevent scroll
+            if (!e.target.closest('.overlay-content')) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
 })();
 
 // Browser detection for Safari vs Chrome positioning
