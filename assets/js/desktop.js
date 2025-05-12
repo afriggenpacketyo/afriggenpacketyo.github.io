@@ -377,6 +377,39 @@
                 this.classList.add('flipped');
                 CardSystem.currentlyFlippedCard = this;
 
+                // === Add swipe-indicator overlay for desktop flipped cards ONLY if there is vertical overflow ===
+                if (window.innerWidth >= 769) {
+                    const cardBack = this.querySelector('.flip-card-back');
+                    if (cardBack && !cardBack.querySelector('.swipe-indicator')) {
+                        // Check for vertical overflow
+                        if (cardBack.scrollHeight > cardBack.clientHeight + 2) { // +2 for rounding tolerance
+    const swipeIndicator = document.createElement('div');
+    swipeIndicator.className = 'swipe-indicator';
+    swipeIndicator.innerHTML = '<span class="scroll-text">Swipe for more</span>';
+    cardBack.appendChild(swipeIndicator);
+
+    // --- Add scroll detection for "end" indicator ---
+    const updateSwipeIndicatorText = () => {
+        const scrollText = swipeIndicator.querySelector('.scroll-text');
+        if (!scrollText) return;
+        const isAtBottom = Math.abs(cardBack.scrollHeight - cardBack.scrollTop - cardBack.clientHeight) < 2;
+        if (!cardBack || cardBack.scrollHeight <= cardBack.clientHeight + 2) {
+            scrollText.textContent = "Swipe for more";
+        } else if (isAtBottom) {
+            scrollText.textContent = "End";
+        } else {
+            scrollText.textContent = "Swipe For More";
+        }
+    };
+    cardBack.addEventListener('scroll', updateSwipeIndicatorText);
+    // Also update on creation in case already at bottom
+    setTimeout(updateSwipeIndicatorText, 0);
+}
+
+                    }
+                }
+                // === END swipe-indicator overlay ===
+
                 // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
                 if (!isCardCentered && isScrollMomentumActive) {
                     // Set a flag that we want to center this card after momentum ends
@@ -407,11 +440,66 @@
                     }, 200);
                 }
             } else {
-                // Unflipping
+                // Unflipping - use a different approach to prevent scrollbar
+                
+                // 1. Create full-viewport overlay to block scrollbar appearance
+                const overlay = document.createElement('div');
+                overlay.id = 'scrollbar-blocker';
+                overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:1000; pointer-events:none;';
+                document.body.appendChild(overlay);
+                
+                // 2. Force a specific height on the body and viewport
+                const viewportHeight = window.innerHeight;
+                document.body.style.height = `${viewportHeight}px`;
+                document.documentElement.style.height = `${viewportHeight}px`;
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                
+                // 3. Store current scroll position
+                const scrollY = window.scrollY;
+                
+                // 4. Execute card deflipping with text scaling
+                // Add was-flipped class to trigger text scaling during deflip
+                this.classList.add('was-flipped');
                 void this.offsetWidth; // Force reflow
                 this.classList.remove('flipped');
-                CardSystem.adjustCardHeight(this, false);
+
+                // === Remove swipe-indicator overlay for desktop flipped cards ===
+                if (window.innerWidth >= 769) {
+                    const cardBack = this.querySelector('.flip-card-back');
+                    if (cardBack) {
+                        const swipeIndicator = cardBack.querySelector('.swipe-indicator');
+                        if (swipeIndicator) {
+                            cardBack.removeChild(swipeIndicator);
+                        }
+                    }
+                }
+                // === END swipe-indicator removal ===
+                
+                // 5. Directly handle height change with inline styles for instant transition
+                const originalHeight = 400; // Match the height in adjustCardHeight
+                this.style.height = `${originalHeight}px`;
+                this.querySelector('.flip-card-inner').style.height = '100%';
+                this.querySelector('.flip-card-back').style.minHeight = '100%';
                 CardSystem.currentlyFlippedCard = null;
+                
+                // 6. Wait for transition to complete, then restore everything
+                setTimeout(() => {
+                    // Remove overlay
+                    if (document.getElementById('scrollbar-blocker')) {
+                        document.getElementById('scrollbar-blocker').remove();
+                    }
+                    
+                    // Restore scroll position and overflow handling
+                    document.body.style.height = '';
+                    document.documentElement.style.height = '';
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    window.scrollTo(0, scrollY);
+                    
+                    // Remove the was-flipped class when the transition is complete
+                    this.classList.remove('was-flipped');
+                }, 400); // Match transition duration
             }
 
             // Reset manual flipping flag after a delay
@@ -1170,6 +1258,33 @@
 
     // Call during initialization
     document.addEventListener('DOMContentLoaded', initLogoVisibility);
+    
+    // Override the card height adjustment method to prevent scrollbars when deflipping
+    const originalAdjustCardHeight = CardSystem.adjustCardHeight;
+    CardSystem.adjustCardHeight = function(card, setHeight = false) {
+        // Only apply special handling when deflipping (when height goes from high to low)
+        if (!setHeight) {
+            // Store current document state
+            const htmlStyle = document.documentElement.style.overflow;
+            const bodyStyle = document.body.style.overflow;
+            
+            // Apply overflow:hidden to prevent scrollbar
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+            
+            // Call original method to perform height adjustment
+            originalAdjustCardHeight.call(this, card, setHeight);
+            
+            // Restore the original overflow settings after a slight delay
+            setTimeout(() => {
+                document.documentElement.style.overflow = htmlStyle;
+                document.body.style.overflow = bodyStyle;
+            }, 400); // Match transition time
+        } else {
+            // For expanding cards, just use the original method
+            originalAdjustCardHeight.call(this, card, setHeight);
+        }
+    };
 
     // Initialize desktop-specific features
     addNavigationArrows();

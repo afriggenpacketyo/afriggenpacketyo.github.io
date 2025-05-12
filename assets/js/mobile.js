@@ -520,18 +520,14 @@
         if (!highlightTargetCard.activeStyle) {
             highlightTargetCard.activeStyle = `
                 opacity: 1 !important;
-                background-color: var(--primary-color, #0078e7) !important;
-                border-color: var(--primary-color-dark, #005bb1) !important;
                 transform: scale(1) !important;
-                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+                transition: opacity 0.25s ease, transform 0.28s ease !important;
             `;
 
             highlightTargetCard.inactiveStyle = `
                 opacity: 0.7 !important;
-                background-color: var(--secondary-color, #76b5e7) !important;
-                border-color: var(--secondary-color-dark, #5090c9) !important;
                 transform: scale(0.95) !important;
-                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+                transition: opacity 0.25s ease, transform 0.28s ease !important;
             `;
         }
 
@@ -552,18 +548,14 @@
         if (!resetCardHighlights.activeStyle) {
             resetCardHighlights.activeStyle = `
                 opacity: 1 !important;
-                background-color: var(--primary-color, #0078e7) !important;
-                border-color: var(--primary-color-dark, #005bb1) !important;
                 transform: scale(1) !important;
-                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+                transition: opacity 0.25s ease, transform 0.28s ease !important;
             `;
 
             resetCardHighlights.inactiveStyle = `
                 opacity: 0.7 !important;
-                background-color: var(--secondary-color, #76b5e7) !important;
-                border-color: var(--secondary-color-dark, #5090c9) !important;
                 transform: scale(0.95) !important;
-                transition: opacity 0.25s ease, background-color 0.25s ease, transform 0.28s ease !important;
+                transition: opacity 0.25s ease, transform 0.28s ease !important;
             `;
         }
 
@@ -1164,7 +1156,11 @@
             logoContainer.style.visibility = 'hidden';
         } else {
             // Show in all other cases
-            logoContainer.style.cssText = ''; // Reset to default visible state
+            // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease'; // Reset to default visible state
         }
     }
 
@@ -1182,7 +1178,11 @@
         if (!logoContainer) return;
 
         // Start with default visible state
-        logoContainer.style.cssText = '';
+        // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease';
 
         // Only hide if card is flipped
         isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null || isOverlayActive;
@@ -1200,12 +1200,10 @@
         // Use our shared function for consistent detection
         if (isPhoneLandscape()) {
             // Force immediate hiding with !important styles for phones in landscape
-            logoContainer.style.cssText = `
-                opacity: 0 !important;
-                visibility: hidden !important;
-                transition: none !important;
-                display: none !important;
-            `;
+            logoContainer.style.opacity = '0';
+logoContainer.style.visibility = 'hidden';
+logoContainer.style.transition = 'none';
+logoContainer.style.display = 'none';
             console.log("toggleLogoVisibility - hiding logo for landscape");
             return;
         }
@@ -1213,14 +1211,22 @@
         // Normal behavior for portrait or tablets/desktops
         if (show) {
             // Reset any !important styles first
-            logoContainer.style.cssText = '';
+            // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease';
             logoContainer.style.opacity = '1';
             logoContainer.style.visibility = 'visible';
             logoContainer.style.display = '';
             logoContainer.style.transition = 'opacity 0.3s ease';
         } else {
             // Reset any !important styles first
-            logoContainer.style.cssText = '';
+            // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease';
             logoContainer.style.opacity = '0';
             logoContainer.style.visibility = 'hidden';
             logoContainer.style.transition = 'opacity 0.3s ease';
@@ -1353,7 +1359,11 @@
 
                 } else {
                     // Standard resize in portrait mode - normal logo display
-                    logoContainer.style.cssText = '';
+                    // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease';
                     logoContainer.style.opacity = '1';
                     logoContainer.style.visibility = 'visible';
                     logoContainer.style.display = '';
@@ -1702,15 +1712,14 @@
             closeButton.className = 'overlay-close';
             closeButton.addEventListener('click', closeOverlay);
 
-            // Create swipe indicator
-            const swipeIndicator = document.createElement('div');
-            swipeIndicator.className = 'swipe-indicator';
-            swipeIndicator.textContent = 'Scroll down for more';
-
             // Append elements
             overlayContent.appendChild(closeButton);
-            overlayContent.appendChild(swipeIndicator);
             cardOverlay.appendChild(overlayContent);
+            // Create swipe indicator and append as direct child of overlayContent
+            const swipeIndicator = document.createElement('div');
+            swipeIndicator.className = 'swipe-indicator';
+            swipeIndicator.textContent = '';
+            overlayContent.appendChild(swipeIndicator);
             document.body.appendChild(cardOverlay);
 
             // Add touch event listeners for the overlay
@@ -1783,11 +1792,14 @@
         // Reset overlay content scroll position
         overlayContent.scrollTop = 0;
 
-        // Add swipe indicator after all content
-        const swipeIndicator = document.createElement('div');
-        swipeIndicator.className = 'swipe-indicator';
-        swipeIndicator.textContent = '';
-        overlayContent.appendChild(swipeIndicator);
+        // Ensure only one swipe indicator as direct child of overlayContent
+        let swipeIndicator = overlayContent.querySelector('.swipe-indicator');
+        if (!swipeIndicator) {
+            swipeIndicator = document.createElement('div');
+            swipeIndicator.className = 'swipe-indicator';
+            swipeIndicator.textContent = '';
+            overlayContent.appendChild(swipeIndicator);
+        }
 
         // Show the overlay
         cardOverlay.classList.add('active');
@@ -2045,7 +2057,11 @@
                 `;
             } else if (!isAnyCardFlipped) {
                 // Show logo if not a phone landscape and no card is flipped
-                logoContainer.style.cssText = '';
+                // Only reset visibility/opacity/display/transition, let CSS handle appearance
+logoContainer.style.opacity = '1';
+logoContainer.style.visibility = 'visible';
+logoContainer.style.display = '';
+logoContainer.style.transition = 'opacity 0.3s ease';
                 logoContainer.style.opacity = '1';
                 logoContainer.style.visibility = 'visible';
                 logoContainer.style.display = '';
