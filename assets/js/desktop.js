@@ -385,7 +385,7 @@
                         if (cardBack.scrollHeight > cardBack.clientHeight + 2) { // +2 for rounding tolerance
     const swipeIndicator = document.createElement('div');
     swipeIndicator.className = 'swipe-indicator';
-    swipeIndicator.innerHTML = '<span class="scroll-text">Swipe for more</span>';
+    swipeIndicator.innerHTML = '<span class="scroll-text">Scroll for more</span>';
     cardBack.appendChild(swipeIndicator);
 
     // --- Add scroll detection for "end" indicator ---
@@ -394,11 +394,11 @@
         if (!scrollText) return;
         const isAtBottom = Math.abs(cardBack.scrollHeight - cardBack.scrollTop - cardBack.clientHeight) < 2;
         if (!cardBack || cardBack.scrollHeight <= cardBack.clientHeight + 2) {
-            scrollText.textContent = "Swipe for more";
+            scrollText.textContent = "Scroll for more";
         } else if (isAtBottom) {
             scrollText.textContent = "End";
         } else {
-            scrollText.textContent = "Swipe For More";
+            scrollText.textContent = "Scroll For More";
         }
     };
     cardBack.addEventListener('scroll', updateSwipeIndicatorText);
