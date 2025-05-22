@@ -18,6 +18,23 @@ window.CardSystem = {
 
     // Utility functions
     updateUI: function() {
+        // CRITICAL FIX: Ensure header is accounted for before positioning cards
+        const header = document.querySelector('.page-header');
+        const container = this.container;
+        
+        // Ensure container has adequate padding to prevent cards from riding up under header
+        if (header && container) {
+            const headerHeight = header.offsetHeight;
+            const minPadding = headerHeight + 20; // Add some extra space
+            const currentPadding = parseInt(getComputedStyle(container).paddingTop);
+            
+            // Only update if current padding is less than what we need
+            if (currentPadding < minPadding) {
+                container.style.paddingTop = minPadding + 'px';
+            }
+        }
+        
+        // Now update card classes - this happens AFTER we ensure proper spacing
         this.flipCards.forEach((card, i) => {
             card.classList.toggle('active', i === this.activeCardIndex);
         });

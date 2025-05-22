@@ -5,28 +5,55 @@
 /* =========================
    1. CSS VARIABLES
    ========================= */
-   :root {
-    --primary-blue: #3498db;
-    --primary-blue-dark: #2c3e50;
-    --primary-green: #27ae60;
-    --primary-orange: #f39c12;
-    --primary-red: #e74c3c;
-    --card-width: 300px;
-    --card-height: 400px;
-    --card-radius: 10px;
-    --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
-    --transition-medium: 0.3s ease;
-    --transition-flip: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
-    --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
-    --header-bg: rgba(255, 255, 255, 0.9);
-    --header-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    --indicator-dot: #3498db;
-    --indicator-dot-active: #2980b9;
-    --logo-max-width: 80px;
-    --logo-max-width-mobile: 60px;
-  }
+   /* =============================================================
+   1. GLOBAL VARIABLES & THEME COLORS
+   ============================================================= */
+:root {
+  /* Light mode colors */
+  --primary-blue: #3498db;
+  --primary-blue-dark: #2c3e50;
+  --primary-green: #27ae60;
+  --primary-orange: #f39c12;
+  --primary-red: #e74c3c;
+  --background-main: #f5f5f7;
+  --background-card: #fff;
+  --background-overlay: rgba(0, 0, 0, 0.75);
+  --text-main: #222;
+  --text-subtle: #666;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --header-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --indicator-dot: #3498db;
+  --indicator-dot-active: #2980b9;
+  --logo-max-width: 80px;
+  --logo-max-width-mobile: 60px;
+  /* Card and transition variables */
+  --card-width: 300px;
+  --card-height: 400px;
+  --card-radius: 10px;
+  --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+  --transition-medium: 0.3s ease;
+  --transition-flip: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+html.dark-mode {
+  /* Dark mode overrides */
+  --background-main: #181c20;
+  --background-card: #23272e;
+  --background-overlay: rgba(20,20,20,0.92);
+  --text-main: #5ecbff;
+  --text-subtle: #b0d8f7;
+  --header-bg: #181c20;
+  --header-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --indicator-dot: #5ecbff;
+  --indicator-dot-active: #39fffd;
+  /* Card and transition variables remain the same */
+}
+
+/* Now all color, background, and text styles use these variables. */
+
 
   * {
   margin: 0;
@@ -76,7 +103,8 @@ html.desktop-prevent-scrollbar .container.with-coverflow {
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
-  background-color: #f5f5f7;
+  background: var(--background-main);
+  color: var(--text-main);
 }
 
 /* =========================
@@ -91,28 +119,101 @@ html.desktop-prevent-scrollbar .container.with-coverflow {
   min-height: 0;
 }
 /* Fix for logo/header layout jumping */
-.logo-container {
+.logo-container, .header-logo-container {
   /* contain: layout paint; */
   will-change: transform, opacity;
 }
-.site-logo {
+.site-logo, .header-logo {
   display: block;
   max-width: var(--logo-max-width, 80px);
   height: auto;
   min-width: 0;
   min-height: 0;
 }
+
+/* Header controls row for mobile layout */
+.header-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 5px 10px;
+  position: relative;
+  z-index: 10;
+  min-height: 40px;
+}
+
+/* Header logo row */
+.header-logo-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  height: 40px;
+  z-index: 20;
+}
+
+/* Header logo container positioning */
+.header-logo-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+/* Header logo styling */
+.header-logo {
+  max-width: var(--logo-max-width-mobile, 60px);
+  height: auto;
+  width: 60px;
+  object-fit: contain;
+}
+
+/* Control logo visibility based on screen size */
+@media (min-width: 769px) {
+  /* Desktop: Show outside logo, hide header logo */
+  .logo-container {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+  }
+  .header-logo-container {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile: Hide outside logo, show header logo */
+  .logo-container {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  .header-logo-container {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+  }
+}
 .page-header {
   contain: layout paint;
   will-change: opacity, transform;
   position: relative;
+  padding-top: 40px; /* Add space for the absolutely positioned logo */
 }
 
 
   .header-hamburger {
-    position: absolute;
-    top: 14px;
-    left: 16px;
     width: 32px;
     height: 32px;
     display: flex;
@@ -228,14 +329,11 @@ html.dark-mode .header-hamburger span {
   }
 
   .header-toggle-switch {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    z-index: 1100;
     display: flex;
     align-items: center;
     height: 28px;
     pointer-events: auto;
+    z-index: 1100;
   }
   .switch {
     position: relative;
@@ -915,7 +1013,7 @@ html.dark-mode .header-hamburger span {
       scroll-snap-type: none;
       gap: 30px;
       padding-top: 90px !important;
-      /* padding-bottom: 50px !important; */
+      padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important; /* 32px for visual gap, plus iOS safe area */
       display: flex;
       overflow-x: auto;
       overflow-y: hidden;
@@ -1197,8 +1295,8 @@ html.dark-mode .header-hamburger span {
       max-width: var(--logo-max-width-mobile, 60px);
     }
 
-    html.dark-mode .logo-container img.site-logo {
-      filter: invert(1) hue-rotate(180deg) !important;
+    html.dark-mode .logo-container img.site-logo,
+    html.dark-mode .header-logo-container  {
       box-shadow:
         0 0 8px 2px #5ecbff,
         0 0 20px 6px #39fffd,
@@ -1209,10 +1307,9 @@ html.dark-mode .header-hamburger span {
   }
 
   /* --- DARK MODE LOGO: Only apply effect to image, not container --- */
-  html.dark-mode .site-logo,
-  html.dark-mode .logo-container img {
-    filter: invert(1) hue-rotate(180deg) !important;
-    /* NEON EFFECT: strong, multi-layered glow */
+  @media (min-width: 769px) {
+  html.dark-mode .site-logo {
+    filter: invert(1) hue-rotate(180deg);
     box-shadow:
       0 0 8px 2px #5ecbff,
       0 0 20px 6px #39fffd,
@@ -1220,6 +1317,7 @@ html.dark-mode .header-hamburger span {
       0 0 60px 18px #39fffd !important;
     transition: filter 0.3s, box-shadow 0.3s;
   }
+}
 
 
   /* Exception: hide logo for mobile landscape via display:none as before */
@@ -1244,7 +1342,7 @@ html.dark-mode .header-hamburger span {
     left: 0;
     width: 100vw; /* Use viewport width for consistent coverage */
     height: 100vh; /* Use viewport height for consistent coverage */
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.75) !important;
     z-index: 999;
     opacity: 0;
     visibility: hidden;
@@ -1405,6 +1503,7 @@ html.dark-mode .header-hamburger span {
   /* Hide original flipped card when overlay is active */
   .card-overlay.active ~ .container .flip-card.flipped {
     visibility: hidden;
+    background: rgba(0, 0, 0, 0.75) !important;
   }
 
   /* === Swipe Indicator Styles === */
@@ -1718,13 +1817,6 @@ html.dark-mode .header-hamburger span {
     from { transform: translate(-50%, -40%); opacity: 0; }
     to { transform: translate(-50%, -50%); opacity: 1; }
   }
-  body.safari-mobile .card-overlay.active { animation: overlayFadeIn 0.3s ease forwards; }
-  body.safari-mobile .card-overlay.active .overlay-content { animation: contentSlideUp 0.3s ease forwards; }
-  body.safari-mobile .card-overlay.active ~ header {
-    visibility: hidden !important;
-    opacity: 0 !important;
-    transition: opacity var(--transition-medium), visibility var(--transition-medium) !important;
-  }
   @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
     .logo-container {
       opacity: 0 !important;
@@ -1750,10 +1842,12 @@ html.dark-mode .header-hamburger span {
     }
   }
 
-  /*
+  /* Mobile dark mode logo styles */
 @media (max-width: 768px) {
   html.dark-mode .logo-container img.site-logo,
-  html.dark-mode .site-logo {
+  html.dark-mode .site-logo,
+  html.dark-mode .header-logo-container img.header-logo,
+  html.dark-mode .header-logo {
     filter: invert(1) hue-rotate(180deg) !important;
     box-shadow:
       0 0 8px 2px #5ecbff,
@@ -1763,7 +1857,7 @@ html.dark-mode .header-hamburger span {
     transition: filter 0.3s, box-shadow 0.3s;
   }
 }
-*/
+
 
 /* =============================================================
      END OF STYLE.CSS
@@ -1880,28 +1974,6 @@ html.dark-mode .timestamp {
 }
 html.dark-mode .header-toggle-switch,
 html.dark-mode .header-hamburger,
-html.dark-mode .card-indicator,
-html.dark-mode .indicator-dot,
-html.dark-mode .nav-arrow {
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-}
-html.dark-mode a,
-html.dark-mode .menu-content a {
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-  transition: color 0.3s, text-shadow 0.3s;
-}
-html.dark-mode a:hover,
-html.dark-mode .menu-content a:hover {
-  color: #fff !important;
-  background: #1a4c6e !important;
-}
-
-html.dark-mode .header-toggle-switch,
-html.dark-mode .header-hamburger,
-html.dark-mode .card-indicator,
-html.dark-mode .indicator-dot,
 html.dark-mode .nav-arrow {
   color: #5ecbff !important;
   text-shadow: 0 0 1.5px #5ecbff;
@@ -1923,4 +1995,21 @@ html.dark-mode .menu-content a:hover {
       display: none; /* This will hide them */
       /* or content: none; */
     }
+    img.header-logo {
+    margin-top: auto;
+    }
+    .page-header h1 {
+    margin-top: 30px;
+    }
+  }
+
+  @media (min-width: 769px) {
+     .header-mobile-content {
+      display: none;
+     }
+  }
+  @media (max-width: 768px) {
+     .header-desktop-content {
+      display: none;
+     }
   }

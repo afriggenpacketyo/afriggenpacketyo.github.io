@@ -1,5 +1,13 @@
 // Mobile-specific implementation
 (function() {
+  // --- ENSURE MANUAL SCROLL RESTORATION ON MOBILE BROWSERS ---
+  var ua = navigator.userAgent.toLowerCase();
+  var isMobile = /iphone|ipad|ipod|android/.test(ua);
+  if (isMobile && typeof window !== 'undefined' && 'scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+})();
+(function() {
     // Immediate logo blocking for landscape mode
     const styleBlocker = document.createElement('style');
     styleBlocker.id = 'initial-logo-block';
@@ -1801,7 +1809,16 @@ logoContainer.style.transition = 'opacity 0.3s ease';
             overlayContent.appendChild(swipeIndicator);
         }
 
-        // Show the overlay
+        // Immediately hide the original card and set background to prevent flash
+        if (currentOverlayCard) {
+            currentOverlayCard.style.visibility = 'hidden';
+            currentOverlayCard.style.opacity = '0';
+        }
+        
+        // Force a reflow before adding the active class
+        void cardOverlay.offsetWidth;
+        
+        // Show the overlay - the background is handled by CSS
         cardOverlay.classList.add('active');
         isOverlayActive = true;
 
@@ -1859,13 +1876,25 @@ logoContainer.style.transition = 'opacity 0.3s ease';
         if (closeOverlay.isClosing) return;
         closeOverlay.isClosing = true;
 
+        // Store a reference to the current overlay card before nulling it
+        const overlayCard = currentOverlayCard;
+        
         cardOverlay.classList.remove('active');
         isOverlayActive = false;
 
         // Reset card states
         CardSystem.currentlyFlippedCard = null;
-        currentOverlayCard = null;
         isAnyCardFlipped = false;
+        
+        // Restore the card's visibility if it exists
+        if (overlayCard) {
+            overlayCard.style.visibility = '';
+            overlayCard.style.opacity = '';
+            overlayCard.style.transition = '';
+        }
+        
+        // Clear the reference after restoring visibility
+        currentOverlayCard = null;
 
         const currentlyInPortrait = !isPhoneLandscape();
         console.log(`Closing overlay. Currently in Portrait: ${currentlyInPortrait}`);
@@ -2229,20 +2258,50 @@ logoContainer.style.transition = 'opacity 0.3s ease';
         if (!header) return;
 
         if (isPhoneLandscape()) {
-            // Hide header in landscape mode
+            // In widescreen mode, make header invisible but allow ALL touch events to pass through
             header.style.cssText = `
                 opacity: 0 !important;
                 visibility: hidden !important;
-                display: none !important;
+                pointer-events: none !important;
+                touch-action: none !important;
+                -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important;
+                user-select: none !important;
+                position: absolute !important;
+                width: 100% !important;
+                height: 100% !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: -1 !important;
+                background: transparent !important;
                 transition: none !important;
             `;
+            
+            // Ensure no children can receive pointer events either
+            const headerElements = header.querySelectorAll('*');
+            headerElements.forEach(el => {
+                el.style.pointerEvents = 'none';
+                el.style.touchAction = 'none';
+            });
         } else {
-            // Show header in portrait mode (unless a card is flipped)
+            // In portrait mode, restore header visibility and interactivity
+            header.style.cssText = '';
             if (!isAnyCardFlipped && !isOverlayActive) {
-                header.style.cssText = '';
                 header.style.opacity = '1';
                 header.style.visibility = 'visible';
-                header.style.display = '';
+                header.style.pointerEvents = 'auto';
+                header.style.touchAction = '';
+                header.style.position = '';
+                header.style.width = '';
+                header.style.height = '';
+                header.style.zIndex = '';
+                
+                // Restore pointer events for children
+                const headerElements = header.querySelectorAll('*');
+                headerElements.forEach(el => {
+                    el.style.pointerEvents = '';
+                    el.style.touchAction = '';
+                });
             }
         }
     }
@@ -2478,8 +2537,20 @@ logoContainer.style.transition = 'opacity 0.3s ease';
   // Run on page load
   if (document.readyState === 'complete') {
     applyBrowserClass();
+    // === AUTO SCROLL TO TOP FOR SAFARI/CHROME MOBILE ===
+    if (['safari-mobile', 'chrome-ios', 'chrome-android'].includes(detectBrowser())) {
+      window.scrollTo(0, 0);
+    }
+    // === END AUTO SCROLL TO TOP ===
   } else {
-    window.addEventListener('load', applyBrowserClass);
+    window.addEventListener('load', function() {
+      applyBrowserClass();
+      // === AUTO SCROLL TO TOP FOR SAFARI/CHROME MOBILE ===
+      if (['safari-mobile', 'chrome-ios', 'chrome-android'].includes(detectBrowser())) {
+        window.scrollTo(0, 0);
+      }
+      // === END AUTO SCROLL TO TOP ===
+    });
   }
 
   // Also add a debug element to verify detection
