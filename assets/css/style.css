@@ -8,1295 +8,1308 @@
    /* =============================================================
    1. GLOBAL VARIABLES & THEME COLORS
    ============================================================= */
-:root {
-  /* Light mode colors */
-  --primary-blue: #3498db;
-  --primary-blue-dark: #2c3e50;
-  --primary-green: #27ae60;
-  --primary-orange: #f39c12;
-  --primary-red: #e74c3c;
-  --background-main: #f5f5f7;
-  --background-card: #fff;
-  --background-overlay: rgba(0, 0, 0, 0.75);
-  --text-main: #222;
-  --text-subtle: #666;
-  --header-bg: rgba(255, 255, 255, 0.9);
-  --header-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  --indicator-dot: #3498db;
-  --indicator-dot-active: #2980b9;
-  --logo-max-width: 80px;
-  --logo-max-width-mobile: 60px;
-  /* Card and transition variables */
-  --card-width: 300px;
-  --card-height: 400px;
-  --card-radius: 10px;
-  --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
-  --transition-medium: 0.3s ease;
-  --transition-flip: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
-  --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
-}
-
-html.dark-mode {
-  /* Dark mode overrides */
-  --background-main: #181c20;
-  --background-card: #23272e;
-  --background-overlay: rgba(20,20,20,0.92);
-  --text-main: #5ecbff;
-  --text-subtle: #b0d8f7;
-  --header-bg: #181c20;
-  --header-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  --indicator-dot: #5ecbff;
-  --indicator-dot-active: #39fffd;
-  /* Card and transition variables remain the same */
-}
-
-/* Now all color, background, and text styles use these variables. */
-
-
-  * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-/* =========================
-   2. RESET & BASE LAYOUT
-   ========================= */
-
-  /* Desktop-only class to prevent scrollbar during card transitions */
-html.desktop-prevent-scrollbar {
-  overflow-y: hidden !important;
-}
-
-/* When active (to account for specificity), ensure no vertical scrollbar appears */
-html.desktop-prevent-scrollbar body,
-html.desktop-prevent-scrollbar .container,
-html.desktop-prevent-scrollbar .container.with-coverflow {
-  overflow-y: hidden !important;
-}
-
+   :root {
+    /* Light mode colors */
+    --primary-blue: #3498db;
+    --primary-blue-dark: #2c3e50;
+    --primary-green: #27ae60;
+    --primary-orange: #f39c12;
+    --primary-red: #e74c3c;
+    --background-main: #f5f5f7;
+    --background-card: #fff;
+    --background-overlay: rgba(0, 0, 0, 0.75);
+    --text-main: #222;
+    --text-subtle: #666;
+    --header-bg: rgba(255, 255, 255, 0.9);
+    --header-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    --indicator-dot: #3498db;
+    --indicator-dot-active: #2980b9;
+    --logo-max-width: 80px;
+    --logo-max-width-mobile: 60px;
+    /* Card and transition variables */
+    --card-width: 300px;
+    --card-height: 400px;
+    --card-radius: 10px;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition-medium: 0.3s ease;
+    --transition-flip: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
+    --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
+  }
   
-  /* Hide scrollbars on desktop - ensure they never appear visually but maintain scrolling function */
-  /* Removed desktop scrollbar hiding rules to allow scrollbars to show on desktop when there is overflow. If you want to customize the appearance of scrollbars on desktop, you can add custom styling here (optional). */
-
-  @media (min-width: 769px) {
-    /* Example: Uncomment and customize for styled scrollbars on desktop
-    ::-webkit-scrollbar {
-      width: 8px;
-      background: #e0e0e0;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #b0aee0;
-      border-radius: 6px;
-    }
-    */
+  html.dark-mode {
+    /* Dark mode overrides */
+    --background-main: #181c20;
+    --background-card: #23272e;
+    --background-overlay: rgba(20,20,20,0.92);
+    --text-main: #5ecbff;
+    --text-subtle: #b0d8f7;
+    --header-bg: #181c20;
+    --header-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    --indicator-dot: #5ecbff;
+    --indicator-dot-active: #39fffd;
+    /* Card and transition variables remain the same */
   }
-
-    
-  body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  height: 100vh;
-  overflow: hidden;
-  background: var(--background-main);
-  color: var(--text-main);
-}
-
-/* =========================
-   3. LAYOUT & CONTAINER
-   ========================= */
-
-  /* --- Chrome Idle/Restore Robustness Fixes --- */
-/* Ensure all flex/grid children can shrink properly */
-.container, .container.with-coverflow {
-  min-height: 100vh;
-  min-width: 0;
-  min-height: 0;
-}
-/* Fix for logo/header layout jumping */
-.logo-container, .header-logo-container {
-  /* contain: layout paint; */
-  will-change: transform, opacity;
-}
-.site-logo, .header-logo {
-  display: block;
-  max-width: var(--logo-max-width, 80px);
-  height: auto;
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Header controls row for mobile layout */
-.header-controls-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 5px 10px;
-  position: relative;
-  z-index: 10;
-  min-height: 40px;
-}
-
-/* Header logo row */
-.header-logo-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  position: relative;
-  height: 40px;
-  z-index: 20;
-}
-
-/* Header logo container positioning */
-.header-logo-container {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-}
-
-/* Header logo styling */
-.header-logo {
-  max-width: var(--logo-max-width-mobile, 60px);
-  height: auto;
-  width: 60px;
-  object-fit: contain;
-}
-
-/* Control logo visibility based on screen size */
-@media (min-width: 769px) {
-  /* Desktop: Show outside logo, hide header logo */
-  .logo-container {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-  }
-  .header-logo-container {
-    display: none;
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Mobile: Hide outside logo, show header logo */
-  .logo-container {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-  }
-  .header-logo-container {
-    display: flex;
-    opacity: 1;
-    visibility: visible;
-  }
-}
-.page-header {
-  contain: layout paint;
-  will-change: opacity, transform;
-  position: relative;
-  padding-top: 40px; /* Add space for the absolutely positioned logo */
-}
-
-
-  .header-hamburger {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    z-index: 1101;
-    background: none !important; /* Explicitly none in light mode */
-    border: none;
+  
+  /* Now all color, background, and text styles use these variables. */
+  
+  
+    * {
+    margin: 0;
     padding: 0;
-    transition: background 0.3s, box-shadow 0.3s;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
-  .header-hamburger span {
-    display: block;
-    width: 22px;
-    height: 3px;
-    margin: 3px 0;
-    background: #333;
-    border-radius: 2px;
-    transition: background 0.2s, box-shadow 0.2s;
+  
+  /* =========================
+     2. RESET & BASE LAYOUT
+     ========================= */
+  
+    /* Desktop-only class to prevent scrollbar during card transitions */
+  html.desktop-prevent-scrollbar {
+    overflow-y: hidden !important;
   }
-  @media (max-width: 768px) {
-    .header-hamburger {
-      width: 24px;
-      height: 24px;
-      top: 10px;
-      left: 10px;
+  
+  /* When active (to account for specificity), ensure no vertical scrollbar appears */
+  html.desktop-prevent-scrollbar body,
+  html.desktop-prevent-scrollbar .container,
+  html.desktop-prevent-scrollbar .container.with-coverflow {
+    overflow-y: hidden !important;
+  }
+  
+    
+    /* Hide scrollbars on desktop - ensure they never appear visually but maintain scrolling function */
+    /* Removed desktop scrollbar hiding rules to allow scrollbars to show on desktop when there is overflow. If you want to customize the appearance of scrollbars on desktop, you can add custom styling here (optional). */
+  
+    @media (min-width: 1025px) {
+      /* Example: Uncomment and customize for styled scrollbars on desktop
+      ::-webkit-scrollbar {
+        width: 8px;
+        background: #e0e0e0;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #b0aee0;
+        border-radius: 6px;
+      }
+      */
     }
-    .header-hamburger span {
-      width: 18px;
-      height: 2px;
-      margin: 2px 0;
-    }
-  }
-  /* DARK MODE Hamburger Styles */
-html.dark-mode .header-hamburger {
-  background: rgba(35,39,46,0.92);
-  box-shadow: 0 2px 10px 0 rgba(94,203,255,0.12);
-  transition: background 0.3s, box-shadow 0.3s;
-}
-html.dark-mode .header-hamburger span {
-  background: #5ecbff !important;
-  box-shadow: 0 0 6px 2px #5ecbff99;
-  transition: background 0.3s, box-shadow 0.3s;
-}
-
-  .header-hamburger span {
-    display: block;
-    width: 24px;
-    height: 3px;
-    margin: 3px 0;
-    background: #222;
-    border-radius: 2px;
-    transition: all 0.2s;
-  }
-  @media (max-width: 768px) {
-    .header-hamburger {
-      width: 24px;
-      height: 24px;
-      top: 10px;
-      left: 10px;
-    }
-    .header-hamburger span {
-      width: 18px;
-      height: 2px;
-      margin: 2px 0;
-    }
-  }
-
-  .menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.75);
+  
+      
+    body {
     display: flex;
     justify-content: center;
     align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-    z-index: 2000;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--background-main);
+    color: var(--text-main);
   }
-  .menu-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .menu-content {
-    background: #fff;
-    border-radius: 16px;
-    padding: 40px 32px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    min-width: 200px;
-    align-items: center;
-  }
-  .menu-content a {
-    color: var(--primary-blue, #3498db);
-    text-decoration: none;
-    font-size: 1.2rem;
-    font-weight: 500;
-    padding: 8px 0;
-    border-radius: 6px;
-    transition: background 0.2s, color 0.2s;
-  }
-  .menu-content a:hover {
-    background: var(--primary-blue, #3498db);
-    color: #fff;
-  }
-
-  .header-toggle-switch {
-    display: flex;
-    align-items: center;
-    height: 28px;
-    pointer-events: auto;
-    z-index: 1100;
-  }
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-  }
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .2s;
-    border-radius: 24px;
-  }
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: .2s;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
-  }
-  input:checked + .slider {
-    background-color: var(--primary-blue, #3498db);
-  }
-  input:checked + .slider:before {
-    transform: translateX(20px);
-  }
-  .slider.round {
-    border-radius: 24px;
-  }
-  @media (max-width: 768px) {
-    .header-toggle-switch,
-    .header-toggle-switch *,
-    .switch,
-    .slider {
-      -webkit-tap-highlight-color: transparent !important;
-      touch-action: manipulation !important;
-    }
-    a, a:active, a:focus {
-      -webkit-tap-highlight-color: transparent !important;
-      touch-action: manipulation !important;
-    }
-    .header-toggle-switch {
-      right: 10px;
-      height: 30px;
-    }
-    .switch {
-      width: 36px;
-      height: 18px;
-    }
-    .slider:before {
-      height: 14px;
-      width: 14px;
-      left: 2px;
-      bottom: 2px;
-    }
-    input:checked + .slider:before {
-      transform: translateX(16px);
-    }
-  }
-  /* Ensure flip-card and children don't jump on Chrome idle/restore */
-  .flip-card, .flip-card-inner, .flip-card-front, .flip-card-back {
+  
+  /* =========================
+     3. LAYOUT & CONTAINER
+     ========================= */
+  
+    /* --- Chrome Idle/Restore Robustness Fixes --- */
+  /* Ensure all flex/grid children can shrink properly */
+  .container, .container.with-coverflow {
+    min-height: 100vh;
     min-width: 0;
     min-height: 0;
   }
-  /* Force hardware acceleration for critical elements */
-  .container, .logo-container, .page-header {
-    transform: translateZ(0);
-  }
-  /* Prevent Chrome from miscalculating heights */
-  body, html {
-    min-height: 100vh;
-    height: 100vh;
-    width: 100vw;
-    min-width: 0;
-    overflow-x: hidden;
-  }
-
-  /* =========================
-   4. CARD STYLES (SHARED)
-   ========================= */
-
-@media (min-width: 769px) {
-.card-link-rectangle {
-  min-height: 10px !important;
-  width: 100% !important;
-  align-self: stretch !important;
-  background: none !important;
-  margin: 0;
-  padding: 0;
-  display: block !important;
-}
-}
-@media (max-width: 768px) {
- .card-link-rectangle {
-  display: none !important;
- } 
-}
-
-
-  .flip-card {
-    flex: 0 0 var(--card-width);
-    height: var(--card-height);
-    min-height: var(--card-height);
-    margin: 0 15px;
-    cursor: pointer;
+  /* Fix for logo/header layout jumping */
+  .logo-container, .header-logo-container {
+    /* contain: layout paint; */
     will-change: transform, opacity;
-    transform-origin: center center;
-    z-index: 1;
-    transition: transform var(--transition-medium), opacity var(--transition-medium);
-    scroll-snap-align: center;
-    background: transparent !important;
-    border-radius: var(--card-radius);
   }
-  .flip-card.active {
-    opacity: 1;
-    transform: scale(1);
-    z-index: 2;
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: var(--card-radius);
-  }
-  .flip-card:not(.active) {
-    opacity: 0.65;
-    transform: scale(0.9);
-    z-index: 1;
-  }
-  .flip-card-inner {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    transition: transform var(--transition-flip);
-    transform-style: preserve-3d;
-    will-change: transform;
-    display: flex;
-    z-index: 1;
-  }
-  
-  /* Add text scaling for more convincing transitions */
-  .flip-card-front *, .flip-card-back * {
-    transition: all var(--transition-flip);
-    transform-origin: center center;
-  }
-  
-  /* Only add transition properties to card back elements */
-  .flip-card-back h3,
-  .flip-card-back p,
-  .flip-card-back a,
-  .flip-card-back .summary {
-    transition: transform 0.4s ease, opacity 0.4s ease;
-    transform-origin: center center;
-  }
-  
-  /* Define a specific CSS class that will be added when transitioning from flipped to not flipped */
-  .flip-card.was-flipped .flip-card-back h3,
-  .flip-card.was-flipped .flip-card-back p,
-  .flip-card.was-flipped .flip-card-back a,
-  .flip-card.was-flipped .flip-card-back .summary {
-    transform: scale(0.85);
-    opacity: 0.9;
-  }
-  .flip-card.flipped .flip-card-inner {
-    transform: rotateY(180deg) !important;
-  }
-  .flip-card-front, .flip-card-back {
-    position: absolute;
-    width: 100%;
-    min-height: 100%;
-    height: auto;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    border-radius: var(--card-radius);
-    box-shadow: var(--box-shadow);
-    display: flex;
-    flex-direction: column;
-  }
-  .flip-card-front {
-    background: linear-gradient(45deg, var(--primary-blue-dark), var(--primary-blue));
-    color: #fff;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 20px 30px;
-    box-shadow: var(--box-shadow-strong);
-
-    position: relative;
-  }
-  .flip-card-back {
-    background: #fff;
-    color: #333;
-    transform: rotateY(180deg);
-    padding: 20px 20px 40px 20px; /* Remove bottom padding */
-    text-align: left;
-    overflow-y: auto;
-    max-height: var(--card-height);
-    justify-content: flex-start;
-    min-height: 100%;
-    position: absolute;
-    width: 100%;
-    backface-visibility: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  /* .flip-card-back::after removed (bottom blur/fade overlay) */
-  html.dark-mode .flip-card-back {
-    background: #23272e !important;
-    color: #5ecbff !important;
-  }
-  @media (min-width: 769px) {
-    .flip-card-back {
-      padding: 20px 20px 0 20px !important;
-    }
-  }
-
-  /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
-  @media (max-width: 768px) {
-    html.dark-mode .flip-card.active .flip-card-front {
-      background: #3a206e;
-      color: #e0e0e0;
-    }
-    html.dark-mode .flip-card.active .flip-card-front h2,
-    html.dark-mode .flip-card.active .flip-card-front p,
-    html.dark-mode .flip-card.active .flip-card-front span,
-    html.dark-mode .flip-card.active .flip-card-front a,
-    html.dark-mode .flip-card.active .flip-card-front li,
-    html.dark-mode .flip-card.active .flip-card-front strong,
-    html.dark-mode .flip-card.active .flip-card-front em {
-      color: #e0e0e0;
-
-      border: none;
-    }
-  }
-  /* html.dark-mode .flip-card-back::after removed (bottom blur/fade overlay) */
-  .flip-card-front h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    white-space: pre-wrap;
-    word-break: keep-all;
-    max-width: 260px;
-    width: 260px;
-    overflow-wrap: normal;
-    hyphens: none;
-  }
-  .flip-card-back h3 {
-    color: var(--primary-blue);
-    margin: 10px 0 5px;
-  }
-  .flip-card-back-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    padding-bottom: 56px; /* Ensure space for swipe-indicator overlay */
-  }
-  .flip-card-back p {
-    margin-bottom: 15px;
-    line-height: 1.5;
-  }
-  .flip-card-back a {
-    color: var(--primary-blue);
-    text-decoration: none;
-    font-weight: bold;
-    display: inline-block;
-    width: fit-content;
-    white-space: nowrap;
-    padding: 5px 10px;
-    line-height: 1;
-    border-radius: 20px;
-    background: rgba(52, 152, 219, 0.1);
-    transition: all var(--transition-fast);
-    transform-origin: center;
-    position: relative;
-    text-align: center;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .flip-card-back a:hover,
-    .flip-card-front a:hover {
-      background: rgba(52, 152, 219, 0.2);
-      transform: scale(1.05);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      padding: 5px 12px;
-      z-index: 5;
-      border: 2px solid var(--primary-blue);
-    }
-  }
-
-  /* =============================================================
-     UI ELEMENTS
-     ============================================================= */
-  .optimism-score {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-weight: bold;
-    color: #fff;
-  }
-  .score-high { background: var(--primary-green); }
-  .score-medium { background: var(--primary-orange); }
-  .score-low { background: var(--primary-red); }
-
-  .card-indicator {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
-    position: fixed;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    transition: opacity var(--transition-medium);
-    line-height: 0;
-  }
-  .flip-card.flipped .card-indicator {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .indicator-dot {
-    background: var(--indicator-dot);
-    border-radius: 50%;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 8px;
-    width: 20px;
-    height: 20px;
-    box-sizing: content-box;
-    transform-origin: center center;
-    position: relative;
-    vertical-align: middle;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .indicator-dot.visible { display: flex; }
-  .indicator-dot.size-small { transform: scale(1.2); opacity: 0.4; margin: 0 3px; }
-  .indicator-dot.size-mid { transform: scale(1.5); opacity: 0.6; margin: 0 6.5px; }
-  .indicator-dot.size-large { transform: scale(1.8); opacity: 0.8; margin: 0 10px; }
-  .indicator-dot.size-active {
-    transform: scale(2);
-    opacity: 1;
-    margin: 0 12px;
-    background: var(--indicator-dot-active);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
-
-  /* =============================================================
-     PAGE HEADER
-     ============================================================= */
-  .page-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: var(--header-bg);
-    padding: 10px 20px;
-    text-align: center;
-    z-index: 1000;
-    box-shadow: var(--header-shadow);
-  }
-  .page-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--primary-blue-dark);
-  }
-  .last-updated {
-    font-size: 0.8rem;
-    color: #7f8c8d;
-    margin-top: 5px;
-  }
-  .section-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  .source-text {
-    font-size: 0.9em;
-    margin-top: 5px;
-    color: #666;
-  }
-
-  /* =============================================================
-     SUMMARY TEXT
-     ============================================================= */
-  /* Summary text styles fixed to avoid interference with link hover */
-  .flip-card-back .summary,
-  .flip-card.flipped .flip-card-back .summary {
-    width: 260px;
+  .site-logo, .header-logo {
     display: block;
-    white-space: pre-wrap;
-    word-break: keep-all;
-    transform-origin: left top;
-    transition: transform var(--transition-flip);
+    max-width: var(--logo-max-width, 80px);
+    height: auto;
+    min-width: 0;
+    min-height: 0;
   }
-  .flip-card.flipped .flip-card-back .summary {
-    transform: scale(1.125);
-    margin-bottom: 0.5em;
-  }
-
-  /* =============================================================
-     DESKTOP/PC STYLES
-     ============================================================= */
-
-@media (min-width: 769px) {
-  .flip-card.flipped .flip-card-back {
-    scrollbar-width: none; /* Firefox */
-  }
-  .flip-card.flipped .flip-card-back::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-  .flip-card.flipped .flip-card-back .swipe-indicator {
-
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
-    min-height: 40px;
-    height: 40px;
-    /* border-radius: 12px; */
-    background: #fff;
-    color: #23272e;
-    font-weight: bold;
-    font-size: 1.1em;
+  
+  /* Header controls row for mobile layout */
+  .header-controls-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    box-shadow: none;
-    backdrop-filter: blur(2.5px);
-    -webkit-backdrop-filter: blur(2.5px);
-    z-index: 10;
-    pointer-events: none;
-    user-select: none;
-    opacity: 0.80;
-    transition: opacity 0.3s;
-  }
-  html.dark-mode .flip-card.flipped .flip-card-back .swipe-indicator {
-    background: linear-gradient(
-      to top,
-      rgba(35,39,46,0.92) 0%,
-      rgba(35,39,46,0.72) 40%,
-      rgba(35,39,46,0.0) 100%
-    );
-    color: #5ecbff;
-    box-shadow: 0 2px 12px rgba(24,28,32,0.25);
-    opacity: 0.92;
-    border-radius: 0;
-  }
-  .flip-card.flipped .flip-card-back .swipe-indicator .scroll-text {
+    width: 100%;
+    padding: 5px 10px;
     position: relative;
-    z-index: 2;
-    letter-spacing: 0.02em;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    font-size: 1em;
-    padding: 0 12px;
+    z-index: 10;
+    min-height: 40px;
   }
-}
-
-  @media (min-width: 769px) {
-    /* Desktop dark mode card styles - clean implementation */
-    html.dark-mode .container.with-coverflow .flip-card-inner {
-      background: transparent;
+  
+  /* Header logo row */
+  .header-logo-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    height: 40px;
+    z-index: 20;
+  }
+  
+  /* Header logo container positioning */
+  .header-logo-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+  }
+  
+  /* Header logo styling */
+  .header-logo {
+    max-width: var(--logo-max-width-mobile, 60px);
+    height: auto;
+    width: 60px;
+    object-fit: contain;
+  }
+  
+  /* Control logo visibility based on screen size */
+  @media (min-width: 1025px) {
+    /* Desktop: Show outside logo, hide header logo */
+    .logo-container {
+      display: block;
+      opacity: 1;
+      visibility: visible;
     }
-    
-    /* Ensure scale(0.9) applies to inactive cards in desktop dark mode */
-    html.dark-mode .container.with-coverflow .flip-card:not(.active) {
-      opacity: 0.65;
-      transform: scale(0.9);
+    .header-logo-container {
+      display: none;
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  
+  @media (max-width: 1024px) {
+    /* Mobile: Hide outside logo, show header logo */
+    .logo-container {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+    .header-logo-container {
+      display: flex;
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  .page-header {
+    contain: layout paint;
+    will-change: opacity, transform;
+    position: relative;
+    padding-top: 40px; /* Add space for the absolutely positioned logo */
+  }
+  
+  
+    .header-hamburger {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 1101;
+      background: none !important; /* Explicitly none in light mode */
+      border: none;
+      padding: 0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .header-hamburger span {
+      display: block;
+      width: 22px;
+      height: 3px;
+      margin: 3px 0;
+      background: #333;
+      border-radius: 2px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    @media (max-width: 1024px) {
+      .header-hamburger {
+        width: 24px;
+        height: 24px;
+        top: 10px;
+        left: 10px;
+      }
+      .header-hamburger span {
+        width: 18px;
+        height: 2px;
+        margin: 2px 0;
+      }
+    }
+    /* DARK MODE Hamburger Styles */
+  html.dark-mode .header-hamburger {
+    background: rgba(35,39,46,0.92);
+    box-shadow: 0 2px 10px 0 rgba(94,203,255,0.12);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  html.dark-mode .header-hamburger span {
+    background: #5ecbff !important;
+    box-shadow: 0 0 6px 2px #5ecbff99;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  
+    .header-hamburger span {
+      display: block;
+      width: 24px;
+      height: 3px;
+      margin: 3px 0;
+      background: #222;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    @media (max-width: 1024px) {
+      .header-hamburger {
+        width: 24px;
+        height: 24px;
+        top: 10px;
+        left: 10px;
+      }
+      .header-hamburger span {
+        width: 18px;
+        height: 2px;
+        margin: 2px 0;
+      }
+    }
+  
+    .menu-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 2000;
+    }
+    .menu-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .menu-content {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 200px;
+      align-items: center;
+    }
+    .menu-content a {
+      color: var(--primary-blue, #3498db);
+      text-decoration: none;
+      font-size: 1.2rem;
+      font-weight: 500;
+      padding: 8px 0;
+      border-radius: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .menu-content a:hover {
+      background: var(--primary-blue, #3498db);
+      color: #fff;
+    }
+  
+    .header-toggle-switch {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      pointer-events: auto;
+      z-index: 1100;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .2s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    }
+    input:checked + .slider {
+      background-color: var(--primary-blue, #3498db);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .slider.round {
+      border-radius: 24px;
+    }
+    @media (max-width: 1024px) {
+      .header-toggle-switch,
+      .header-toggle-switch *,
+      .switch,
+      .slider {
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+      }
+      a, a:active, a:focus {
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+      }
+      .header-toggle-switch {
+        right: 10px;
+        height: 30px;
+      }
+      .switch {
+        width: 36px;
+        height: 18px;
+      }
+      .slider:before {
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+      }
+      input:checked + .slider:before {
+        transform: translateX(16px);
+      }
+    }
+    /* Ensure flip-card and children don't jump on Chrome idle/restore */
+    .flip-card, .flip-card-inner, .flip-card-front, .flip-card-back {
+      min-width: 0;
+      min-height: 0;
+    }
+    /* Force hardware acceleration for critical elements */
+    .container, .logo-container, .page-header {
+      transform: translateZ(0);
+    }
+    /* Prevent Chrome from miscalculating heights */
+    body, html {
+      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+  
+    /* =========================
+     4. CARD STYLES (SHARED)
+     ========================= */
+  
+  @media (min-width: 1025px) {
+  .card-link-rectangle {
+    min-height: 10px !important;
+    width: 100% !important;
+    align-self: stretch !important;
+    background: none !important;
+    margin: 0;
+    padding: 0;
+    display: block !important;
+  }
+  }
+  @media (max-width: 1024px) {
+   .card-link-rectangle {
+    display: none !important;
+   } 
+  }
+  
+  
+    .flip-card {
+      flex: 0 0 var(--card-width);
+      height: var(--card-height);
+      min-height: var(--card-height);
+      margin: 0 15px;
+      cursor: pointer;
+      will-change: transform, opacity;
+      transform-origin: center center;
       z-index: 1;
+      transition: transform var(--transition-medium), opacity var(--transition-medium);
+      scroll-snap-align: center;
+      background: transparent !important;
+      border-radius: var(--card-radius);
     }
-    
-    /* Active card should have no transform and be at full scale */
-    html.dark-mode .container.with-coverflow .flip-card.active {
+    .flip-card.active {
       opacity: 1;
       transform: scale(1);
       z-index: 2;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: var(--card-radius);
     }
-    
-    .container::-webkit-scrollbar { display: none; }
-    .container {
-      display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x mandatory;
-      scroll-padding: 0 20px;
-      width: 100%;
-      max-width: 100vw;
-      height: 100vh;
-      align-items: center;
-      padding-left: calc(50vw - 150px);
-      padding-right: calc(50vw - 150px);
-      -webkit-overflow-scrolling: touch;
-      gap: 30px;
-      padding-top: 80px;
-      scroll-behavior: smooth;
-      padding-bottom: 80px;
-      min-height: 600px;
-    }
-    .flip-card.flipped {
-      position: relative !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-      width: 90vw !important;
-    }
-    .nav-arrow {
-      position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 50px;
-      height: 50px;
-      background: rgba(52, 152, 219, 0.9);
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      font-size: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      transition: all var(--transition-medium);
-      user-select: none;
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .nav-arrow:hover {
-      background: var(--primary-blue);
-      transform: translateY(-50%) scale(1.1);
-    }
-    .nav-arrow.disabled {
-      opacity: 0.3;
-      cursor: default;
-      pointer-events: none;
-    }
-    .nav-left { left: 20px; }
-    .nav-right { right: 20px; }
-    .container.with-coverflow {
-      perspective: 1000px; /* Add proper perspective for 3D transform */
-      height: 100vh;
-      align-items: center;
-      justify-content: flex-start;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Give container a dark background in dark mode to prevent white edges */
-    html.dark-mode .container.with-coverflow {
-      background-color: #181c20;
-    }
-    
-    /* Prevent scrollbars during flip animation */
-    .container.with-coverflow {
-      /* This overflow is for the container overall */
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-    .container.with-coverflow .flip-card {
-      flex: 0 0 var(--card-width);
-      height: auto;
-      min-height: var(--card-height);
-      max-height: 80vh;
-      margin: 0;
-    }
-    /* Desktop dark mode: match inactive card color schema to mobile */
-    html.dark-mode .container.with-coverflow .flip-card:not(.active):not(.preactivated) .flip-card-front {
-      background: #183a4c !important; /* darker blue for deactivated */
-      color: #b0d8f7 !important;
-      box-shadow: 0 2px 8px rgba(24, 58, 76, 0.6);
-      border: 1px solid #244a6a;
-    }
-    html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-      background: #2471a3 !important; /* toned-down blue for active */
-      color: #eaf6fb !important;
-      box-shadow: 0 2px 16px 2px #244a6a;
-      border: 1px solid #2980b9;
-    }
-    /* Desktop dark mode: fix neon box shadow for active card front */
-    html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-      background: var(--primary-blue);
-      color: #fff;
-
-      /* Toned-down box shadow for desktop: less neon, less spread, less intensity */
-      box-shadow: 0 0 4px 1px #5ecbff88, 0 0 8px 2px #39fffd55;
-      border: 1px solid rgba(94, 203, 255, 0.18);
-    }
-    .container.with-coverflow .flip-card-inner {
-      height: 100%;
-      min-height: var(--card-height);
-      /* Improve 3D transforms for desktop but maintain clickability */
-      transform-style: preserve-3d;
-      /* Help with vertical line issue during flips */
-      width: 100%;
-    }
-    .container.with-coverflow .flip-card-front,
-    .container.with-coverflow .flip-card-back {
-      min-height: 100%;
-      height: auto;
-      width: 100%; /* Ensure full width */
-      /* Keep backface-visibility only on the front to maintain clickability on the back */
-      transform-style: preserve-3d;
-      /* Fix for white line during transitions */
-      border: 0; /* Remove any borders that might create edges */
-      outline: none;
-    }
-    
-    /* Blur effect removed */
-    .container.with-coverflow .flip-card-back::after {
-      display: none;
-    }
-    
-    /* Make sure links are always clickable on desktop */
-    .container.with-coverflow .flip-card-back a,
-    .container.with-coverflow .flip-card.flipped .flip-card-back a {
-      pointer-events: auto;
-      z-index: 10;
-      position: relative;
-      transform-origin: center;
-    }
-    .container.with-coverflow .flip-card.flipped .flip-card-inner {
-      transform: rotateY(180deg) !important;
-      height: auto;
-      min-height: var(--card-height);
-      /* Prevent any glitches during animation */
-      transition: transform var(--transition-flip), height 0s;
-      /* Preserve 3D without hiding clickable elements */
-      transform-style: preserve-3d;
-      /* Ensure links are clickable */
-      pointer-events: auto;
-    }
-    .container.with-coverflow .flip-card.active .flip-card-front {
-      box-shadow: var(--box-shadow-highlight);
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-      background: var(--primary-blue);
-      color: #fff;
-
-      /* Neon box shadow to match mobile */
-      box-shadow: 0 0 4px 1px #5ecbff, 0 0 8px 2px #39fffd;
-      border: 1px solid rgba(94, 203, 255, 0.2);
-    }
-  }
-
-  /* =============================================================
-     MOBILE STYLES
-     ============================================================= */
-  @media (max-width: 768px) {
-    .container {
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: auto;
-      padding-left: 0;
-      padding-right: 0;
-      scroll-snap-type: none;
-      gap: 30px;
-      padding-top: 90px !important;
-      padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important; /* 32px for visual gap, plus iOS safe area */
-      display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
-      width: 100%;
-      max-width: 100vw;
-      height: 100vh;
-      align-items: center;
-      min-height: 600px;
-    }
-    .container::-webkit-scrollbar { display: none; }
-    .flip-card {
-      margin: 0 15px !important;
-      height: var(--card-height);
-      min-height: var(--card-height);
-    }
-    /* Mobile dark mode - establish cleaner cascade instead of using !important */
-    html.dark-mode .container .flip-card {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-    }
-    
-    /* Preserve the 90% scale for inactive cards in dark mode */
-    html.dark-mode .container .flip-card:not(.active) {
+    .flip-card:not(.active) {
       opacity: 0.65;
       transform: scale(0.9);
       z-index: 1;
     }
-    
-    html.dark-mode .container .flip-card-inner {
-      /* Card inner is completely transparent in all states to avoid rectangle effect */
-      background: transparent;
-      /* No box shadow on inner element */
-      box-shadow: none;
-      border: none;
-      transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: transform;
-    }
-    /* Front and back faces in mobile dark mode */
-    html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
-      background: #3a206e !important;
-      color: #e0e0e0 !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    /* Keep preactivated and active rules below as-is */
-    /* If needed, you can keep the original rule as a fallback for other cases, but for non-activated, non-preactivated cards, use the purple. */
-    
-    html.dark-mode .container .flip-card .flip-card-back {
-      background: rgba(35, 39, 46, 0.85);
-      color: #5ecbff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-back {
-      background: #3a206e;
-      color: #e0e0e0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    
-    /* Blur effect removed */
-    html.dark-mode .flip-card.flipped .flip-card-back {
-      background: rgba(35, 39, 46, 0.85);
-
-
-      margin: 0;
-      box-sizing: border-box;
-      /* Keep standard width for content */
-      width: 90vw !important;
-      /* Blur effect removed */
-      position: relative;
-      /* Ensure full content width including padding */
-      padding-left: 25px;
-      padding-right: 25px;
-      /* Blur effect removed */
-      margin-left: -25px;
-      margin-right: -25px;
-      width: calc(90vw + 50px) !important;
-    }
-    
-    /* Blur effect removed */
-    html.dark-mode .flip-card.flipped .flip-card-back::before {
-      content: '';
+    .flip-card-inner {
       position: absolute;
-      top: -25px;
-      left: -25px;
-      right: -25px;
-      bottom: -25px;
-      background: inherit;
-
-
-      z-index: -1;
-      border-radius: inherit;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform var(--transition-flip);
+      transform-style: preserve-3d;
+      will-change: transform;
+      display: flex;
+      z-index: 1;
     }
     
-    /* Ensure the fade overlay for flipped cards extends fully */
-    /* Mobile-specific dark mode fixes */
-    /* This is a critical fix for mobile dark mode */
-    @media (max-width: 768px) {
-      /* Specific styling for the ::after fade effect */
-      html.dark-mode .container .flip-card .flip-card-back::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 48px;
-        background: none;
-        border-radius: 0 0 var(--card-radius) var(--card-radius);
-        pointer-events: none;
+    /* Add text scaling for more convincing transitions */
+    .flip-card-front *, .flip-card-back * {
+      transition: all var(--transition-flip);
+      transform-origin: center center;
+    }
+    
+    /* Only add transition properties to card back elements */
+    .flip-card-back h3,
+    .flip-card-back p,
+    .flip-card-back a,
+    .flip-card-back .summary {
+      transition: transform 0.4s ease, opacity 0.4s ease;
+      transform-origin: center center;
+    }
+    
+    /* Define a specific CSS class that will be added when transitioning from flipped to not flipped */
+    .flip-card.was-flipped .flip-card-back h3,
+    .flip-card.was-flipped .flip-card-back p,
+    .flip-card.was-flipped .flip-card-back a,
+    .flip-card.was-flipped .flip-card-back .summary {
+      transform: scale(0.85);
+      opacity: 0.9;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg) !important;
+    }
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      min-height: 100%;
+      height: auto;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: var(--card-radius);
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .flip-card-front {
+      background: linear-gradient(45deg, var(--primary-blue-dark), var(--primary-blue));
+      color: #fff;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 20px 30px;
+      box-shadow: var(--box-shadow-strong);
+  
+      position: relative;
+    }
+    .flip-card-back {
+      background: #fff;
+      color: #333;
+      transform: rotateY(180deg);
+      padding: 20px 20px 40px 20px; /* Remove bottom padding */
+      text-align: left;
+      overflow-y: auto;
+      max-height: var(--card-height);
+      justify-content: flex-start;
+      min-height: 100%;
+      position: absolute;
+      width: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* .flip-card-back::after removed (bottom blur/fade overlay) */
+    html.dark-mode .flip-card-back {
+      background: #23272e !important;
+      color: #5ecbff !important;
+    }
+    @media (min-width: 1025px) {
+      .flip-card-back {
+        padding: 20px 20px 0 20px !important;
+      }
+    }
+  
+    /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
+    @media (max-width: 1024px) {
+      html.dark-mode .flip-card.active .flip-card-front {
+        background: #3a206e;
+        color: #e0e0e0;
+      }
+      html.dark-mode .flip-card.active .flip-card-front h2,
+      html.dark-mode .flip-card.active .flip-card-front p,
+      html.dark-mode .flip-card.active .flip-card-front span,
+      html.dark-mode .flip-card.active .flip-card-front a,
+      html.dark-mode .flip-card.active .flip-card-front li,
+      html.dark-mode .flip-card.active .flip-card-front strong,
+      html.dark-mode .flip-card.active .flip-card-front em {
+        color: #e0e0e0;
+  
+        border: none;
+      }
+    }
+    /* html.dark-mode .flip-card-back::after removed (bottom blur/fade overlay) */
+    .flip-card-front h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      word-break: keep-all;
+      max-width: 260px;
+      width: 260px;
+      overflow-wrap: normal;
+      hyphens: none;
+    }
+    .flip-card-back h3 {
+      color: var(--primary-blue);
+      margin: 10px 0 5px;
+    }
+    .flip-card-back-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding-bottom: 56px; /* Ensure space for swipe-indicator overlay */
+    }
+    .flip-card-back p {
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    .flip-card-back a {
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+      width: fit-content;
+      white-space: nowrap;
+      padding: 5px 10px;
+      line-height: 1;
+      border-radius: 20px;
+      background: rgba(52, 152, 219, 0.1);
+      transition: all var(--transition-fast);
+      transform-origin: center;
+      position: relative;
+      text-align: center;
+    }
+  
+    @media (hover: hover) and (pointer: fine) {
+      .flip-card-back a:hover,
+      .flip-card-front a:hover {
+        background: rgba(52, 152, 219, 0.2);
+        transform: scale(1.05);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 5px 12px;
+        z-index: 5;
+        border: 2px solid var(--primary-blue);
+      }
+    }
+  
+    /* =============================================================
+       UI ELEMENTS
+       ============================================================= */
+    .optimism-score {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .score-high { background: var(--primary-green); }
+    .score-medium { background: var(--primary-orange); }
+    .score-low { background: var(--primary-red); }
+  
+    .card-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      transition: opacity var(--transition-medium);
+      line-height: 0;
+    }
+    .flip-card.flipped .card-indicator {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .indicator-dot {
+      background: var(--indicator-dot);
+      border-radius: 50%;
+      transition: all var(--transition-fast);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 8px;
+      width: 20px;
+      height: 20px;
+      box-sizing: content-box;
+      transform-origin: center center;
+      position: relative;
+      vertical-align: middle;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .indicator-dot.visible { display: flex; }
+    .indicator-dot.size-small { transform: scale(1.2); opacity: 0.4; margin: 0 3px; }
+    .indicator-dot.size-mid { transform: scale(1.5); opacity: 0.6; margin: 0 6.5px; }
+    .indicator-dot.size-large { transform: scale(1.8); opacity: 0.8; margin: 0 10px; }
+    .indicator-dot.size-active {
+      transform: scale(2);
+      opacity: 1;
+      margin: 0 12px;
+      background: var(--indicator-dot-active);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+  
+    /* =============================================================
+       PAGE HEADER
+       ============================================================= */
+    .page-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--header-bg);
+      padding: 10px 20px;
+      text-align: center;
+      z-index: 1000;
+      box-shadow: var(--header-shadow);
+    }
+    .page-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--primary-blue-dark);
+    }
+    .last-updated {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+      margin-top: 5px;
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .source-text {
+      font-size: 0.9em;
+      margin-top: 5px;
+      color: #666;
+    }
+  
+    /* =============================================================
+       SUMMARY TEXT
+       ============================================================= */
+    /* Summary text styles fixed to avoid interference with link hover */
+    .flip-card-back .summary,
+    .flip-card.flipped .flip-card-back .summary {
+      width: 260px;
+      display: block;
+      white-space: pre-wrap;
+      word-break: keep-all;
+      transform-origin: left top;
+      transition: transform var(--transition-flip);
+    }
+    .flip-card.flipped .flip-card-back .summary {
+      transform: scale(1.125);
+      margin-bottom: 0.5em;
+    }
+  
+    /* =============================================================
+       DESKTOP/PC STYLES
+       ============================================================= */
+  
+  @media (min-width: 1025px) {
+    .flip-card.flipped .flip-card-back {
+      scrollbar-width: none; /* Firefox */
+    }
+    .flip-card.flipped .flip-card-back::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+    .flip-card.flipped .flip-card-back .swipe-indicator {
+  
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+      min-height: 40px;
+      height: 40px;
+      /* border-radius: 12px; */
+      background: #fff;
+      color: #23272e;
+      font-weight: bold;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+      backdrop-filter: blur(2.5px);
+      -webkit-backdrop-filter: blur(2.5px);
+      z-index: 10;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0.80;
+      transition: opacity 0.3s;
+    }
+    html.dark-mode .flip-card.flipped .flip-card-back .swipe-indicator {
+      background: linear-gradient(
+        to top,
+        rgba(35,39,46,0.92) 0%,
+        rgba(35,39,46,0.72) 40%,
+        rgba(35,39,46,0.0) 100%
+      );
+      color: #5ecbff;
+      box-shadow: 0 2px 12px rgba(24,28,32,0.25);
+      opacity: 0.92;
+      border-radius: 0;
+    }
+    .flip-card.flipped .flip-card-back .swipe-indicator .scroll-text {
+      position: relative;
+      z-index: 2;
+      letter-spacing: 0.02em;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      font-size: 1em;
+      padding: 0 12px;
+    }
+  }
+  
+    @media (min-width: 1025px) {
+      /* Desktop dark mode card styles - clean implementation */
+      html.dark-mode .container.with-coverflow .flip-card-inner {
+        background: transparent;
+      }
+      
+      /* Ensure scale(0.9) applies to inactive cards in desktop dark mode */
+      html.dark-mode .container.with-coverflow .flip-card:not(.active) {
+        opacity: 0.65;
+        transform: scale(0.9);
+        z-index: 1;
+      }
+      
+      /* Active card should have no transform and be at full scale */
+      html.dark-mode .container.with-coverflow .flip-card.active {
+        opacity: 1;
+        transform: scale(1);
         z-index: 2;
       }
       
-      /* The flipped card case where we need to extend the width */
-      html.dark-mode .flip-card.flipped .flip-card-back::after {
-        /* Extend the width to match the expanded card */
-        width: calc(100% + 50px);
-        left: -25px;
-        /* Keep the same gradient direction and color values for consistency */
-        background: none;
+      .container::-webkit-scrollbar { display: none; }
+      .container {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 20px;
+        width: 100%;
+        max-width: 100vw;
+        height: 100vh;
+        align-items: center;
+        padding-left: calc(50vw - 150px);
+        padding-right: calc(50vw - 150px);
+        -webkit-overflow-scrolling: touch;
+        gap: 30px;
+        padding-top: 80px;
+        scroll-behavior: smooth;
+        padding-bottom: 80px;
+        min-height: 600px;
+      }
+      .flip-card.flipped {
+        position: relative !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        width: 90vw !important;
+      }
+      .nav-arrow {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        background: rgba(52, 152, 219, 0.9);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 100;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: all var(--transition-medium);
+        user-select: none;
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .nav-arrow:hover {
+        background: var(--primary-blue);
+        transform: translateY(-50%) scale(1.1);
+      }
+      .nav-arrow.disabled {
+        opacity: 0.3;
+        cursor: default;
+        pointer-events: none;
+      }
+      .nav-left { left: 20px; }
+      .nav-right { right: 20px; }
+      .container.with-coverflow {
+        perspective: 1000px; /* Add proper perspective for 3D transform */
+        height: 100vh;
+        align-items: center;
+        justify-content: flex-start;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Give container a dark background in dark mode to prevent white edges */
+      html.dark-mode .container.with-coverflow {
+        background-color: #181c20;
+      }
+      
+      /* Prevent scrollbars during flip animation */
+      .container.with-coverflow {
+        /* This overflow is for the container overall */
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .container.with-coverflow .flip-card {
+        flex: 0 0 var(--card-width);
+        height: auto;
+        min-height: var(--card-height);
+        max-height: 80vh;
+        margin: 0;
+      }
+      /* Desktop dark mode: match inactive card color schema to mobile */
+      html.dark-mode .container.with-coverflow .flip-card:not(.active):not(.preactivated) .flip-card-front {
+        background: #183a4c !important; /* darker blue for deactivated */
+        color: #b0d8f7 !important;
+        box-shadow: 0 2px 8px rgba(24, 58, 76, 0.6);
+        border: 1px solid #244a6a;
+      }
+      html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
+        background: #2471a3 !important; /* toned-down blue for active */
+        color: #eaf6fb !important;
+        box-shadow: 0 2px 16px 2px #244a6a;
+        border: 1px solid #2980b9;
+      }
+      /* Desktop dark mode: fix neon box shadow for active card front */
+      html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
+        background: var(--primary-blue);
+        color: #fff;
+  
+        /* Toned-down box shadow for desktop: less neon, less spread, less intensity */
+        box-shadow: 0 0 4px 1px #5ecbff88, 0 0 8px 2px #39fffd55;
+        border: 1px solid rgba(94, 203, 255, 0.18);
+      }
+      .container.with-coverflow .flip-card-inner {
+        height: 100%;
+        min-height: var(--card-height);
+        /* Improve 3D transforms for desktop but maintain clickability */
+        transform-style: preserve-3d;
+        /* Help with vertical line issue during flips */
+        width: 100%;
+      }
+      .container.with-coverflow .flip-card-front,
+      .container.with-coverflow .flip-card-back {
+        min-height: 100%;
+        height: auto;
+        width: 100%; /* Ensure full width */
+        /* Keep backface-visibility only on the front to maintain clickability on the back */
+        transform-style: preserve-3d;
+        /* Fix for white line during transitions */
+        border: 0; /* Remove any borders that might create edges */
+        outline: none;
+      }
+      
+      /* Blur effect removed */
+      .container.with-coverflow .flip-card-back::after {
+        display: none;
+      }
+      
+      /* Make sure links are always clickable on desktop */
+      .container.with-coverflow .flip-card-back a,
+      .container.with-coverflow .flip-card.flipped .flip-card-back a {
+        pointer-events: auto;
+        z-index: 10;
+        position: relative;
+        transform-origin: center;
+      }
+      .container.with-coverflow .flip-card.flipped .flip-card-inner {
+        transform: rotateY(180deg) !important;
+        height: auto;
+        min-height: var(--card-height);
+        /* Prevent any glitches during animation */
+        transition: transform var(--transition-flip), height 0s;
+        /* Preserve 3D without hiding clickable elements */
+        transform-style: preserve-3d;
+        /* Ensure links are clickable */
+        pointer-events: auto;
+      }
+      .container.with-coverflow .flip-card.active .flip-card-front {
+        box-shadow: var(--box-shadow-highlight);
+        border: 1px solid rgba(255,255,255,0.2);
+      }
+      html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
+        background: var(--primary-blue);
+        color: #fff;
+  
+        /* Neon box shadow to match mobile */
+        box-shadow: 0 0 4px 1px #5ecbff, 0 0 8px 2px #39fffd;
+        border: 1px solid rgba(94, 203, 255, 0.2);
       }
     }
-    /* Active card in mobile dark mode - increase specificity instead of !important */
-    /* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
-    html.dark-mode .container .flip-card.active .flip-card-front,
-    html.dark-mode .container .flip-card.preactivated .flip-card-front {
-      background: #3a206e;
-      color: #e0e0e0;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
+  
+    /* =============================================================
+       MOBILE STYLES
+       ============================================================= */
+    @media (max-width: 1024px) {
+      .container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: auto;
+        padding-left: 0;
+        padding-right: 0;
+        scroll-snap-type: none;
+        gap: 30px;
+        padding-top: 90px !important;
+        padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important; /* 32px for visual gap, plus iOS safe area */
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+        max-width: 100vw;
+        height: 100vh;
+        align-items: center;
+        min-height: 600px;
+      }
+      .container::-webkit-scrollbar { display: none; }
+      .flip-card {
+        margin: 0 15px !important;
+        height: var(--card-height);
+        min-height: var(--card-height);
+      }
+      /* Mobile dark mode - establish cleaner cascade instead of using !important */
+      html.dark-mode .container .flip-card {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+      }
+      
+      /* Preserve the 90% scale for inactive cards in dark mode */
+      html.dark-mode .container .flip-card:not(.active) {
+        opacity: 0.65;
+        transform: scale(0.9);
+        z-index: 1;
+      }
+      
+      html.dark-mode .container .flip-card-inner {
+        /* Card inner is completely transparent in all states to avoid rectangle effect */
+        background: transparent;
+        /* No box shadow on inner element */
+        box-shadow: none;
+        border: none;
+        transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+        will-change: transform;
+      }
+      /* Front and back faces in mobile dark mode */
+      html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
+        background: #3a206e !important;
+        color: #e0e0e0 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      }
+      /* Keep preactivated and active rules below as-is */
+      /* If needed, you can keep the original rule as a fallback for other cases, but for non-activated, non-preactivated cards, use the purple. */
+      
+      html.dark-mode .container .flip-card .flip-card-back {
+        background: rgba(35, 39, 46, 0.85);
+        color: #5ecbff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      }
+      html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-back {
+        background: #3a206e;
+        color: #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      }
+      
+      /* Blur effect removed */
+      html.dark-mode .flip-card.flipped .flip-card-back {
+        background: rgba(35, 39, 46, 0.85);
+  
+  
+        margin: 0;
+        box-sizing: border-box;
+        /* Keep standard width for content */
+        width: 90vw !important;
+        /* Blur effect removed */
+        position: relative;
+        /* Ensure full content width including padding */
+        padding-left: 25px;
+        padding-right: 25px;
+        /* Blur effect removed */
+        margin-left: -25px;
+        margin-right: -25px;
+        width: calc(90vw + 50px) !important;
+      }
+      
+      /* Blur effect removed */
+      html.dark-mode .flip-card.flipped .flip-card-back::before {
+        content: '';
+        position: absolute;
+        top: -25px;
+        left: -25px;
+        right: -25px;
+        bottom: -25px;
+        background: inherit;
+  
+  
+        z-index: -1;
+        border-radius: inherit;
+      }
+      
+      /* Ensure the fade overlay for flipped cards extends fully */
+      /* Mobile-specific dark mode fixes */
+      /* This is a critical fix for mobile dark mode */
+      @media (max-width: 1024px) {
+        /* Specific styling for the ::after fade effect */
+        html.dark-mode .container .flip-card .flip-card-back::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 48px;
+          background: none;
+          border-radius: 0 0 var(--card-radius) var(--card-radius);
+          pointer-events: none;
+          z-index: 2;
+        }
+        
+        /* The flipped card case where we need to extend the width */
+        html.dark-mode .flip-card.flipped .flip-card-back::after {
+          /* Extend the width to match the expanded card */
+          width: calc(100% + 50px);
+          left: -25px;
+          /* Keep the same gradient direction and color values for consistency */
+          background: none;
+        }
+      }
+      /* Active card in mobile dark mode - increase specificity instead of !important */
+      /* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
+      html.dark-mode .container .flip-card.active .flip-card-front,
+      html.dark-mode .container .flip-card.preactivated .flip-card-front {
+        background: #3a206e;
+        color: #e0e0e0;
+        box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+        border: 1.5px solid #7c6fd8;
+        outline: none;
+      }
+  
+      /* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
+      html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
+      html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
+  
+      html.dark-mode .container .flip-card.active .flip-card-front,
+      html.dark-mode .container .flip-card.preactivated .flip-card-front,
+      html.dark-mode .flip-card.active .flip-card-front,
+      html.dark-mode .flip-card.preactivated .flip-card-front {
+        background: #3a206e !important; /* deep indigo purple */
+        color: #e0e0e0 !important;
+        box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+        border: 1.5px solid #7c6fd8;
+        outline: none;
+      }
+      html.dark-mode .flip-card.card-targeted .flip-card-front {
+        background: #3a206e !important; /* deep indigo purple */
+        color: #e0e0e0 !important;
+        box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+        border: 1.5px solid #7c6fd8;
+        outline: none;
+      }
+      html.dark-mode .flip-card.active .flip-card-front * {
+        color: #e0e0e0;
+  
+        border: none;
+      }
+  
+      /* Keep inner card transparent to avoid rectangular appearance */
+      html.dark-mode .container .flip-card.active .flip-card-inner {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+      }
+      
+      html.dark-mode .container .flip-card.active .flip-card-back {
+        background: var(--primary-blue);
+        color: #fff;
+      }
+      /* Clean transition for all cards - removing unnecessary style overrides */
+      .flip-card-inner {
+        transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+        will-change: transform;
+      }
+      .flip-card-back {
+        height: auto;
+        max-height: var(--card-height);
+      }
+      .nav-arrow { display: none; }
+      .page-header h1 { font-size: 1.2rem; }
+      header { z-index: 999; }
+      #left-scroll-padding, #right-scroll-padding {
+        flex-shrink: 0;
+        height: 1px;
+        visibility: visible !important;
+        opacity: 0;
+      }
+      .flip-card.flipped {
+        position: relative !important;
+        width: var(--card-width) !important;
+        height: var(--card-height) !important;
+        margin: 0 15px !important;
+        z-index: 100 !important;
+      }
+      .flip-card.flipped .flip-card-back {
+        position: fixed !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) rotateY(180deg) !important;
+        width: 90vw !important;
+        height: auto !important;
+        min-height: 70vh !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        padding: 25px !important;
+        z-index: 1000 !important;
+      }
+      .safari-browser .flip-card.flipped .flip-card-back { top: 19.9vh !important; }
+      .chrome-browser .flip-card.flipped .flip-card-back { top: 21vh !important; }
+      .chrome-browser .container { padding-bottom: 80px !important; }
+      .flip-card.flipped ~ .flip-card:not(.flipped) { opacity: 0.7 !important; }
+      .flip-card.flipped .flip-card-back .summary { font-size: 1.2rem; line-height: 1.4; }
+      .card-indicator { z-index: 998; }
+      .flip-card-back .summary, .flip-card.flipped .flip-card-back .summary {
+        width: 100%;
+      }
+      .flip-card.flipped .flip-card-back .summary {
+        transform: scale(1.2);
+        width: 100%;
+      }
+  
     }
-
-    /* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
-    html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
-    html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
-
-    html.dark-mode .container .flip-card.active .flip-card-front,
-    html.dark-mode .container .flip-card.preactivated .flip-card-front,
-    html.dark-mode .flip-card.active .flip-card-front,
-    html.dark-mode .flip-card.preactivated .flip-card-front {
-      background: #3a206e !important; /* deep indigo purple */
-      color: #e0e0e0 !important;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
-    }
-    html.dark-mode .flip-card.card-targeted .flip-card-front {
-      background: #3a206e !important; /* deep indigo purple */
-      color: #e0e0e0 !important;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
-    }
-    html.dark-mode .flip-card.active .flip-card-front * {
-      color: #e0e0e0;
-
-      border: none;
-    }
-
-    /* Keep inner card transparent to avoid rectangular appearance */
-    html.dark-mode .container .flip-card.active .flip-card-inner {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-    }
-    
-    html.dark-mode .container .flip-card.active .flip-card-back {
-      background: var(--primary-blue);
-      color: #fff;
-    }
-    /* Clean transition for all cards - removing unnecessary style overrides */
-    .flip-card-inner {
-      transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: transform;
-    }
-    .flip-card-back {
-      height: auto;
-      max-height: var(--card-height);
-    }
-    .nav-arrow { display: none; }
-    .page-header h1 { font-size: 1.2rem; }
-    header { z-index: 999; }
-    #left-scroll-padding, #right-scroll-padding {
-      flex-shrink: 0;
-      height: 1px;
-      visibility: visible !important;
-      opacity: 0;
-    }
-    .flip-card.flipped {
-      position: relative !important;
-      width: var(--card-width) !important;
-      height: var(--card-height) !important;
-      margin: 0 15px !important;
-      z-index: 100 !important;
-    }
-    .flip-card.flipped .flip-card-back {
-      position: fixed !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) rotateY(180deg) !important;
-      width: 90vw !important;
-      height: auto !important;
-      min-height: 70vh !important;
-      max-height: 80vh !important;
-      overflow-y: auto !important;
-      padding: 25px !important;
+  
+    /* =============================================================
+       JS-CONTROLLED STYLES
+       ============================================================= */
+    .container.dot-navigation { scroll-behavior: auto !important; }
+    .flip-card.force-expanded {
       z-index: 1000 !important;
+      width: calc(100vw - 20px) !important;
+      max-width: calc(100vw - 20px) !important;
+      margin: 0 !important;
     }
-    .safari-browser .flip-card.flipped .flip-card-back { top: 19.9vh !important; }
-    .chrome-browser .flip-card.flipped .flip-card-back { top: 21vh !important; }
-    .chrome-browser .container { padding-bottom: 80px !important; }
-    .flip-card.flipped ~ .flip-card:not(.flipped) { opacity: 0.7 !important; }
-    .flip-card.flipped .flip-card-back .summary { font-size: 1.2rem; line-height: 1.4; }
-    .card-indicator { z-index: 998; }
-    .flip-card-back .summary, .flip-card.flipped .flip-card-back .summary {
-      width: 100%;
+    .flip-card.force-expanded .flip-card-back {
+      max-height: none !important;
+      min-height: 90vh !important;
+      padding: 30px 25px !important;
+      overflow-y: auto !important;
     }
-    .flip-card.flipped .flip-card-back .summary {
-      transform: scale(1.2);
-      width: 100%;
+    .flip-card.force-expanded .flip-card-back .summary {
+      font-size: calc(1.3rem + 1vw) !important;
+      line-height: 1.4 !important;
+      margin-bottom: 20px !important;
     }
-
-  }
-
-  /* =============================================================
-     JS-CONTROLLED STYLES
-     ============================================================= */
-  .container.dot-navigation { scroll-behavior: auto !important; }
-  .flip-card.force-expanded {
-    z-index: 1000 !important;
-    width: calc(100vw - 20px) !important;
-    max-width: calc(100vw - 20px) !important;
-    margin: 0 !important;
-  }
-  .flip-card.force-expanded .flip-card-back {
-    max-height: none !important;
-    min-height: 90vh !important;
-    padding: 30px 25px !important;
-    overflow-y: auto !important;
-  }
-  .flip-card.force-expanded .flip-card-back .summary {
-    font-size: calc(1.3rem + 1vw) !important;
-    line-height: 1.4 !important;
-    margin-bottom: 20px !important;
-  }
-  .flip-card.force-expanded .flip-card-back p:not(.summary) {
-    font-size: calc(1.1rem + 0.5vw) !important;
-    line-height: 1.5 !important;
-    margin-bottom: 20px !important;
-  }
-  .flip-card.force-expanded .flip-card-back h3 {
-    font-size: calc(1.2rem + 0.8vw) !important;
-    margin-top: 25px !important;
-    margin-bottom: 15px !important;
-  }
-
-  /* =============================================================
-     LOGO STYLES
-     ============================================================= */
-  .logo-container {
-    position: fixed;
-    top: var(--logo-top, 80px);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    opacity: 1;
-    visibility: visible;
-    display: block;
-    transition: opacity 0.3s, visibility 0.3s;
-    padding: 15px 15px 15px 15px;
-    /* contain: layout paint; */ /* Commented out to prevent shadow clipping */
-    will-change: transform, opacity;
-  }
-  .site-logo {
-    max-width: var(--logo-max-width, 80px);
-    height: auto;
-    opacity: 0.9;
-  }
-  @media (max-width: 768px) {
+    .flip-card.force-expanded .flip-card-back p:not(.summary) {
+      font-size: calc(1.1rem + 0.5vw) !important;
+      line-height: 1.5 !important;
+      margin-bottom: 20px !important;
+    }
+    .flip-card.force-expanded .flip-card-back h3 {
+      font-size: calc(1.2rem + 0.8vw) !important;
+      margin-top: 25px !important;
+      margin-bottom: 15px !important;
+    }
+  
+    /* =============================================================
+       LOGO STYLES
+       ============================================================= */
+    .logo-container {
+      position: fixed;
+      top: var(--logo-top, 80px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      opacity: 1;
+      visibility: visible;
+      display: block;
+      transition: opacity 0.3s, visibility 0.3s;
+      padding: 15px 15px 15px 15px;
+      /* contain: layout paint; */ /* Commented out to prevent shadow clipping */
+      will-change: transform, opacity;
+    }
     .site-logo {
-      max-width: var(--logo-max-width-mobile, 60px);
+      max-width: var(--logo-max-width, 80px);
+      height: auto;
+      opacity: 0.9;
     }
-
-    html.dark-mode .logo-container img.site-logo,
-    html.dark-mode .header-logo-container  {
+    @media (max-width: 1024px) {
+      .site-logo {
+        max-width: var(--logo-max-width-mobile, 60px);
+      }
+  
+      html.dark-mode .logo-container img.site-logo,
+      html.dark-mode .header-logo-container  {
+        box-shadow:
+          0 0 8px 2px #5ecbff,
+          0 0 20px 6px #39fffd,
+          0 0 40px 12px #5ecbff,
+          0 0 60px 18px #39fffd !important;
+        transition: filter 0.3s, box-shadow 0.3s;
+      }
+    }
+  
+    /* --- DARK MODE LOGO: Only apply effect to image, not container --- */
+    @media (min-width: 1025px) {
+    html.dark-mode .site-logo {
+      filter: invert(1) hue-rotate(180deg);
       box-shadow:
         0 0 8px 2px #5ecbff,
         0 0 20px 6px #39fffd,
@@ -1305,116 +1318,77 @@ html.dark-mode .header-hamburger span {
       transition: filter 0.3s, box-shadow 0.3s;
     }
   }
-
-  /* --- DARK MODE LOGO: Only apply effect to image, not container --- */
-  @media (min-width: 769px) {
-  html.dark-mode .site-logo {
-    filter: invert(1) hue-rotate(180deg);
-    box-shadow:
-      0 0 8px 2px #5ecbff,
-      0 0 20px 6px #39fffd,
-      0 0 40px 12px #5ecbff,
-      0 0 60px 18px #39fffd !important;
-    transition: filter 0.3s, box-shadow 0.3s;
-  }
-}
-
-
-  /* Exception: hide logo for mobile landscape via display:none as before */
-  @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
-    .logo-container {
+  
+  
+    /* Exception: hide logo for mobile landscape via display:none as before */
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+      .logo-container {
+        opacity: 0;
+        visibility: hidden;
+        display: none;
+        transition: none;
+      }
+    }
+  
+    /* =============================================================
+       OVERLAY & WEBVIEW/SPECIAL BROWSER STYLES
+       (Grouped, deduplicated, and comments added for clarity)
+       ============================================================= */
+  
+    /* === Base Overlay Styles === */
+    .card-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw; /* Use viewport width for consistent coverage */
+      height: 100vh; /* Use viewport height for consistent coverage */
+      background: rgba(0, 0, 0, 0.75) !important;
+      z-index: 999;
       opacity: 0;
       visibility: hidden;
-      display: none;
-      transition: none;
+      transition: opacity var(--transition-medium);
+  
     }
-  }
-
-  /* =============================================================
-     OVERLAY & WEBVIEW/SPECIAL BROWSER STYLES
-     (Grouped, deduplicated, and comments added for clarity)
-     ============================================================= */
-
-  /* === Base Overlay Styles === */
-  .card-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw; /* Use viewport width for consistent coverage */
-    height: 100vh; /* Use viewport height for consistent coverage */
-    background: rgba(0, 0, 0, 0.75) !important;
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity var(--transition-medium);
-
-  }
-  /* === Overlay: always use original light mode blur and background for all modes === */
-  .card-overlay, html.dark-mode .card-overlay {
-    background: rgba(0, 0, 0, 0.75) !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity var(--transition-medium);
-    /*
-      [Cascade note]: This overlay style is intentionally identical in light and dark mode.
-      Do NOT override background or blur for .card-overlay in dark mode. This restores the original overlay effect.
-    */
-  }
-  .card-overlay.active, html.dark-mode .card-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    background: rgba(0, 0, 0, 0.75) !important;
-  }
-  /* Overlay-content must be scrollable for content overflow */
-  /* Overlay-content is fixed on mobile, relative on desktop for sticky children */
-  .overlay-content {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    max-height: none;
-    transform: none;
-    background: #fff;
-    border-radius: 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    /* overflow-y: auto !important;  <-- removed for sticky to work */
-    padding: 0 0 56px 0;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-  }
-  .overlay-scroll-area {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    width: 100%;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 56px; /* Prevent swipe-indicator overlap */
-  }
-  @media (min-width: 769px) {
+    /* === Overlay: always use original light mode blur and background for all modes === */
+    .card-overlay, html.dark-mode .card-overlay {
+      background: rgba(0, 0, 0, 0.75) !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition-medium);
+      /*
+        [Cascade note]: This overlay style is intentionally identical in light and dark mode.
+        Do NOT override background or blur for .card-overlay in dark mode. This restores the original overlay effect.
+      */
+    }
+    .card-overlay.active, html.dark-mode .card-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      background: rgba(0, 0, 0, 0.75) !important;
+    }
+    /* Overlay-content must be scrollable for content overflow */
+    /* Overlay-content is fixed on mobile, relative on desktop for sticky children */
     .overlay-content {
-      position: relative;
-      width: 100%;
-      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
       max-width: none;
       max-height: none;
+      transform: none;
       background: #fff;
       border-radius: 0;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      /* overflow-y: auto !important; <-- removed for sticky to work */
-      padding: 0;
+      /* overflow-y: auto !important;  <-- removed for sticky to work */
+      padding: 0 0 56px 0;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -1427,10 +1401,184 @@ html.dark-mode .header-hamburger span {
       min-height: 0;
       display: flex;
       flex-direction: column;
+      padding-bottom: 56px; /* Prevent swipe-indicator overlap */
+    }
+    @media (min-width: 1025px) {
+      .overlay-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        background: #fff;
+        border-radius: 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        /* overflow-y: auto !important; <-- removed for sticky to work */
+        padding: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+      }
+      .overlay-scroll-area {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        width: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  
+    html.dark-mode .overlay-content {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      transform: none;
+      background: rgba(24, 28, 32, 0.75) !important;
+      border-radius: 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      overflow-y: auto;
+      padding: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      color: #5ecbff !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      text-shadow: 0 0 1.5px #5ecbff;
+      transition: background 0.3s, color 0.3s, text-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(94, 203, 255, 0.2);
+    }
+    html.dark-mode .overlay-content::after {
+    /* Remove this gradient entirely as it's causing the fixed gradient issue */
+    display: none;
+  }
+    .overlay-close {
+      position: absolute;
+      top: 25px;
+      right: 25px;
+      width: 44px;
+      height: 44px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1001;
+      transition: background 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+      box-sizing: content-box;
+    }
+    @media (max-width: 600px) {
+      .overlay-close {
+        width: 40px;
+        height: 40px;
+        top: 15px;
+        right: 15px;
+      }
+    }
+    .overlay-close:before,
+    .overlay-close:after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 2px;
+      background: #333;
+    }
+    .overlay-close:before { transform: rotate(45deg); }
+    .overlay-close:after { transform: rotate(-45deg); }
+  
+    /* Hide original flipped card when overlay is active */
+    .card-overlay.active ~ .container .flip-card.flipped {
+      visibility: hidden;
+      background: rgba(0, 0, 0, 0.75) !important;
+    }
+  
+    /* === Swipe Indicator Styles === */
+    @media (max-width: 1024px) {
+    /* Sticky swipe-indicator at bottom of overlay-content */
+    .overlay-content .swipe-indicator {
+      border: none !important;
+      box-shadow: none !important;
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      min-height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none !important;
+      border-bottom-left-radius: 1px;
+      border-bottom-right-radius: 1px;
+      background: linear-gradient(
+        to top,
+        rgba(255,255,255,0.88) 0%,
+        rgba(255,255,255,0.72) 30%,
+        rgba(255,255,255,0.0) 100%
+      );
+      color: #000;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      font-weight: bold;
+      font-size: 1.1em;
+      backdrop-filter: blur(2.5px);
+      -webkit-backdrop-filter: blur(2.5px);
+      z-index: 10;
+      margin-left: 0;
+      margin-right: 0;
+      -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
+      mask-image: linear-gradient(to top, black 60%, transparent 100%);
+    }
+    html.dark-mode .overlay-content .swipe-indicator {
+      border: none !important;
+      box-shadow: none !important;
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      min-height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none !important;
+      border-bottom-left-radius: 1px;
+      border-bottom-right-radius: 1px;
+      background: linear-gradient(
+        to top,
+        rgba(35,39,46,0.92) 0%,    /* Nearly solid dark at bottom */
+        rgba(35,39,46,0.72) 30%,   /* Fade up to semi-transparent dark */
+        rgba(35,39,46,0.0) 100%    /* Fully transparent at top */
+      );
+      color: #5ecbff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      font-weight: bold;
+      font-size: 1.1em;
+      backdrop-filter: blur(2.5px);
+      -webkit-backdrop-filter: blur(2.5px);
+      opacity: 0.88;
+      z-index: 10;
+      margin-left: 0;
+      margin-right: 0;
+      -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
+      mask-image: linear-gradient(to top, black 60%, transparent 100%);
     }
   }
-
-  html.dark-mode .overlay-content {
+  
+  
+    @media (min-width: 1025px) {
+      .overlay-content {
     position: fixed;
     top: 0;
     left: 0;
@@ -1441,575 +1589,427 @@ html.dark-mode .header-hamburger span {
     max-width: none;
     max-height: none;
     transform: none;
-    background: rgba(24, 28, 32, 0.75) !important;
+    background: #fff;
     border-radius: 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     padding: 0;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    color: #5ecbff !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-    text-shadow: 0 0 1.5px #5ecbff;
-    transition: background 0.3s, color 0.3s, text-shadow 0.3s;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(94, 203, 255, 0.2);
   }
-  html.dark-mode .overlay-content::after {
-  /* Remove this gradient entirely as it's causing the fixed gradient issue */
-  display: none;
-}
-  .overlay-close {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    width: 44px;
-    height: 44px;
-    background: rgba(0,0,0,0.08);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1001;
-    transition: background 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
-    margin: 0;
-    padding: 0;
-    box-sizing: content-box;
-  }
-  @media (max-width: 600px) {
-    .overlay-close {
-      width: 40px;
-      height: 40px;
-      top: 15px;
-      right: 15px;
-    }
-  }
-  .overlay-close:before,
-  .overlay-close:after {
-    content: '';
-    position: absolute;
-    width: 15px;
-    height: 2px;
-    background: #333;
-  }
-  .overlay-close:before { transform: rotate(45deg); }
-  .overlay-close:after { transform: rotate(-45deg); }
-
-  /* Hide original flipped card when overlay is active */
-  .card-overlay.active ~ .container .flip-card.flipped {
-    visibility: hidden;
-    background: rgba(0, 0, 0, 0.75) !important;
-  }
-
-  /* === Swipe Indicator Styles === */
-  @media (max-width: 768px) {
-  /* Sticky swipe-indicator at bottom of overlay-content */
   .overlay-content .swipe-indicator {
     border: none !important;
     box-shadow: none !important;
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    min-height: 65px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none !important;
-    border-bottom-left-radius: 1px;
-    border-bottom-right-radius: 1px;
+  
+    position: absolute;
+    left: 50%;
+    top: 90%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 8px;
+    border-radius: 4px;
     background: linear-gradient(
-      to top,
-      rgba(255,255,255,0.88) 0%,
-      rgba(255,255,255,0.72) 30%,
-      rgba(255,255,255,0.0) 100%
+      to bottom,
+      rgba(160,160,255,0.0) 0%,   /* Transparent at top */
+      rgba(160,160,255,0.7) 60%,  /* Fade in to solid */
+      rgba(160,160,255,0.7) 100%  /* Solid at bottom */
     );
-    color: #000;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-    font-weight: bold;
-    font-size: 1.1em;
-    backdrop-filter: blur(2.5px);
-    -webkit-backdrop-filter: blur(2.5px);
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    pointer-events: none;
     z-index: 10;
-    margin-left: 0;
-    margin-right: 0;
-    -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
-    mask-image: linear-gradient(to top, black 60%, transparent 100%);
+    /* Taper/fade the top edge only, not sides */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
   }
-  html.dark-mode .overlay-content .swipe-indicator {
+  
+    /* Desktop dark mode header override */
+    html.dark-mode .page-header,
+    html.dark-mode .page-header h1,
+    html.dark-mode .page-header .site-title,
+    html.dark-mode .page-header .last-updated,
+    html.dark-mode .page-header a {
+      color: #5ecbff !important;
+      text-shadow: 0 0 1.5px #5ecbff;
+    }
+    html.dark-mode .page-header a:hover {
+      color: #fff !important;
+      background: #1a4c6e !important;
+    }
+    html.dark-mode .page-header {
+      background: #181c20 !important;
+    }
+  
+  @media (max-width: 1024px) {
+    .overlay-content .swipe-indicator {
     border: none !important;
     box-shadow: none !important;
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    min-height: 65px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none !important;
-    border-bottom-left-radius: 1px;
-    border-bottom-right-radius: 1px;
-    background: linear-gradient(
-      to top,
-      rgba(35,39,46,0.92) 0%,    /* Nearly solid dark at bottom */
-      rgba(35,39,46,0.72) 30%,   /* Fade up to semi-transparent dark */
-      rgba(35,39,46,0.0) 100%    /* Fully transparent at top */
-    );
-    color: #5ecbff;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-    font-weight: bold;
-    font-size: 1.1em;
-    backdrop-filter: blur(2.5px);
-    -webkit-backdrop-filter: blur(2.5px);
-    opacity: 0.88;
-    z-index: 10;
-    margin-left: 0;
-    margin-right: 0;
-    -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
-    mask-image: linear-gradient(to top, black 60%, transparent 100%);
+  
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      border-radius: 0;
+      z-index: 1100;
+    }
   }
-}
-
-
-  @media (min-width: 769px) {
-    .overlay-content {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-  max-height: none;
-  transform: none;
-  background: #fff;
-  border-radius: 0;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  padding: 0;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-.overlay-content .swipe-indicator {
-  border: none !important;
-  box-shadow: none !important;
-
-  position: absolute;
-  left: 50%;
-  top: 90%;
-  transform: translate(-50%, -50%);
-  width: 50px;
-  height: 8px;
-  border-radius: 4px;
-  background: linear-gradient(
-    to bottom,
-    rgba(160,160,255,0.0) 0%,   /* Transparent at top */
-    rgba(160,160,255,0.7) 60%,  /* Fade in to solid */
-    rgba(160,160,255,0.7) 100%  /* Solid at bottom */
-  );
-  opacity: 0.7;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 10;
-  /* Taper/fade the top edge only, not sides */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
-}
-
-  /* Desktop dark mode header override */
-  html.dark-mode .page-header,
-  html.dark-mode .page-header h1,
-  html.dark-mode .page-header .site-title,
-  html.dark-mode .page-header .last-updated,
-  html.dark-mode .page-header a {
+  
+    }
+  
+    /* Only use fixed/viewport style for fullscreen overlays on mobile */
+    @media (max-width: 1024px) {
+    /* Remove fixed/viewport swipe-indicator for overlays, handled above */
+  
+  
+    html.dark-mode .swipe-indicator {
+    color: rgba(94,203,255,0.8);
+    /* Simplified gradient to avoid artifacts */
+    /* background: rgba(24, 28, 32, 0.85) !important; */
+  }
+    .swipe-indicator:before, .swipe-indicator:after {
+      content: '';
+      width: 20px;
+      height: 2px;
+      background: rgba(0,0,0,0.3);
+      position: relative;
+      margin: 0 8px;
+    }
+    .swipe-indicator:before { transform: translateX(5px); }
+    .swipe-indicator:after { transform: translateX(-5px); }
+    .swipe-indicator .scroll-text { transition: opacity var(--transition-medium); position: relative; }
+  .scroll-text:before, .scroll-text:after {
+    content: '\2014'; /* em dash */
+    font-size: 1.3em;
+    color: inherit;
+    vertical-align: middle;
+    position: relative;
+    top: -3px;
+    margin: 0 0.11em;
+    font-weight: 400;
+  }
+  
+  
+    /* Ensure overlay-content does not have extra bottom padding */
+    .overlay-content { padding-bottom: 0 !important; }
+  
+    /* === Browser-Specific Styles === */
+    body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
+    body.safari-mobile .card-overlay,
+    body.chrome-android .card-overlay,
+    body.chrome-ios .card-overlay,
+    body.webview .card-overlay,
+    body.wkwebview .card-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition-medium);
+  
+    }
+    body.safari-mobile .card-overlay.active,
+    body.chrome-android .card-overlay.active,
+    body.chrome-ios .card-overlay.active,
+    body.webview .card-overlay.active,
+    body.wkwebview .card-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    body.safari-mobile .overlay-content,
+    body.chrome-android .overlay-content,
+    body.chrome-ios .overlay-content,
+    body.webview .overlay-content,
+    body.wkwebview .overlay-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 90vw;
+      height: 85vh;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      padding: 25px 25px 0 25px;
+      z-index: 1000;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      display: flex;
+      flex-direction: column;
+    }
+    body.safari-mobile .overlay-content .flip-card-back,
+    body.chrome-android .overlay-content .flip-card-back,
+    body.chrome-ios .overlay-content .flip-card-back,
+    body.webview .overlay-content .flip-card-back,
+    body.wkwebview .overlay-content .flip-card-back {
+      position: relative !important;
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      transform: none !important;
+      flex: 1;
+    }
+    body.safari-mobile .overlay-content .flip-card-back,
+    body.wkwebview .overlay-content .flip-card-back {
+      padding-bottom: 40px !important;
+    }
+    /* Removed browser-specific overlay mask-image fade for .flip-card-back */
+    /* Removed browser-specific dark mode overlay mask-image fade for .flip-card-back */
+  
+    body.safari-mobile .overlay-content .flip-card-back-content,
+    body.chrome-android .overlay-content .flip-card-back-content,
+    body.chrome-ios .overlay-content .flip-card-back-content,
+    body.webview .overlay-content .flip-card-back-content,
+    body.wkwebview .overlay-content .flip-card-back-content {
+      overflow: visible;
+      height: auto;
+      padding-bottom: 56px; /* Prevent swipe-indicator overlap */
+    }
+    body.safari-mobile .card-overlay.active ~ .container .flip-card.flipped,
+    body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
+    body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped,
+    body.webview .card-overlay.active ~ .container .flip-card.flipped,
+    body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
+      visibility: hidden;
+    }
+  
+    body.chrome-android .overlay-content .flip-card-back > *:last-child,
+    body.chrome-ios .overlay-content .flip-card-back > *:last-child,
+    body.webview .overlay-content .flip-card-back > *:last-child,
+    body.wkwebview .overlay-content .flip-card-back > *:last-child {
+      margin-bottom: 65px !important;
+    }
+    body.safari-mobile .swipe-indicator,
+    body.chrome-android .swipe-indicator,
+    body.chrome-ios .swipe-indicator,
+    body.webview .swipe-indicator,
+    body.wkwebview .swipe-indicator {
+      margin-top: -45px !important;
+    }
+    body.safari-mobile .swipe-indicator .scroll-text,
+    body.chrome-android .swipe-indicator .scroll-text,
+    body.chrome-ios .swipe-indicator .scroll-text,
+    body.webview .swipe-indicator .scroll-text,
+    body.wkwebview .swipe-indicator .scroll-text {
+      transition: opacity var(--transition-medium);
+    }
+    @supports (padding-top: env(safe-area-inset-top)) {
+      body.safari-mobile .overlay-content {
+        padding-top: max(25px, env(safe-area-inset-top));
+        padding-bottom: max(25px, env(safe-area-inset-bottom));
+        padding-left: max(25px, env(safe-area-inset-left));
+        padding-right: max(25px, env(safe-area-inset-right));
+      }
+    }
+    @keyframes overlayFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes contentSlideUp {
+      from { transform: translate(-50%, -40%); opacity: 0; }
+      to { transform: translate(-50%, -50%); opacity: 1; }
+    }
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+      .logo-container {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        display: none !important;
+        transition: none !important;
+      }
+    }
+  
+    /* =============================================================
+       Remove tap/click highlight on mobile links
+       ============================================================= */
+    a, a:active, a:focus {
+      -webkit-tap-highlight-color: transparent;
+    }
+  
+    @media (hover: hover) and (pointer: fine) {
+      /* Basic hover style for non-card links */
+      a:hover:not(.flip-card-back a):not(.flip-card-front a), 
+      a:focus-visible:not(.flip-card-back a):not(.flip-card-front a) {
+        color: var(--primary-blue-dark);
+        text-decoration: underline;
+      }
+    }
+  
+    /* Mobile dark mode logo styles */
+  @media (max-width: 1024px) {
+    html.dark-mode .logo-container img.site-logo,
+    html.dark-mode .site-logo,
+    html.dark-mode .header-logo-container img.header-logo,
+    html.dark-mode .header-logo {
+      filter: invert(1) hue-rotate(180deg) !important;
+      box-shadow:
+        0 0 8px 2px #5ecbff,
+        0 0 20px 6px #39fffd,
+        0 0 40px 12px #5ecbff,
+        0 0 60px 18px #39fffd !important;
+      transition: filter 0.3s, box-shadow 0.3s;
+    }
+  }
+  
+  
+  /* =============================================================
+       END OF STYLE.CSS
+       ============================================================= */
+  html, body {
+    overflow-y: hidden !important;
+  }
+  
+  /* === DARK MODE REFINED === */
+  html.dark-mode body {
+    background: #181c20 !important;
     color: #5ecbff !important;
     text-shadow: 0 0 1.5px #5ecbff;
-  }
-  html.dark-mode .page-header a:hover {
-    color: #fff !important;
-    background: #1a4c6e !important;
+    transition: background 0.3s, color 0.3s, text-shadow 0.3s;
   }
   html.dark-mode .page-header {
     background: #181c20 !important;
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
   }
-
-@media (max-width: 768px) {
-  .overlay-content .swipe-indicator {
-  border: none !important;
-  box-shadow: none !important;
-
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    border-radius: 0;
-    z-index: 1100;
+  html.dark-mode .page-header h1, html.dark-mode .site-title {
+    color: #5ecbff !important;
   }
-}
-
+  
+  html.dark-mode .container {
+    background: #23272e !important;
+    color: #5ecbff !important;
+    transition: background 0.3s, color 0.3s;
+    transition: background 0.3s, color 0.3s, text-shadow 0.3s;
   }
-
-  /* Only use fixed/viewport style for fullscreen overlays on mobile */
-  @media (max-width: 768px) {
-  /* Remove fixed/viewport swipe-indicator for overlays, handled above */
-
-
-  html.dark-mode .swipe-indicator {
-  color: rgba(94,203,255,0.8);
-  /* Simplified gradient to avoid artifacts */
-  /* background: rgba(24, 28, 32, 0.85) !important; */
-}
-  .swipe-indicator:before, .swipe-indicator:after {
-    content: '';
-    width: 20px;
-    height: 2px;
-    background: rgba(0,0,0,0.3);
-    position: relative;
-    margin: 0 8px;
+  /* Base dark mode styles for card components */
+  html.dark-mode .flip-card-front,
+  html.dark-mode .flip-card-back,
+  html.dark-mode .overlay-content {
+    background: #23272e !important;
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    /* Do NOT override transform, transition, or filter for card animation elements in dark mode */
   }
-  .swipe-indicator:before { transform: translateX(5px); }
-  .swipe-indicator:after { transform: translateX(-5px); }
-  .swipe-indicator .scroll-text { transition: opacity var(--transition-medium); position: relative; }
-.scroll-text:before, .scroll-text:after {
-  content: '\2014'; /* em dash */
-  font-size: 1.3em;
-  color: inherit;
-  vertical-align: middle;
-  position: relative;
-  top: -3px;
-  margin: 0 0.11em;
-  font-weight: 400;
-}
-
-
-  /* Ensure overlay-content does not have extra bottom padding */
-  .overlay-content { padding-bottom: 0 !important; }
-
-  /* === Browser-Specific Styles === */
-  body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
-  body.safari-mobile .card-overlay,
-  body.chrome-android .card-overlay,
-  body.chrome-ios .card-overlay,
-  body.webview .card-overlay,
-  body.wkwebview .card-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity var(--transition-medium);
-
+  /* Remove generic background to avoid conflicts */
+  html.dark-mode .flip-card-inner {
+    /* Always keep inner transparent in dark mode */
+    background: transparent;
+    transition: transform 0.6s;
   }
-  body.safari-mobile .card-overlay.active,
-  body.chrome-android .card-overlay.active,
-  body.chrome-ios .card-overlay.active,
-  body.webview .card-overlay.active,
-  body.wkwebview .card-overlay.active {
-    opacity: 1;
-    visibility: visible;
+  
+  
+  /* Force active card front (unflipped) and inner to match in dark mode */
+  /* Card container in dark mode - base styles for all viewports */
+  html.dark-mode .flip-card {
+    background: transparent !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: none !important;
+    border: none !important;
   }
-  body.safari-mobile .overlay-content,
-  body.chrome-android .overlay-content,
-  body.chrome-ios .overlay-content,
-  body.webview .overlay-content,
-  body.wkwebview .overlay-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 90vw;
-    height: 85vh;
-    background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    overflow-y: auto;
-    padding: 25px 25px 0 25px;
-    z-index: 1000;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    display: flex;
-    flex-direction: column;
+  
+  /* Ensure inactive cards keep 90% scale in dark mode (global) */
+  html.dark-mode .flip-card:not(.active) {
+    opacity: 0.65;
+    transform: scale(0.9);
+    z-index: 1;
   }
-  body.safari-mobile .overlay-content .flip-card-back,
-  body.chrome-android .overlay-content .flip-card-back,
-  body.chrome-ios .overlay-content .flip-card-back,
-  body.webview .overlay-content .flip-card-back,
-  body.wkwebview .overlay-content .flip-card-back {
-    position: relative !important;
-    overflow: visible !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    transform: none !important;
-    flex: 1;
+  
+  /* Active card in dark mode - base styles for all viewports */
+  html.dark-mode .flip-card.active {
+    background: transparent !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: none !important;
+    border: none !important;
   }
-  body.safari-mobile .overlay-content .flip-card-back,
-  body.wkwebview .overlay-content .flip-card-back {
-    padding-bottom: 40px !important;
+  /* Ensure proper flipping in dark mode */
+  /* Flipped state - increased specificity over !important */
+  html.dark-mode .container .flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+    /* Keep transparent to avoid inner rectangle visibility */
+    background: transparent;
+    box-shadow: none;
+    border: none;
   }
-  /* Removed browser-specific overlay mask-image fade for .flip-card-back */
-  /* Removed browser-specific dark mode overlay mask-image fade for .flip-card-back */
-
-  body.safari-mobile .overlay-content .flip-card-back-content,
-  body.chrome-android .overlay-content .flip-card-back-content,
-  body.chrome-ios .overlay-content .flip-card-back-content,
-  body.webview .overlay-content .flip-card-back-content,
-  body.wkwebview .overlay-content .flip-card-back-content {
-    overflow: visible;
-    height: auto;
-    padding-bottom: 56px; /* Prevent swipe-indicator overlap */
+  /* Active card front and inner in dark mode */
+  html.dark-mode .flip-card.active .flip-card-front {
+    background: var(--primary-blue) !important;
+    border-radius: var(--card-radius);
   }
-  body.safari-mobile .card-overlay.active ~ .container .flip-card.flipped,
-  body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
-  body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped,
-  body.webview .card-overlay.active ~ .container .flip-card.flipped,
-  body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
-    visibility: hidden;
+  
+  /* Keep inner transparent */
+  html.dark-mode .flip-card.active .flip-card-inner {
+    background: transparent !important;
+    border-radius: var(--card-radius);
   }
-
-  body.chrome-android .overlay-content .flip-card-back > *:last-child,
-  body.chrome-ios .overlay-content .flip-card-back > *:last-child,
-  body.webview .overlay-content .flip-card-back > *:last-child,
-  body.wkwebview .overlay-content .flip-card-back > *:last-child {
-    margin-bottom: 65px !important;
+  html.dark-mode .flip-card.active .flip-card-front {
+    color: #fff !important;
+    text-shadow: none !important;
+    box-shadow: var(--box-shadow-highlight) !important;
   }
-  body.safari-mobile .swipe-indicator,
-  body.chrome-android .swipe-indicator,
-  body.chrome-ios .swipe-indicator,
-  body.webview .swipe-indicator,
-  body.wkwebview .swipe-indicator {
-    margin-top: -45px !important;
+  
+  html.dark-mode .menu-overlay {
+    background: rgba(20,20,20,0.92) !important;
+    transition: background 0.3s;
   }
-  body.safari-mobile .swipe-indicator .scroll-text,
-  body.chrome-android .swipe-indicator .scroll-text,
-  body.chrome-ios .swipe-indicator .scroll-text,
-  body.webview .swipe-indicator .scroll-text,
-  body.wkwebview .swipe-indicator .scroll-text {
-    transition: opacity var(--transition-medium);
+  html.dark-mode .menu-content {
+    background: #23272e !important;
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    transition: background 0.3s, color 0.3s, text-shadow 0.3s;
   }
-  @supports (padding-top: env(safe-area-inset-top)) {
-    body.safari-mobile .overlay-content {
-      padding-top: max(25px, env(safe-area-inset-top));
-      padding-bottom: max(25px, env(safe-area-inset-bottom));
-      padding-left: max(25px, env(safe-area-inset-left));
-      padding-right: max(25px, env(safe-area-inset-right));
+  html.dark-mode .last-updated,
+  html.dark-mode .section-title,
+  html.dark-mode .timestamp {
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
+  }
+  html.dark-mode .header-toggle-switch,
+  html.dark-mode .header-hamburger,
+  html.dark-mode .nav-arrow {
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
+  }
+  html.dark-mode a,
+  html.dark-mode .menu-content a {
+    color: #5ecbff !important;
+    text-shadow: 0 0 1.5px #5ecbff;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  html.dark-mode a:hover,
+  html.dark-mode .menu-content a:hover {
+    color: #fff !important;
+    background: #1a4c6e !important;
+  }
     }
-  }
-  @keyframes overlayFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes contentSlideUp {
-    from { transform: translate(-50%, -40%); opacity: 0; }
-    to { transform: translate(-50%, -50%); opacity: 1; }
-  }
-  @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
-    .logo-container {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      display: none !important;
-      transition: none !important;
+    @media (max-width: 1024px) {
+      .swipe-indicator:before, .swipe-indicator:after {
+        display: none; /* This will hide them */
+        /* or content: none; */
+      }
+      img.header-logo {
+      margin-top: auto;
+      }
+      .page-header h1 {
+      margin-top: 30px;
+      }
     }
-  }
-
-  /* =============================================================
-     Remove tap/click highlight on mobile links
-     ============================================================= */
-  a, a:active, a:focus {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    /* Basic hover style for non-card links */
-    a:hover:not(.flip-card-back a):not(.flip-card-front a), 
-    a:focus-visible:not(.flip-card-back a):not(.flip-card-front a) {
-      color: var(--primary-blue-dark);
-      text-decoration: underline;
+  
+    @media (min-width: 1025px) {
+       .header-mobile-content {
+        display: none;
+       }
     }
-  }
-
-  /* Mobile dark mode logo styles */
-@media (max-width: 768px) {
-  html.dark-mode .logo-container img.site-logo,
-  html.dark-mode .site-logo,
-  html.dark-mode .header-logo-container img.header-logo,
-  html.dark-mode .header-logo {
-    filter: invert(1) hue-rotate(180deg) !important;
-    box-shadow:
-      0 0 8px 2px #5ecbff,
-      0 0 20px 6px #39fffd,
-      0 0 40px 12px #5ecbff,
-      0 0 60px 18px #39fffd !important;
-    transition: filter 0.3s, box-shadow 0.3s;
-  }
-}
-
-
-/* =============================================================
-     END OF STYLE.CSS
-     ============================================================= */
-html, body {
-  overflow-y: hidden !important;
-}
-
-/* === DARK MODE REFINED === */
-html.dark-mode body {
-  background: #181c20 !important;
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-  transition: background 0.3s, color 0.3s, text-shadow 0.3s;
-}
-html.dark-mode .page-header {
-  background: #181c20 !important;
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-}
-html.dark-mode .page-header h1, html.dark-mode .site-title {
-  color: #5ecbff !important;
-}
-
-html.dark-mode .container {
-  background: #23272e !important;
-  color: #5ecbff !important;
-  transition: background 0.3s, color 0.3s;
-  transition: background 0.3s, color 0.3s, text-shadow 0.3s;
-}
-/* Base dark mode styles for card components */
-html.dark-mode .flip-card-front,
-html.dark-mode .flip-card-back,
-html.dark-mode .overlay-content {
-  background: #23272e !important;
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  /* Do NOT override transform, transition, or filter for card animation elements in dark mode */
-}
-/* Remove generic background to avoid conflicts */
-html.dark-mode .flip-card-inner {
-  /* Always keep inner transparent in dark mode */
-  background: transparent;
-  transition: transform 0.6s;
-}
-
-
-/* Force active card front (unflipped) and inner to match in dark mode */
-/* Card container in dark mode - base styles for all viewports */
-html.dark-mode .flip-card {
-  background: transparent !important;
-  border-radius: var(--card-radius) !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* Ensure inactive cards keep 90% scale in dark mode (global) */
-html.dark-mode .flip-card:not(.active) {
-  opacity: 0.65;
-  transform: scale(0.9);
-  z-index: 1;
-}
-
-/* Active card in dark mode - base styles for all viewports */
-html.dark-mode .flip-card.active {
-  background: transparent !important;
-  border-radius: var(--card-radius) !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-/* Ensure proper flipping in dark mode */
-/* Flipped state - increased specificity over !important */
-html.dark-mode .container .flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-  /* Keep transparent to avoid inner rectangle visibility */
-  background: transparent;
-  box-shadow: none;
-  border: none;
-}
-/* Active card front and inner in dark mode */
-html.dark-mode .flip-card.active .flip-card-front {
-  background: var(--primary-blue) !important;
-  border-radius: var(--card-radius);
-}
-
-/* Keep inner transparent */
-html.dark-mode .flip-card.active .flip-card-inner {
-  background: transparent !important;
-  border-radius: var(--card-radius);
-}
-html.dark-mode .flip-card.active .flip-card-front {
-  color: #fff !important;
-  text-shadow: none !important;
-  box-shadow: var(--box-shadow-highlight) !important;
-}
-
-html.dark-mode .menu-overlay {
-  background: rgba(20,20,20,0.92) !important;
-  transition: background 0.3s;
-}
-html.dark-mode .menu-content {
-  background: #23272e !important;
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-  transition: background 0.3s, color 0.3s, text-shadow 0.3s;
-}
-html.dark-mode .last-updated,
-html.dark-mode .section-title,
-html.dark-mode .timestamp {
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-}
-html.dark-mode .header-toggle-switch,
-html.dark-mode .header-hamburger,
-html.dark-mode .nav-arrow {
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-}
-html.dark-mode a,
-html.dark-mode .menu-content a {
-  color: #5ecbff !important;
-  text-shadow: 0 0 1.5px #5ecbff;
-  transition: color 0.3s, text-shadow 0.3s;
-}
-html.dark-mode a:hover,
-html.dark-mode .menu-content a:hover {
-  color: #fff !important;
-  background: #1a4c6e !important;
-}
-  }
-  @media (max-width: 768px) {
-    .swipe-indicator:before, .swipe-indicator:after {
-      display: none; /* This will hide them */
-      /* or content: none; */
+    @media (max-width: 1024px) {
+       .header-desktop-content {
+        display: none;
+       }
     }
-    img.header-logo {
-    margin-top: auto;
-    }
-    .page-header h1 {
-    margin-top: 30px;
-    }
-  }
-
-  @media (min-width: 769px) {
-     .header-mobile-content {
-      display: none;
-     }
-  }
-  @media (max-width: 768px) {
-     .header-desktop-content {
-      display: none;
-     }
-  }

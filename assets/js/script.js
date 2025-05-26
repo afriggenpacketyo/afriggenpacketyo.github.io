@@ -89,7 +89,7 @@
   
   
       // Detect device type
-      const isMobile = window.innerWidth <= 768;
+      const isMobile = window.innerWidth <= 932;
   
       // Create global CardSystem namespace
       window.CardSystem = {
@@ -119,7 +119,7 @@
   
       // Handle resize events that might require switching implementations
       window.addEventListener('resize', () => {
-          const currentIsMobile = window.innerWidth <= 768;
+          const currentIsMobile = window.innerWidth <= 932;
           if (currentIsMobile !== isMobile) {
               // Device type changed, force a hard reload to get the correct implementation
               window.location.href = window.location.href.split('#')[0] +

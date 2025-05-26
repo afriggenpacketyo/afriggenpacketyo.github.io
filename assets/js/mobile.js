@@ -20,7 +20,7 @@
           }
   
           /* Only hide for mobile landscape */
-          @media (max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+          @media (max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
               .logo-container {
                   opacity: 0 !important;
                   visibility: hidden !important;
@@ -663,7 +663,7 @@
   
           // Check if we're on mobile/tablet using a more comprehensive check
           const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                                window.matchMedia("(max-width: 768px)").matches ||
+                                window.matchMedia("(max-width: 1024px)").matches ||
                                 ('ontouchstart' in window);
   
           // If it's a mobile device OR specifically Safari Mobile/Chrome Mobile, use overlay
@@ -1157,7 +1157,7 @@
       function toggleLogoVisibility(show) {
           const logoContainer = document.querySelector('.logo-container');
           if (!logoContainer) return;
-      // Add this function for consistent aspect ratio detectionn    function isPhoneLandscape() {n        const mediaQuery = window.matchMedia("(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)");n        return mediaQuery.matches;n    }n
+      // Add this function for consistent aspect ratio detectionn    function isPhoneLandscape() {n        const mediaQuery = window.matchMedia("(max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse)");n        return mediaQuery.matches;n    }n
           // Only hide if it's a phone in landscape or we're explicitly hiding
           if (isPhoneLandscape() || !show) {
               logoContainer.style.opacity = '0';
@@ -2066,7 +2066,7 @@
               const viewportWidth = window.innerWidth;
               const viewportHeight = window.innerHeight;
               const aspectRatio = viewportWidth / viewportHeight;
-              const isPhoneLandscape = aspectRatio > 1.7 && viewportHeight < 500 && viewportWidth < 900;
+              const isPhoneLandscape = aspectRatio > 1.7 && viewportHeight < 500 && viewportWidth < 1024;
   
               const logoContainer = document.querySelector('.logo-container');
               if (!logoContainer) return;
@@ -2352,7 +2352,7 @@
   
       // Add this function for consistent aspect ratio detection
       function isPhoneLandscape() {
-          const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 480px) and (max-width: 926px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
+          const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
           return mediaQuery.matches;
       }
   
