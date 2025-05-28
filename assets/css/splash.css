@@ -18,7 +18,7 @@ html.dark-mode .splash-overlay {
   background: var(--background-main, #181c20);
 }
 
-@media (max-width: 768px) {
+@media (pointer: coarse) and (hover: none) {
 .splash-logo {
   width: 90vw; /* Initial large size */
   max-width: 500px; /* Add a max-width for very large screens */
@@ -33,7 +33,7 @@ html.dark-mode .splash-overlay {
   object-fit: contain;
 }
 }
-@media (min-width: 769px) {
+@media (pointer: fine) and (hover: hover) {
   .splash-logo {
     /* width: 90vw; Initial large size */
     max-width: 1000px; /* Add a max-width for very large screens */
@@ -63,7 +63,7 @@ html.dark-mode .splash-overlay {
 }
 
 /* Desktop animation - targets the .logo-container position */
-@media (min-width: 769px) {
+@media (pointer: fine) and (hover: hover) {
   .splash-logo.splash-animate { /* Override the mobile animation for desktop */
     /*
       Target: final width var(--logo-max-width, 80px)
@@ -103,4 +103,300 @@ html.dark-mode .splash-overlay {
 body.splash-active {
   overflow: hidden !important;
   height: 100vh !important;
+}
+
+/* --- Additional Splash Animations --- */
+
+/* 1. Bounce In & Pulse */
+.splash-logo.splash-bounce {
+  animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;
+}
+
+/* Mobile bounce animation */
+@media (pointer: coarse) and (hover: none) {
+  @keyframes splash-bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.85) translateY(-50vh);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1.03) translateY(-10vh);
+    }
+    60% {
+      transform: scale(0.97) translateY(-3vh);
+    }
+    80% {
+      transform: scale(1.01) translateY(-1vh);
+    }
+    100% {
+      opacity: 1;
+      /* Mobile: end at header logo position */
+      transform: translateY(-45vh) scale(0.18);
+    }
+  }
+}
+
+/* Desktop bounce animation */
+@media (pointer: fine) and (hover: hover) {
+  @keyframes splash-bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.85) translateY(-50vh);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1.03) translateY(-10vh);
+    }
+    60% {
+      transform: scale(0.97) translateY(-3vh);
+    }
+    80% {
+      transform: scale(1.01) translateY(-1vh);
+    }
+    100% {
+      opacity: 1;
+      /* Desktop: use calculated values */
+      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));
+    }
+  }
+}
+
+/* 2. Draw-on (SVG Path Animation) */
+.splash-logo.splash-draw {
+  /* For SVG logo: animate stroke */
+  animation: splash-draw-on 1.2s linear forwards;
+}
+
+/* Mobile draw animation */
+@media (pointer: coarse) and (hover: none) {
+  @keyframes splash-draw-on {
+    0% {
+      opacity: 0.2;
+      filter: grayscale(1);
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      transform: scale(1.3) translateY(-30vh);
+    }
+    60% {
+      opacity: 1;
+      filter: grayscale(0.4);
+      stroke-dashoffset: 0;
+      transform: scale(1.08) translateY(-10vh);
+    }
+    100% {
+      opacity: 1;
+      filter: grayscale(0);
+      stroke-dashoffset: 0;
+      /* Mobile: end at header logo position */
+      transform: translateY(-45vh) scale(0.18);
+    }
+  }
+}
+
+/* Desktop draw animation */
+@media (pointer: fine) and (hover: hover) {
+  @keyframes splash-draw-on {
+    0% {
+      opacity: 0.2;
+      filter: grayscale(1);
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      transform: scale(1.3) translateY(-30vh);
+    }
+    60% {
+      opacity: 1;
+      filter: grayscale(0.4);
+      stroke-dashoffset: 0;
+      transform: scale(1.08) translateY(-10vh);
+    }
+    100% {
+      opacity: 1;
+      filter: grayscale(0);
+      stroke-dashoffset: 0;
+      /* Desktop: use calculated values */
+      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));
+    }
+  }
+}
+/* If not SVG, fallback to fade-in and outline glow */
+.splash-logo.splash-draw:not(svg) {
+  box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;
+  animation: splash-draw-fallback 1.2s linear forwards;
+}
+
+/* Mobile draw fallback animation */
+@media (pointer: coarse) and (hover: none) {
+  @keyframes splash-draw-fallback {
+    0% {
+      opacity: 0.2;
+      filter: grayscale(1);
+      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;
+      transform: scale(1.3) translateY(-30vh);
+    }
+    60% {
+      opacity: 1;
+      filter: grayscale(0.4);
+      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;
+      transform: scale(1.08) translateY(-10vh);
+    }
+    100% {
+      opacity: 1;
+      filter: grayscale(0);
+      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;
+      /* Mobile: end at header logo position */
+      transform: translateY(-45vh) scale(0.18);
+    }
+  }
+}
+
+/* Desktop draw fallback animation */
+@media (pointer: fine) and (hover: hover) {
+  @keyframes splash-draw-fallback {
+    0% {
+      opacity: 0.2;
+      filter: grayscale(1);
+      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;
+      transform: scale(1.3) translateY(-30vh);
+    }
+    60% {
+      opacity: 1;
+      filter: grayscale(0.4);
+      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;
+      transform: scale(1.08) translateY(-10vh);
+    }
+    100% {
+      opacity: 1;
+      filter: grayscale(0);
+      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;
+      /* Desktop: use calculated values */
+      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));
+    }
+  }
+}
+
+/* 3. Pixelation/Depixelation */
+.splash-logo.splash-pixel {
+  animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;
+  image-rendering: pixelated;
+  will-change: filter, transform;
+}
+
+/* Remove pixelation after animation ends */
+.splash-logo.pixel-cleanup {
+  image-rendering: auto !important;
+} 
+
+/* Mobile pixel animation */
+@media (pointer: coarse) and (hover: none) {
+  @keyframes splash-pixelate {
+    0% {
+      filter: blur(8px) brightness(1.2);
+      opacity: 0.1;
+      transform: scale(3) translateY(-30vh);
+    }
+    40% {
+      filter: blur(4px) brightness(1.08);
+      opacity: 0.7;
+      transform: scale(1.7) translateY(-10vh);
+    }
+    80% {
+      filter: blur(1.2px) brightness(1);
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    100% {
+      filter: none;
+      opacity: 1;
+      /* Mobile: end at header logo position */
+      transform: translateY(-45vh) scale(0.18);
+    }
+  }
+}
+
+/* Desktop pixel animation */
+@media (pointer: fine) and (hover: hover) {
+  @keyframes splash-pixelate {
+    0% {
+      filter: blur(8px) brightness(1.2);
+      opacity: 0.1;
+      transform: scale(3) translateY(-30vh);
+    }
+    40% {
+      filter: blur(4px) brightness(1.08);
+      opacity: 0.7;
+      transform: scale(1.7) translateY(-10vh);
+    }
+    80% {
+      filter: blur(1.2px) brightness(1);
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    100% {
+      filter: none;
+      opacity: 1;
+      /* Desktop: use calculated values */
+      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));
+    }
+  }
+}
+
+/* 4. Spin & Color Cycle */
+.splash-logo.splash-spin {
+  animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;
+}
+
+/* Mobile spin animation */
+@media (pointer: coarse) and (hover: none) {
+  @keyframes splash-spin-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) rotate(-360deg);
+      filter: hue-rotate(0deg) brightness(1.5);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.12) rotate(15deg);
+      filter: hue-rotate(180deg) brightness(1.1);
+    }
+    100% {
+      opacity: 1;
+      /* Mobile: end at header logo position */
+      transform: translateY(-45vh) scale(0.18) rotate(0deg);
+      filter: hue-rotate(0deg) brightness(1);
+    }
+  }
+}
+
+/* Desktop spin animation */
+@media (pointer: fine) and (hover: hover) {
+  @keyframes splash-spin-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) rotate(-360deg);
+      filter: hue-rotate(0deg) brightness(1.5);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.12) rotate(15deg);
+      filter: hue-rotate(180deg) brightness(1.1);
+    }
+    100% {
+      opacity: 1;
+      /* Desktop: use calculated values */
+      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);
+      filter: hue-rotate(0deg) brightness(1);
+    }
+  }
+}
+@keyframes splash-spin-color {
+  0% {
+    filter: hue-rotate(0deg) brightness(1.5);
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(1.1);
+  }
+  100% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
 }

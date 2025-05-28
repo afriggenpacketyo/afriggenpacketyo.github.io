@@ -1297,6 +1297,6 @@
     updateLogoPosition();
 
     // Add event listeners for responsive positioning
-    window.addEventListener('resize', updateLogoPosition);
-    window.addEventListener('orientationchange', updateLogoPosition);
+    // window.addEventListener('resize', updateLogoPosition);
+    // window.addEventListener('orientationchange', updateLogoPosition);
 })();

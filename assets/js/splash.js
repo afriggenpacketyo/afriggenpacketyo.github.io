@@ -22,7 +22,7 @@
                     window.innerHeight <= 768);
     
     // Check if in landscape mode with widescreen aspect ratio (wider than 16:9)
-    const isWidescreen = window.innerWidth > window.innerHeight * 1.8; // Wider than 16:9
+    const isWidescreen = 'ontouchstart' in window && window.innerWidth > window.innerHeight * 1.8; // Wider than 16:9
     
     return isMobile && isWidescreen;
   }
@@ -63,7 +63,7 @@
 
   // Function to calculate and set desktop animation target
   function setDesktopAnimationTarget() {
-    if (window.innerWidth > 768 && mainLogoContainer && mainSiteLogo) {
+    if (mainLogoContainer && mainSiteLogo) {
       // Get dimensions and positions AFTER page has settled
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -116,29 +116,72 @@
   }
 
   // Function to animate logo and wait for animation to complete
-  function animateLogoAndWait() {
+  function animateLogoAndWait(animationType) {
     return new Promise(resolve => {
-      function onTransitionEnd(e) {
-        if (e.propertyName === 'transform') { // Only listen for transform
-          splashLogo.removeEventListener('transitionend', onTransitionEnd);
-          clearTimeout(safetyTimeout); // Clear safety timeout
-          resolve();
-        }
-      }
-      
-      splashLogo.addEventListener('transitionend', onTransitionEnd);
-      
-      const safetyTimeout = setTimeout(() => {
-        console.warn("Splash logo transitionend fallback timeout triggered.");
-        splashLogo.removeEventListener('transitionend', onTransitionEnd);
-        resolve();
-      }, 1200); // Slightly longer than 1.1s animation
+      let animationEndHandler;
+      let safetyTimeout;
+      // Remove all splash animation classes
+      splashLogo.classList.remove('splash-animate', 'splash-bounce', 'splash-draw', 'splash-pixel', 'splash-spin');
 
-      // Recalculate target just before animating, in case of resize during page load
-      setDesktopAnimationTarget(); 
-      
-      // Start the animation
-      splashLogo.classList.add('splash-animate'); // This triggers the CSS transform
+      // Helper: clean up after animation
+      function cleanup() {
+        splashLogo.removeEventListener('animationend', animationEndHandler);
+        splashLogo.removeEventListener('transitionend', animationEndHandler);
+        clearTimeout(safetyTimeout);
+        resolve();
+      }
+
+      // Handler for both transition and animation end
+      animationEndHandler = function(e) {
+        // Listen for the right property
+        if (
+          (animationType === 'default' && e.propertyName === 'transform') ||
+          (animationType === 'bounce' && e.animationName === 'splash-bounce-in') ||
+          (animationType === 'draw' && e.animationName === 'splash-draw-on') ||
+          (animationType === 'pixel' && e.animationName === 'splash-pixelate') ||
+          (animationType === 'spin' && e.animationName === 'splash-spin-in')
+        ) {
+          cleanup();
+        }
+      };
+
+      splashLogo.addEventListener('animationend', animationEndHandler);
+      splashLogo.addEventListener('transitionend', animationEndHandler);
+
+      // Safety timeout (longest animation is 1.5s)
+      safetyTimeout = setTimeout(() => {
+        console.warn("Splash logo animation fallback timeout triggered.");
+        cleanup();
+      }, 1600);
+
+      setDesktopAnimationTarget();
+
+      // Trigger the chosen animation
+      switch (animationType) {
+        case 'bounce':
+          splashLogo.classList.add('splash-bounce');
+          break;
+        case 'draw':
+          splashLogo.classList.add('splash-draw');
+          break;
+        case 'pixel':
+          splashLogo.classList.add('splash-pixel');
+          // After animation ends, remove pixelation for crispness
+          Promise.resolve().then(() => {
+            splashLogo.addEventListener('animationend', function cleanupPixelation() {
+              splashLogo.classList.remove('splash-pixel');
+              splashLogo.classList.add('pixel-cleanup');
+              splashLogo.removeEventListener('animationend', cleanupPixelation);
+            });
+          });
+          break;
+        case 'spin':
+          splashLogo.classList.add('splash-spin');
+          break;
+        case 'default':
+        default:
+          splashLogo.classList.add('splash-animate');
+      }
     });
   }
 
@@ -153,14 +196,38 @@
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            if (!splashLogo.classList.contains('splash-animate')) { // Only recalc if not yet animating
+            if (!splashLogo.classList.contains('splash-animate') &&
+                !splashLogo.classList.contains('splash-bounce') &&
+                !splashLogo.classList.contains('splash-draw') &&
+                !splashLogo.classList.contains('splash-pixel') &&
+                !splashLogo.classList.contains('splash-spin')) {
                  setDesktopAnimationTarget();
             }
         }, 100);
     });
 
+    // Get or create a random order for the animations
+    let animationOrder = JSON.parse(localStorage.getItem('splashAnimationOrder') || 'null');
+    let nextIndex = parseInt(localStorage.getItem('splashAnimationIndex') || '0', 10);
+    
+    // If no order exists or we've completed a full cycle, create a new random order
+    if (!animationOrder || nextIndex >= animationOrder.length) {
+      // Create a new random order of the animations
+      animationOrder = ['default', 'pixel', 'spin'];
+      for (let i = animationOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [animationOrder[i], animationOrder[j]] = [animationOrder[j], animationOrder[i]];
+      }
+      localStorage.setItem('splashAnimationOrder', JSON.stringify(animationOrder));
+      nextIndex = 0;
+    }
+    
+    // Get the next animation and update the index
+    const chosen = animationOrder[nextIndex];
+    localStorage.setItem('splashAnimationIndex', nextIndex + 1);
+
     setTimeout(() => {
-      animateLogoAndWait().then(() => {
+      animateLogoAndWait(chosen).then(() => {
         splashOverlay.classList.add('splash-hide');
         setTimeout(() => {
           splashOverlay.style.display = 'none';
