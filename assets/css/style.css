@@ -192,7 +192,7 @@
     }
   }
   
-  @media (max-width: 810px) and (hover: none) and (pointer: coarse) { 
+  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) { 
     /* Mobile: Hide outside logo, show header logo */
     .logo-container {
       display: none !important;
@@ -236,7 +236,7 @@
       border-radius: 2px;
       transition: background 0.2s, box-shadow 0.2s;
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .header-hamburger {
         width: 24px;
         height: 24px;
@@ -270,7 +270,7 @@
       border-radius: 2px;
       transition: all 0.2s;
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .header-hamburger {
         width: 24px;
         height: 24px;
@@ -378,7 +378,7 @@
     .slider.round {
       border-radius: 24px;
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .header-toggle-switch,
       .header-toggle-switch *,
       .switch,
@@ -441,7 +441,7 @@
     display: block !important;
   }
   }
-  @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
    .card-link-rectangle {
     display: none !important;
    } 
@@ -567,7 +567,7 @@
     }
   
     /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       html.dark-mode .flip-card.active .flip-card-front {
         background: #3a206e;
         color: #e0e0e0;
@@ -1004,7 +1004,7 @@
     /* =============================================================
        MOBILE STYLES
        ============================================================= */
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .container {
         -webkit-overflow-scrolling: touch;
         scroll-behavior: auto;
@@ -1110,7 +1110,7 @@
       /* Ensure the fade overlay for flipped cards extends fully */
       /* Mobile-specific dark mode fixes */
       /* This is a critical fix for mobile dark mode */
-      @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+      @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
         /* Specific styling for the ::after fade effect */
         html.dark-mode .container .flip-card .flip-card-back::after {
           content: '';
@@ -1290,7 +1290,7 @@
       height: auto;
       opacity: 0.9;
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .site-logo {
         max-width: var(--logo-max-width-mobile, 60px);
       }
@@ -1321,7 +1321,7 @@
   
   
     /* Exception: hide logo for mobile landscape via display:none as before */
-    @media (max-height: 500px) and (min-width: 400px) and (max-width: 810px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
       .logo-container {
         opacity: 0;
         visibility: hidden;
@@ -1507,7 +1507,7 @@
     }
   
     /* === Swipe Indicator Styles === */
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     /* Sticky swipe-indicator at bottom of overlay-content */
     .overlay-content .swipe-indicator {
       border: none !important;
@@ -1641,7 +1641,7 @@
       background: #181c20 !important;
     }
   
-  @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     .overlay-content .swipe-indicator {
     border: none !important;
     box-shadow: none !important;
@@ -1659,7 +1659,7 @@
     }
   
     /* Only use fixed/viewport style for fullscreen overlays on mobile */
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     /* Remove fixed/viewport swipe-indicator for overlays, handled above */
   
   
@@ -1817,7 +1817,7 @@
       from { transform: translate(-50%, -40%); opacity: 0; }
       to { transform: translate(-50%, -50%); opacity: 1; }
     }
-    @media (max-height: 500px) and (min-width: 400px) and (max-width: 810px) and (orientation: landscape) and (hover: hover) and (pointer: fine) {
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (hover: hover) and (pointer: fine) {
       .logo-container {
         opacity: 0 !important;
         visibility: hidden !important;
@@ -1843,7 +1843,7 @@
     }
   
     /* Mobile dark mode logo styles */
-  @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     html.dark-mode .logo-container img.site-logo,
     html.dark-mode .site-logo,
     html.dark-mode .header-logo-container img.header-logo,
@@ -1990,7 +1990,7 @@
     background: #1a4c6e !important;
   }
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .swipe-indicator:before, .swipe-indicator:after {
         display: none; /* This will hide them */
         /* or content: none; */
@@ -2008,7 +2008,7 @@
         display: none;
        }
     }
-    @media (max-width: 810px) and (hover: none) and (pointer: coarse) {
+    @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
        .header-desktop-content {
         display: none;
        }
