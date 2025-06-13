@@ -77,8 +77,37 @@ window.hamburgerMenu = {
     const isMenuContent = target.closest('.menu-content');
     const isExcludesContainer = target.closest('.excludes-content');
 
-    // If touching menu content or excludes container but not the textarea, prevent scrolling
-    if ((isMenuContent || isExcludesContainer) && !isTextarea) {
+    // Handle menu content scrolling with boundary detection
+    if (isMenuContent && !isTextarea && !isExcludesContainer) {
+      const menuContent = target.closest('.menu-content');
+      if (menuContent) {
+        const scrollTop = menuContent.scrollTop;
+        const scrollHeight = menuContent.scrollHeight;
+        const clientHeight = menuContent.clientHeight;
+
+        // Calculate scroll direction
+        const currentTouchY = e.touches[0].clientY;
+        const deltaY = currentTouchY - (this.lastMenuTouchY || currentTouchY);
+        this.lastMenuTouchY = currentTouchY;
+
+        // Check boundaries
+        const atTop = scrollTop <= 0;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+        const cannotScroll = scrollHeight <= clientHeight;
+        const scrollingUp = deltaY > 0;
+        const scrollingDown = deltaY < 0;
+
+        // Prevent scroll chaining when at bounds or no scrollable content
+        if (cannotScroll || (atTop && scrollingUp) || (atBottom && scrollingDown)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+      return;
+    }
+
+    // If touching excludes container but not the textarea, prevent scrolling
+    if (isExcludesContainer && !isTextarea) {
       e.preventDefault();
       return;
     }

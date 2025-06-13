@@ -675,9 +675,10 @@ html.dark-mode .filter-option.coming-soon:active {
   /* Allow menu content scrolling but contain it strictly */
   .menu-content {
     overscroll-behavior: none; /* Prevent any scroll chaining */
-    -webkit-overflow-scrolling: none; /* Disable scrolling on container */
-    touch-action: none; /* Block touch scrolling on menu container */
-    overflow: hidden; /* Prevent container scrolling */
+    -webkit-overflow-scrolling: touch; /* Allow smooth scrolling within */
+    touch-action: pan-y; /* Allow vertical scrolling within menu */
+    overflow-y: auto; /* Allow menu content to scroll */
+    max-height: 90vh; /* Ensure menu can scroll if needed */
   }
 
   /* Prevent body scroll when overlay is active */
@@ -710,12 +711,13 @@ html.dark-mode .filter-option.coming-soon:active {
     touch-action: pan-y; /* Allow vertical panning for closing */
   }
 
-  /* Chrome mobile menu content - prevent container scrolling */
+  /* Chrome mobile menu content - allow scrolling with containment */
   body.chrome-mobile-overlay-active .menu-content {
     overscroll-behavior: none;
-    -webkit-overflow-scrolling: none;
-    touch-action: none;
-    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overflow-y: auto;
+    max-height: 90vh;
   }
 
   /* Chrome mobile excludes container - prevent scrolling */
