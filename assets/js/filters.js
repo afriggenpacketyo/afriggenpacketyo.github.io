@@ -138,8 +138,8 @@ function showExcludesContent() {
     excludesContent.className = 'excludes-content';
     excludesContent.innerHTML = `
       <h3>Exclude Terms</h3>
-      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Enter terms to hide summaries (comma-separated).</p>
-      <textarea id="excludes-input" placeholder="e.g., politics, sports" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingExcludes}</textarea>
+      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Hide article summaries which<br>contain these terms (comma-separated):</p>
+      <textarea id="excludes-input" placeholder="e.g., tariffs, drought" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingExcludes}</textarea>
       <div class="excludes-actions" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
         <button onclick="goBackToFilters()" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Back</button>
         <button onclick="saveExcludes(event)" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Save Excludes</button>
