@@ -35,12 +35,25 @@ window.hamburgerMenu = {
   },
 
   addSafariScrollPrevention() {
-    // Detect Safari mobile
+    // Detect Safari mobile and Chrome mobile
     const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
                            /Safari/.test(navigator.userAgent) &&
                            !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
 
-    if (!isSafariMobile) return;
+    const isChromeMobile = /Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent) ||
+                           /iPhone|iPad|iPod/.test(navigator.userAgent) && /CriOS/.test(navigator.userAgent);
+
+    if (isSafariMobile) {
+      // Add Safari-specific class for stronger scroll prevention
+      document.body.classList.add('safari-mobile-overlay-active');
+      document.documentElement.classList.add('safari-mobile-overlay-active');
+    }
+
+    if (isChromeMobile) {
+      // Add Chrome-specific class for scroll prevention
+      document.body.classList.add('chrome-mobile-overlay-active');
+      document.documentElement.classList.add('chrome-mobile-overlay-active');
+    }
 
     // Add touch event listeners to prevent scroll chaining
     if (this.overlay) {
@@ -52,6 +65,12 @@ window.hamburgerMenu = {
     document.addEventListener('touchmove', this.handleTextareaScrollBounds.bind(this), { passive: false });
   },  handleTextareaScrollBounds(e) {
     if (!this.isOpen) return;
+
+    // Check if this is a mobile browser that needs scroll prevention
+    const isMobileBrowser = /Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent) ||
+                            /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+    if (!isMobileBrowser) return;
 
     const target = e.target;
     const isTextarea = target.tagName === 'TEXTAREA' || target.id === 'excludes-input';
