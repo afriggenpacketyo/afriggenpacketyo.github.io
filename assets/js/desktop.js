@@ -149,7 +149,8 @@
 
         // Direct arrow click handlers
         navLeft.addEventListener('click', () => {
-            if (CardSystem.activeCardIndex > 0) {
+            const newIndex = CardSystem.findPrevVisibleIndex(CardSystem.activeCardIndex);
+            if (newIndex !== CardSystem.activeCardIndex) {
                 // Clear the long swipe timeout to prevent race condition
                 clearTimeout(longSwipeTimeout);
 
@@ -162,8 +163,6 @@
                     isAnyCardFlipped = false;
                     toggleLogoVisibility(true);
                 }
-
-                const newIndex = CardSystem.activeCardIndex - 1;
 
                 CardSystem.activeCardIndex = newIndex;
 
@@ -186,7 +185,8 @@
         });
 
         navRight.addEventListener('click', () => {
-            if (CardSystem.activeCardIndex < flipCards.length - 1) {
+            const newIndex = CardSystem.findNextVisibleIndex(CardSystem.activeCardIndex);
+            if (newIndex !== CardSystem.activeCardIndex) {
                 // Clear the long swipe timeout to prevent race condition
                 clearTimeout(longSwipeTimeout);
 
@@ -199,8 +199,6 @@
                     isAnyCardFlipped = false;
                     toggleLogoVisibility(true);
                 }
-
-                const newIndex = CardSystem.activeCardIndex + 1;
 
                 CardSystem.activeCardIndex = newIndex;
 
@@ -771,17 +769,26 @@
         scrollToCard(newIndex, false);
     }
 
-    // Keyboard navigation - add timeout clearing
-    document.addEventListener('keydown', (e) => {
+    // Keyboard navigation function
+    function handleKeyboardNavigation(e) {
+        // Check if overlay is open - if so, don't handle keyboard navigation
+        const overlay = document.querySelector('.hamburger-overlay');
+        if (overlay && overlay.style.display !== 'none') {
+            return; // Let the overlay handle keyboard events
+        }
+
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            // Calculate new index based on key pressed
+            // Calculate new index based on key pressed - skip filtered cards
             let newIndex = CardSystem.activeCardIndex;
-            if (e.key === 'ArrowLeft' && CardSystem.activeCardIndex > 0) {
-                newIndex = CardSystem.activeCardIndex - 1;
-            } else if (e.key === 'ArrowRight' && CardSystem.activeCardIndex < flipCards.length - 1) {
-                newIndex = CardSystem.activeCardIndex + 1;
-            } else {
-                return;
+            if (e.key === 'ArrowLeft') {
+                newIndex = CardSystem.findPrevVisibleIndex(CardSystem.activeCardIndex);
+            } else if (e.key === 'ArrowRight') {
+                newIndex = CardSystem.findNextVisibleIndex(CardSystem.activeCardIndex);
+            }
+
+            // Only proceed if we found a valid visible card
+            if (newIndex === CardSystem.activeCardIndex) {
+                return; // No next/prev visible card found
             }
 
             // Clear the long swipe timeout to prevent the race condition
@@ -947,10 +954,28 @@
                 CardSystem.isManuallyFlipping = false;
             }, 500);
         }
-    });
+    }
+
+    // Functions to manage keyboard event handlers for overlay compatibility
+    function detachKeyboardHandlers() {
+        document.removeEventListener('keydown', handleKeyboardNavigation);
+        console.log("Keyboard navigation handlers detached for overlay");
+    }
+
+    function attachKeyboardHandlers() {
+        // Only attach if not already attached
+        document.removeEventListener('keydown', handleKeyboardNavigation);
+        document.addEventListener('keydown', handleKeyboardNavigation);
+        console.log("Keyboard navigation handlers reattached after overlay closed");
+    }
+
+    // Expose these functions for hamburger overlay to use
+    window.CardSystem.detachKeyboardHandlers = detachKeyboardHandlers;
+    window.CardSystem.attachKeyboardHandlers = attachKeyboardHandlers;
 
     // Modify the scroll event handler to use grace period instead of immediate unflipping
     container.addEventListener('scroll', () => {
+        if (CardSystem.isFiltering) return;
         // Don't interfere with manual flipping
         if (CardSystem.isManuallyFlipping) return;
 
@@ -1006,6 +1031,7 @@
 
     // Simplified wheel event handler
     container.addEventListener('wheel', (e) => {
+        if (CardSystem.isFiltering) return;
         // This is definitely a manual user scroll
         lastCardActivationSource = 'scroll';
 
@@ -1291,6 +1317,10 @@
     initSmoothScrolling();
     initSmoothDotTransitions();
     addCardOpacityTransitions();
+    
+    // Attach keyboard handlers
+    attachKeyboardHandlers();
+    
     console.log("iPod-style cover flow initialized");
 
     // Initial positioning
@@ -1299,4 +1329,5 @@
     // Add event listeners for responsive positioning
     // window.addEventListener('resize', updateLogoPosition);
     // window.addEventListener('orientationchange', updateLogoPosition);
+    window.CardSystem.scrollToCard = scrollToCard;
 })();

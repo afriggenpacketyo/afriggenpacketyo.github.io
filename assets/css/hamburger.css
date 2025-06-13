@@ -1,0 +1,631 @@
+/* Hamburger Menu Styles - Preserve original styles with dark/light mode support */
+.header-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.3s ease;
+}
+
+.header-hamburger span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: #000;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Dark mode hamburger */
+html.dark-mode .header-hamburger span {
+  background-color: #5ecbff;
+}
+
+.header-hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(7px, 7px);
+}
+
+.header-hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.header-hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Menu Overlay - Resizable */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dark mode overlay */
+html.dark-mode .menu-overlay {
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+/* Dark mode overlay */
+@media (prefers-color-scheme: dark) {
+  .menu-overlay {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+}
+
+.menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Menu Content - This is what gets resized */
+.menu-content {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+  /* Default menu size */
+  width: 300px;
+  min-height: 200px;
+  color: #333;
+  /* Prevent premature resizing during text animation */
+  transition-delay: 0s;
+  /* Contain layout shifts from animations */
+  contain: layout;
+  /* Hide scrollbar while maintaining scrolling ability */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbar for webkit browsers */
+.menu-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent overlay from resizing during text animations */
+.menu-overlay:not(.filter-mode) .menu-content {
+  width: 300px !important;
+  min-height: 200px !important;
+  /* Lock dimensions during animation */
+  max-height: 300px !important;
+}
+
+/* Dark mode menu content */
+html.dark-mode .menu-content {
+  background-color: #1a1a1a;
+  color: #5ecbff;
+}
+
+.menu-overlay.show .menu-content {
+  transform: scale(1);
+}
+
+/* Filter mode - enlarged to match flip-card overlay */
+.menu-overlay.filter-mode .menu-content {
+  width: min(600px, 90vw);
+  min-height: 400px;
+  max-height: 80vh;
+}
+
+.menu-content a {
+  display: block;
+  padding: 1rem;
+  color: #333;
+  text-decoration: none;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.menu-content a:first-child {
+  border-top: 1px solid #eee;
+}
+
+/* Desktop hover states only */
+@media (hover: hover) and (pointer: fine) {
+  .menu-content a:hover {
+    background-color: #f5f5f5;
+  }
+  
+  html.dark-mode .menu-content a:hover {
+    background-color: #333;
+  }
+}
+
+/* Mobile tap feedback - quick flash instead of sticky hover */
+@media (hover: none) and (pointer: coarse) {
+  .menu-content a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .menu-content a:active {
+    background-color: #e9ecef;
+    transition: background-color 0.1s ease;
+  }
+  
+  html.dark-mode .menu-content a:active {
+    background-color: #404040;
+  }
+}
+
+/* Dark mode links */
+html.dark-mode .menu-content a {
+  color: #5ecbff;
+  border-bottom: 1px solid #333;
+}
+
+html.dark-mode .menu-content a:first-child {
+  border-top: 1px solid #333;
+}
+
+/* Filter content styles */
+.filter-content {
+  display: none;
+  transform: scale(0.85);
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.42,0,0.58,1), opacity 0.28s cubic-bezier(0.42,0,0.58,1);
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.filter-content.active {
+  display: block;
+  transform: scale(1);
+  opacity: 1;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: stretch;
+  margin: 2rem 0 2.5rem 0;
+  width: 100%;
+}
+
+.filter-option {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 18px;
+  padding: 1.3rem 1rem;
+  margin: 0 0.3rem;
+  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  text-align: center;
+  min-height: 70px;
+  position: relative;
+}
+
+.filter-option:hover,
+.filter-option:focus {
+  border-color: #007bff;
+  background: #e9ecef;
+  box-shadow: 0 4px 24px rgba(30, 80, 200, 0.10);
+  outline: none;
+}
+
+.filter-option h4 {
+  margin: 0;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #007bff;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.filter-option p {
+  margin: 0;
+  font-size: 1.02em;
+  color: #c9d7e0;
+  font-weight: 400;
+}
+
+@media (max-width: 600px) {
+  .filter-option {
+    font-size: 1.09rem;
+    padding: 1.05rem 0.7rem 0.95rem 0.7rem;
+    border-radius: 15px;
+  }
+  .filter-options {
+    gap: 1rem;
+    margin: 1.1rem 0 1.5rem 0;
+  }
+}
+
+html.dark-mode .filter-option {
+  background: #181c22;
+  border: 2px solid #3a4250;
+  color: #5ecbff;
+}
+
+html.dark-mode .filter-option:hover,
+html.dark-mode .filter-option:focus {
+  border-color: #3ca0ff;
+  background: #232b36;
+}
+
+html.dark-mode .filter-option h4 {
+  color: #4bb5ff;
+}
+
+html.dark-mode .filter-option p {
+  color: #b4c7d9;
+}
+
+/* Auto-apply option styles */
+.auto-apply-option {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.auto-apply-option label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.auto-apply-option input[type="checkbox"] {
+  margin-right: 0.5rem;
+  transform: scale(1.2);
+}
+
+.auto-apply-option p {
+  margin: 0.5rem 0 0 1.6rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+html.dark-mode .auto-apply-option {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+html.dark-mode .auto-apply-option label {
+  color: #5ecbff;
+}
+
+html.dark-mode .auto-apply-option p {
+  color: #b4c7d9;
+}
+
+.info-btn-container {
+  position: relative;
+  margin-left: 0.5rem;
+}
+
+.auto-apply-option .info-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  font-style: italic;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Desktop hover */
+@media (hover: hover) and (pointer: fine) {
+  .info-btn-container:hover .info-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Mobile touch */
+@media (hover: none) and (pointer: coarse) {
+  .info-btn-container.show-tooltip .info-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+html.dark-mode .auto-apply-option .info-btn {
+  background: #5ecbff;
+  color: #1a1a1a;
+}
+
+html.dark-mode .info-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+html.dark-mode .info-tooltip::after {
+  border-top-color: rgba(255, 255, 255, 0.95);
+}
+
+
+/* Excludes content styles */
+.excludes-content {
+  display: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.excludes-content.active {
+  display: block;
+}
+
+.excludes-content h3 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+html.dark-mode .excludes-content h3 {
+  color: #5ecbff;
+}
+
+.excludes-content p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+html.dark-mode .excludes-content p {
+  color: #ccc;
+}
+
+#excludes-input {
+  background-color: #fff;
+  color: #333;
+  border: 2px solid #e9ecef;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#excludes-input:focus {
+  outline: none;
+  border-color: #5ecbff;
+}
+
+html.dark-mode #excludes-input {
+  background-color: #2d2d2d;
+  color: #5ecbff;
+  border-color: #444;
+}
+
+html.dark-mode #excludes-input:focus {
+  border-color: #5ecbff;
+}
+
+.excludes-actions button {
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.excludes-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+html.dark-mode .excludes-actions button:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Text animation styles */
+.text-fade-blur {
+  animation: fadeAndBlur 0.75s ease-out forwards;
+}
+
+@keyframes fadeAndBlur {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  25% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(3px);
+  }
+  75% {
+    opacity: 0.2;
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .menu-content {
+    width: 95vw;
+    padding: 1.5rem;
+  }
+  
+  .menu-overlay.filter-mode .menu-content {
+    width: 95vw;
+    min-height: 300px;
+  }
+  
+  .filter-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .excludes-content {
+    padding: 1rem;
+  }
+  
+  .excludes-actions {
+    flex-direction: column;
+    gap: 0.75rem !important;
+  }
+  
+  .excludes-actions button {
+    width: 100%;
+    padding: 1rem !important;
+  }
+}
+
+/* Filtered card states - completely remove from layout to close gaps */
+.flip-card.filtered {
+  display: none;
+}
+
+/* Hide dot indicators for filtered cards */
+.indicator-dot.filtered {
+  display: none !important;
+}
+
+/* Alternative: Complete removal from flow while maintaining structure */
+.flip-card.filtered-hidden {
+  display: none;
+}
+
+/* Smooth transition for filtering */
+.flip-card {
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+}
+
+/* Freeze body when menu overlay is open to prevent keyboard reflow issues */
+body.menu-overlay-active {
+  position: fixed !important;
+  top: var(--body-scroll-top, 0) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: hidden !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Coming Soon Overlay Styles */
+.filter-option.coming-soon {
+  opacity: 0.9;
+  cursor: not-allowed;
+  position: relative;
+  overflow: hidden;
+}
+
+.coming-soon-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  color: #ff8c00; /* Orange text */
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  letter-spacing: 0.05em;
+  z-index: 10;
+  padding: 0.2em 0.5em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Remove title attribute tooltip since we now have visual indicator */
+.filter-option.coming-soon[title] {
+  pointer-events: none;
+}
+
+/* Disable hover effects for Coming Soon buttons */
+.filter-option.coming-soon:hover,
+.filter-option.coming-soon:focus,
+.filter-option.coming-soon:active {
+  border-color: #e9ecef; /* Keep original border color */
+  background: #f8f9fa; /* Keep original background color */
+  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10); /* Keep original shadow */
+  outline: none;
+}
+
+/* Dark mode version */
+html.dark-mode .filter-option.coming-soon:hover,
+html.dark-mode .filter-option.coming-soon:focus,
+html.dark-mode .filter-option.coming-soon:active {
+  border-color: #3a4250; /* Keep dark mode border color */
+  background: #181c22; /* Keep dark mode background color */
+  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10); /* Keep original shadow */
+  outline: none;
+}
+
+/* Disable mobile tap highlights on coming soon buttons */
+@media (hover: none) and (pointer: coarse) {
+  .filter-option.coming-soon {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .filter-option.coming-soon:active {
+    background-color: inherit;
+  }
+  
+  html.dark-mode .filter-option.coming-soon:active {
+    background-color: inherit;
+  }
+}

@@ -1,8 +1,11 @@
+// --- START OF FILE common.js ---
+
 // Global variables and utility functions shared between implementations
 window.CardSystem = {
     // DOM elements
     flipCards: document.querySelectorAll('.flip-card'),
     container: document.querySelector('.container'),
+    isFiltering: false, // Flag to indicate if filtering is active
 
     // State variables
     activeCardIndex: 0,
@@ -12,48 +15,263 @@ window.CardSystem = {
 
     // Dot indicator properties
     visibleStartIndex: 0,
-    visibleRange: 9, // Show 9 dots at a time
+    visibleRange: 9, // Show a maximum of 9 dots at a time
     previousDirection: 0, // 0 = initial, 1 = right, -1 = left
     previousActiveIndex: 0,
+    previousVisibleActiveIndex: -1, // Added for filter-aware logic
 
     // Utility functions
     updateUI: function() {
-        // CRITICAL FIX: Ensure header is accounted for before positioning cards
+        // Ensure header is accounted for before positioning cards
         const header = document.querySelector('.page-header');
-        const container = this.container;
-        
-        // Ensure container has adequate padding to prevent cards from riding up under header
-        if (header && container) {
+        if (header && this.container) {
             const headerHeight = header.offsetHeight;
-            const minPadding = headerHeight + 20; // Add some extra space
-            const currentPadding = parseInt(getComputedStyle(container).paddingTop);
-            
-            // Only update if current padding is less than what we need
+            const minPadding = headerHeight + 20;
+            const currentPadding = parseInt(getComputedStyle(this.container).paddingTop);
             if (currentPadding < minPadding) {
-                container.style.paddingTop = minPadding + 'px';
+                this.container.style.paddingTop = minPadding + 'px';
             }
         }
         
-        // Now update card classes - this happens AFTER we ensure proper spacing
+        // Find the correct active index if the current one is filtered
+        this.ensureActiveCardVisible();
+        
+        // Update card active classes
         this.flipCards.forEach((card, i) => {
             card.classList.toggle('active', i === this.activeCardIndex);
         });
 
+        // Update dot active/filtered classes and text content
+        let visibleDotCounter = 1;
         document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
+            const card = this.flipCards[i];
+            const isFiltered = card && card.classList.contains('filtered');
+            
             dot.classList.toggle('active', i === this.activeCardIndex);
+            dot.classList.toggle('filtered', isFiltered);
+
+            if (!isFiltered) {
+                dot.textContent = visibleDotCounter.toString();
+                visibleDotCounter++;
+            }
         });
 
-        // Only handle indicator visibility if no card is currently being dragged
-        if (!this.currentlyFlippedCard) {
-            const cardIndicator = document.querySelector('.card-indicator');
-            if (cardIndicator) {
+        // Show/hide indicator container based on currently flipped card - KEEP VISIBLE IN REGULAR MODE
+        const cardIndicator = document.querySelector('.card-indicator');
+        if (cardIndicator) {
+            // Only hide dots if there's an active overlay (hamburger menu)
+            const overlay = document.querySelector('.hamburger-overlay');
+            const isOverlayActive = overlay && overlay.style.display !== 'none';
+            
+            if (isOverlayActive) {
+                // Hide dots only when overlay is active
+                cardIndicator.style.opacity = '0';
+                cardIndicator.style.pointerEvents = 'none';
+            } else {
+                // Always show dots in regular mode - never hide them for flipped cards
                 cardIndicator.style.opacity = '1';
                 cardIndicator.style.pointerEvents = 'auto';
             }
         }
 
-        // Add dot updates
+        // Run the new, filter-aware dot styling logic
         this.updateInstagramStyleDots(this.activeCardIndex);
+    },
+
+    /**
+     * HYBRID: Filter-aware dot indicator logic with smooth Instagram-style transitions.
+     * Combines the filtering logic from the new version with the smooth animations from the old version.
+     * @param {number} masterActiveIndex The index of the active card in the full, original list.
+     */
+    updateInstagramStyleDots: function(masterActiveIndex) {
+        const allDots = document.querySelectorAll('.indicator-dot');
+        const visibleDots = Array.from(allDots).filter(dot => !dot.classList.contains('filtered'));
+        const totalVisibleDots = visibleDots.length;
+
+        if (totalVisibleDots === 0 || masterActiveIndex < 0) {
+            allDots.forEach(dot => {
+                dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim();
+                dot.style.transition = '';
+            });
+            this.previousVisibleActiveIndex = -1;
+            return;
+        }
+
+        let activeDotMaster = allDots[masterActiveIndex];
+        let visibleActiveIndex = visibleDots.indexOf(activeDotMaster);
+
+        // Adjust if masterActiveIndex points to a filtered card
+        if (visibleActiveIndex === -1) {
+            let newMasterActiveIndex = -1;
+            // Try to find the closest visible card if the current one is filtered
+            if (this.isFiltering || (activeDotMaster && activeDotMaster.classList.contains('filtered'))) {
+                // Search forward
+                for (let i = masterActiveIndex; i < allDots.length; i++) {
+                    if (!allDots[i].classList.contains('filtered')) {
+                        newMasterActiveIndex = i;
+                        break;
+                    }
+                }
+                // If not found, search backward
+                if (newMasterActiveIndex === -1) {
+                    for (let i = masterActiveIndex - 1; i >= 0; i--) {
+                        if (!allDots[i].classList.contains('filtered')) {
+                            newMasterActiveIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (newMasterActiveIndex !== -1) {
+                masterActiveIndex = newMasterActiveIndex; // Update masterActiveIndex to the new visible one
+                activeDotMaster = allDots[masterActiveIndex];
+                visibleActiveIndex = visibleDots.indexOf(activeDotMaster);
+            } else {
+                // No visible dot can be made active, clear all and return
+                allDots.forEach(dot => { dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim(); dot.style.transition = ''; });
+                this.previousVisibleActiveIndex = -1;
+                return;
+            }
+            // If still -1 after adjustment, something is wrong or no visible dots available
+            if (visibleActiveIndex === -1) {
+                 allDots.forEach(dot => { dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim(); dot.style.transition = ''; });
+                this.previousVisibleActiveIndex = -1;
+                return;
+            }
+        }
+
+        if (typeof this.previousVisibleActiveIndex === 'undefined' || this.previousVisibleActiveIndex === -1) {
+            this.previousVisibleActiveIndex = visibleActiveIndex;
+        }
+        const currentDirection = (visibleActiveIndex > this.previousVisibleActiveIndex) ? 1 : ((visibleActiveIndex < this.previousVisibleActiveIndex) ? -1 : 0);
+        const isDotClick = Math.abs(visibleActiveIndex - this.previousVisibleActiveIndex) > 1;
+
+        const previousVisibleStart = this.visibleStartIndex;
+
+        if (totalVisibleDots <= this.visibleRange) {
+            this.visibleStartIndex = 0;
+        } else if (visibleActiveIndex < this.visibleStartIndex + 2) {
+            this.visibleStartIndex = Math.max(0, visibleActiveIndex - 2);
+        } else if (visibleActiveIndex > this.visibleStartIndex + this.visibleRange - 3) {
+            this.visibleStartIndex = Math.min(totalVisibleDots - this.visibleRange, visibleActiveIndex - (this.visibleRange - 3));
+        }
+
+        const hasWindowShifted = previousVisibleStart !== this.visibleStartIndex;
+        const activeVisibleDot = visibleDots[visibleActiveIndex]; // This is the dot that should be active
+
+        // Clear transitions before applying new ones
+        visibleDots.forEach(dot => dot.style.transition = '');
+
+        if (hasWindowShifted) {
+            // Apply the sliding transition to all visible dots
+            visibleDots.forEach(dot => {
+                dot.style.transition = 'all 0.3s ease, transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1)';
+            });
+            // Update all visible dots with new states after transition is set
+            visibleDots.forEach((dot, vIndex) => {
+                this.updateFilterAwareDotState(dot, vIndex, visibleActiveIndex, visibleDots);
+            });
+        } else { // No window shift
+            // First, update all non-active visible dots
+            visibleDots.forEach((dot, vIndex) => {
+                if (dot === activeVisibleDot) return; // Skip the active dot for now
+                
+                if (isDotClick) {
+                    dot.style.transition = 'all 0.2s ease';
+                } else {
+                    dot.style.transition = visibleActiveIndex === this.previousVisibleActiveIndex ? 'none' : 'all 0.2s ease';
+                }
+                this.updateFilterAwareDotState(dot, vIndex, visibleActiveIndex, visibleDots);
+            });
+            
+            // Then, handle the active dot with its specific transitions and delays
+            if (activeVisibleDot) {
+                if (!isDotClick && this.previousVisibleActiveIndex !== visibleActiveIndex) { // Sequential swipe
+                    if (visibleDots.length > 0 && visibleDots[0]) visibleDots[0].offsetHeight; // Force reflow
+                    
+                    // Check if the new active dot was 'size-mid' before this update cycle
+                    // This check relies on updateFilterAwareDotState from the *previous* call to updateUI
+                    // or how classes were before this function started manipulating them.
+                    // The key is that `activeVisibleDot` refers to the element that is *becoming* active.
+                    // Its classes would reflect its state *before* it becomes active in this cycle.
+                    if (activeVisibleDot.classList.contains('size-mid')) {
+                        activeVisibleDot.classList.remove('size-mid');
+                        activeVisibleDot.classList.add('size-large'); // Intermediate state
+                        activeVisibleDot.style.transition = 'all 0.1s ease';
+                        
+                        if (visibleDots.length > 0 && visibleDots[0]) visibleDots[0].offsetHeight; // Reflow for intermediate state
+                        
+                        setTimeout(() => {
+                            if (activeVisibleDot) {
+                                activeVisibleDot.style.transition = 'all 0.2s ease';
+                                this.updateFilterAwareDotState(activeVisibleDot, visibleActiveIndex, visibleActiveIndex, visibleDots); // Final state
+                            }
+                        }, 50);
+                    } else { // Not previously size-mid, or not a sequential swipe that needs intermediate
+                        activeVisibleDot.style.transition = 'all 0.2s ease'; // Set transition before timeout
+                        setTimeout(() => {
+                            if (activeVisibleDot) {
+                                // Transition already set, just update state
+                                this.updateFilterAwareDotState(activeVisibleDot, visibleActiveIndex, visibleActiveIndex, visibleDots);
+                            }
+                        }, 30);
+                    }
+                } else { // Dot click or no change in active index
+                    activeVisibleDot.style.transition = isDotClick ? 'all 0.3s ease' : 'none';
+                    this.updateFilterAwareDotState(activeVisibleDot, visibleActiveIndex, visibleActiveIndex, visibleDots);
+                }
+            }
+        }
+
+        this.previousVisibleActiveIndex = visibleActiveIndex;
+        this.previousDirection = currentDirection;
+    },
+
+    /**
+     * Helper function to update dot state based on visible dots array
+     */
+    updateFilterAwareDotState: function(dot, visibleIndex, activeVisibleIndex, visibleDots) {
+        // Remove existing size classes
+        dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
+
+        // Check if dot should be visible in the current window (indices are for visibleDots array)
+        const isInWindow = (visibleIndex >= this.visibleStartIndex &&
+                           visibleIndex < this.visibleStartIndex + this.visibleRange);
+
+        if (isInWindow) {
+            dot.classList.add('visible');
+
+            if (visibleIndex === activeVisibleIndex) {
+                dot.classList.add('size-active');
+            } else if (visibleIndex === this.visibleStartIndex || visibleIndex === (this.visibleStartIndex + this.visibleRange - 1)) {
+                // Window edges
+                if ((activeVisibleIndex === this.visibleStartIndex + 1 && visibleIndex === this.visibleStartIndex) ||
+                    (activeVisibleIndex === this.visibleStartIndex + this.visibleRange - 2 && visibleIndex === this.visibleStartIndex + this.visibleRange - 1)) {
+                    dot.classList.add('size-mid');
+                } else {
+                    dot.classList.add('size-small');
+                }
+            } else if (visibleIndex === this.visibleStartIndex + 1) {
+                // Dot next to start edge
+                if (activeVisibleIndex === this.visibleStartIndex || activeVisibleIndex === this.visibleStartIndex + 1) {
+                    dot.classList.add('size-large');
+                } else {
+                    dot.classList.add('size-mid');
+                }
+            } else if (visibleIndex === this.visibleStartIndex + this.visibleRange - 2) {
+                // Dot next to end edge
+                if (activeVisibleIndex === this.visibleStartIndex + this.visibleRange - 1 ||
+                    activeVisibleIndex === this.visibleStartIndex + this.visibleRange - 2) {
+                    dot.classList.add('size-large');
+                } else {
+                    dot.classList.add('size-mid');
+                }
+            } else {
+                // Other dots in window (not active, not edges, not next to edges)
+                dot.classList.add('size-large');
+            }
+        }
     },
 
     resetFlippedCard: function() {
@@ -65,10 +283,17 @@ window.CardSystem = {
                 this.adjustCardHeight(this.currentlyFlippedCard, false);
                 this.currentlyFlippedCard = null;
 
+                // Don't hide card indicators - they should remain visible in regular mode
                 const cardIndicator = document.querySelector('.card-indicator');
                 if (cardIndicator) {
-                    cardIndicator.style.opacity = '1';
-                    cardIndicator.style.pointerEvents = 'auto';
+                    // Only hide if there's an active overlay, otherwise keep visible
+                    const overlay = document.querySelector('.hamburger-overlay');
+                    const isOverlayActive = overlay && overlay.style.display !== 'none';
+                    
+                    if (!isOverlayActive) {
+                        cardIndicator.style.opacity = '1';
+                        cardIndicator.style.pointerEvents = 'auto';
+                    }
                 }
             }
         }
@@ -209,139 +434,50 @@ window.CardSystem = {
         this.updateUI();
 
         console.log("CardSystem initialized");
+        
+        // Check for auto-apply filters immediately after initialization
+        this.checkAutoApplyFilters();
     },
 
-    // Add these methods to CardSystem
-    updateInstagramStyleDots: function(activeIndex) {
-        const dots = document.querySelectorAll('.indicator-dot');
-        const totalDots = dots.length;
-
-        // Determine swipe direction (-1 for left, 1 for right)
-        const currentDirection = (activeIndex > this.previousActiveIndex) ? 1 : -1;
-
-        // Track if this is a direct dot click vs. a scroll
-        const isDotClick = Math.abs(activeIndex - this.previousActiveIndex) > 1;
-
-        // Calculate previous and new visible window
-        const previousVisibleStart = this.visibleStartIndex;
-        
-        // Handle window sliding
-        if (activeIndex < this.visibleStartIndex + 2) {
-            this.visibleStartIndex = Math.max(0, activeIndex - 2);
-        } else if (activeIndex > this.visibleStartIndex + this.visibleRange - 3) {
-            this.visibleStartIndex = Math.min(totalDots - this.visibleRange, activeIndex - (this.visibleRange - 3));
-        }
-        
-        // Detect if the window has shifted
-        const hasWindowShifted = previousVisibleStart !== this.visibleStartIndex;
-        
-        // Add special transition to all dots when the window shifts
-        if (hasWindowShifted) {
-            // Apply the sliding transition to all dots
-            dots.forEach(dot => {
-                dot.style.transition = 'all 0.3s ease, transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1)';
-            });
-        } else {
-            // First update all non-active dots
-            dots.forEach((dot, index) => {
-                // Skip the soon-to-be active dot for now
-                if (index === activeIndex) return;
-                
-                // For dot clicks, use a single smooth transition
-                if (isDotClick) {
-                    dot.style.transition = 'all 0.2s ease';
-                } else {
-                    // For scrolling/swiping, use normal transition
-                    dot.style.transition = activeIndex === this.previousActiveIndex ? 'none' : 'all 0.2s ease';
-                }
-                
-                // Just update the non-active dots first
-                this.updateDotState(dot, index, activeIndex);
-            });
-        }
-        
-        // For sequential transitions, force a reflow
-        if (!isDotClick && this.previousActiveIndex !== activeIndex) {
-            dots[0].offsetHeight; // Force reflow
+    // Check and apply auto-filters if enabled
+    checkAutoApplyFilters: function() {
+        if (localStorage.getItem('autoApplyFilters') === 'true') {
+            const excludes = localStorage.getItem('Excludes') || '';
             
-            // Second: if the new active dot was mid-sized before, make it large first (intermediate state)
-            const newActiveDot = dots[activeIndex];
-            if (newActiveDot && newActiveDot.classList.contains('size-mid')) {
-                newActiveDot.classList.remove('size-mid');
-                newActiveDot.classList.add('size-large');
-                newActiveDot.style.transition = 'all 0.1s ease';
+            if (excludes.trim()) {
+                console.log('Auto-applying filters during CardSystem initialization...');
                 
-                // Force another reflow to render this intermediate state
-                dots[0].offsetHeight;
+                // Apply filters immediately
+                this.isFiltering = true;
                 
-                // Short delay before final transition
+                // Apply the filtering logic directly here
+                const excludeTerms = excludes.toLowerCase().split(',').map(term => term.trim()).filter(Boolean);
+                let firstVisibleIndex = -1;
+
+                this.flipCards.forEach((card, index) => {
+                    const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
+                    const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
+                    
+                    const shouldHide = excludeTerms.some(term => summary.includes(term));
+                    
+                    card.classList.toggle('filtered', shouldHide);
+
+                    if (!shouldHide && firstVisibleIndex === -1) {
+                        firstVisibleIndex = index;
+                    }
+                });
+
+                // Update active card index to first visible card
+                if (firstVisibleIndex !== -1) {
+                    this.activeCardIndex = firstVisibleIndex;
+                    this.updateUI();
+                }
+
+                // Re-enable after filtering
                 setTimeout(() => {
-                    // Finally update the active dot
-                    newActiveDot.style.transition = 'all 0.2s ease';
-                    this.updateDotState(newActiveDot, activeIndex, activeIndex);
-                }, 50); // Small delay to ensure intermediate transition is visible
-            } else {
-                // If no intermediate state needed, update active dot with slight delay
-                setTimeout(() => {
-                    dots[activeIndex].style.transition = 'all 0.2s ease';
-                    this.updateDotState(dots[activeIndex], activeIndex, activeIndex);
-                }, 30);
-            }
-        } else {
-            // If it's a direct click or no change, just update the active dot immediately
-            dots[activeIndex].style.transition = isDotClick ? 'all 0.3s ease' : 'none';
-            this.updateDotState(dots[activeIndex], activeIndex, activeIndex);
-        }
-        
-        // If window has shifted, update all dots with the new positions
-        if (hasWindowShifted) {
-            // Need to update all dots after transition is set up
-            dots.forEach((dot, index) => {
-                // Apply the new state to all dots
-                this.updateDotState(dot, index, activeIndex);
-            });
-        }
-
-        // Save values for next update
-        this.previousActiveIndex = activeIndex;
-        this.previousDirection = currentDirection;
-    },
-
-    updateDotState: function(dot, index, activeIndex) {
-        // Remove existing classes
-        dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
-
-        // Check if dot should be visible
-        const isVisible = (index >= this.visibleStartIndex &&
-                         index < this.visibleStartIndex + this.visibleRange);
-
-        if (isVisible) {
-            dot.classList.add('visible');
-
-            if (index === activeIndex) {
-                dot.classList.add('size-active');
-            } else if (index === this.visibleStartIndex || index === (this.visibleStartIndex + this.visibleRange - 1)) {
-                if ((activeIndex === this.visibleStartIndex + 1 && index === this.visibleStartIndex) ||
-                    (activeIndex === this.visibleStartIndex + this.visibleRange - 2 && index === this.visibleStartIndex + this.visibleRange - 1)) {
-                    dot.classList.add('size-mid');
-                } else {
-                    dot.classList.add('size-small');
-                }
-            } else if (index === this.visibleStartIndex + 1) {
-                if (activeIndex === this.visibleStartIndex || activeIndex === this.visibleStartIndex + 1) {
-                    dot.classList.add('size-large');
-                } else {
-                    dot.classList.add('size-mid');
-                }
-            } else if (index === this.visibleStartIndex + this.visibleRange - 2) {
-                if (activeIndex === this.visibleStartIndex + this.visibleRange - 1 ||
-                    activeIndex === this.visibleStartIndex + this.visibleRange - 2) {
-                    dot.classList.add('size-large');
-                } else {
-                    dot.classList.add('size-mid');
-                }
-            } else {
-                dot.classList.add('size-large');
+                    this.isFiltering = false;
+                    console.log("Auto-apply filters complete during initialization.");
+                }, 100);
             }
         }
     },
@@ -363,7 +499,54 @@ window.CardSystem = {
 
         // Initialize dots
         this.updateInstagramStyleDots(this.activeCardIndex);
+    },
+
+    // Navigation helper functions for filtering-aware navigation
+    findNextVisibleIndex: function(currentIndex) {
+        // Find next unfiltered card
+        for (let i = currentIndex + 1; i < this.flipCards.length; i++) {
+            if (!this.flipCards[i].classList.contains('filtered')) {
+                return i;
+            }
+        }
+        return currentIndex; // No next visible card found
+    },
+
+    findPrevVisibleIndex: function(currentIndex) {
+        // Find previous unfiltered card
+        for (let i = currentIndex - 1; i >= 0; i--) {
+            if (!this.flipCards[i].classList.contains('filtered')) {
+                return i;
+            }
+        }
+        return currentIndex; // No previous visible card found
+    },
+
+    // Utility function to ensure active card is not filtered
+    ensureActiveCardVisible: function() {
+        const activeCard = this.flipCards[this.activeCardIndex];
+        if (activeCard && activeCard.classList.contains('filtered')) {
+            // Find the first visible card
+            for (let i = 0; i < this.flipCards.length; i++) {
+                if (!this.flipCards[i].classList.contains('filtered')) {
+                    this.activeCardIndex = i;
+                    return i;
+                }
+            }
+            // If no visible cards found, keep current index
+        }
+        return this.activeCardIndex;
+    },
+
+    toggleBodyScrollLock: function(isLocked) {
+        if (isLocked) {
+            document.body.classList.add('body-no-scroll');
+        } else {
+            document.body.classList.remove('body-no-scroll');
+        }
     }
+
+    // Utility functions
 };
 
 // Initialize common functionality
@@ -373,3 +556,4 @@ window.CardSystem.init();
 document.addEventListener('DOMContentLoaded', function() {
     CardSystem.initializeDots();
 });
+// --- END OF FILE common.js ---

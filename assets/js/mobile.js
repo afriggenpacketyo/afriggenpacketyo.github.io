@@ -1,3 +1,4 @@
+// --- START OF FILE mobile.js ---
 // Mobile-specific implementation
 (function() {
     // --- ENSURE MANUAL SCROLL RESTORATION ON MOBILE BROWSERS ---
@@ -63,145 +64,20 @@
       let flippedCardTouchStartX = 0;
       let flippedCardTouchStartY = 0;
   
-      // Instagram style dot indicator
-      let previousActiveIndex = CardSystem.activeCardIndex || 0;
-      let visibleStartIndex = 0;
-      let visibleRange = 9; // Show 9 dots at a time
-  
-      // Add this near the top where other variables are defined
-      let isAnyCardFlipped = false;
-  
       // Add these variables for overlay functionality
+      let isAnyCardFlipped = false;
       let cardOverlay = null;
       let overlayContent = null;
       let currentOverlayCard = null;
       let isOverlayActive = false;
-  
-      // Add these variables at an appropriate scope level
       let preactivatedCard = null;
       let previouslyActiveCard = null;
       let visibilityThreshold = 0.4; // Adjust this value as needed (40% visibility)
   
-      // Add these new variables at the top
+      // Add these variables at the top
       let resizeDebounceTimer = null;
       let layoutRecalculationInProgress = false;
       let wasLandscape = window.innerWidth > window.innerHeight;
-  
-      // Function to update dot sizes based on active index
-      function updateInstagramStyleDots(activeIndex) {
-          // Cache dots selector - don't query DOM every time
-          if (!updateInstagramStyleDots.dots) {
-              updateInstagramStyleDots.dots = document.querySelectorAll('.indicator-dot');
-          }
-          const dots = updateInstagramStyleDots.dots;
-          const totalDots = dots.length;
-  
-          // Skip the entire function if no dots exist
-          if (totalDots === 0) return;
-  
-          // Determine swipe direction
-          const currentDirection = (activeIndex > previousActiveIndex) ? 1 : -1;
-  
-          // Skip animation if we're clicking the same dot we're already on
-          const isSameDot = activeIndex === previousActiveIndex;
-          if (isSameDot) return; // Early exit for performance
-  
-          // Check if we need to shift the window (approaching edge)
-          let needsWindowShift = false;
-          let newVisibleStartIndex = visibleStartIndex;
-  
-          if (activeIndex < visibleStartIndex + 2) {
-              // Near left edge - will shift window left
-              newVisibleStartIndex = Math.max(0, activeIndex - 2);
-              needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
-          } else if (activeIndex > visibleStartIndex + visibleRange - 3) {
-              // Near right edge - will shift window right
-              newVisibleStartIndex = Math.min(totalDots - visibleRange, activeIndex - (visibleRange - 3));
-              needsWindowShift = (newVisibleStartIndex !== visibleStartIndex);
-          }
-  
-          // First update with existing window position to show transition
-          if (needsWindowShift) {
-              // Apply transition to all dots
-              dots.forEach((dot, index) => {
-                  // Use a gentler transition with linear timing for smoother effect
-                  dot.style.transition = 'all 0.22s linear';
-                  updateDotState(dot, index, activeIndex);
-              });
-  
-              // Delay the window shift to allow the first transition to be visible
-              setTimeout(() => {
-                  // Now update the window position
-                  visibleStartIndex = newVisibleStartIndex;
-  
-                  // Apply another transition for the shift
-                  dots.forEach((dot, index) => {
-                      // Use a slightly longer, eased transition for the shift
-                      dot.style.transition = 'all 0.25s ease-out';
-                      updateDotState(dot, index, activeIndex);
-                  });
-              }, 42); // Adjust delay to match the first transition
-          } else {
-              // No window shift needed, just update normally
-              dots.forEach((dot, index) => {
-                  // Only apply transition if we're not clicking the same dot
-                  if (!isSameDot) {
-                      dot.style.transition = 'all 0.25s ease';
-                  } else {
-                      dot.style.transition = 'none';
-                  }
-                  updateDotState(dot, index, activeIndex);
-              });
-          }
-  
-          // Save values for next update
-          previousActiveIndex = activeIndex;
-      }
-  
-      // Helper function to update individual dot state
-      function updateDotState(dot, index, activeIndex) {
-          // Remove existing classes
-          dot.classList.remove('size-small', 'size-mid', 'size-large', 'size-active', 'visible');
-  
-          // Check if dot should be visible
-          const isVisible = (index >= visibleStartIndex &&
-                            index < visibleStartIndex + visibleRange);
-  
-          if (isVisible) {
-              dot.classList.add('visible');
-  
-              if (index === activeIndex) {
-                  // Active dot gets active size
-                  dot.classList.add('size-active');
-              } else if (index === visibleStartIndex || index === (visibleStartIndex + visibleRange - 1)) {
-                  // Edge dots (first and last)
-                  dot.classList.add('size-small');
-  
-                  // Only upgrade to mid size if directly adjacent to active index
-                  if ((index === visibleStartIndex && (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
-                      (index === visibleStartIndex + visibleRange - 1 && (activeIndex === visibleStartIndex + visibleRange - 1 || activeIndex === visibleStartIndex + visibleRange - 2))) {
-                      dot.classList.remove('size-small');
-                      dot.classList.add('size-mid');
-                  }
-              } else if (index === visibleStartIndex + 1 || index === visibleStartIndex + visibleRange - 2) {
-                  // Second and second-to-last dots
-                  dot.classList.add('size-mid');
-  
-                  // Only upgrade to large if they are active or adjacent to active
-                  if ((index === visibleStartIndex + 1 &&
-                       (activeIndex === visibleStartIndex || activeIndex === visibleStartIndex + 1)) ||
-                      (index === visibleStartIndex + visibleRange - 2 &&
-                       (activeIndex === visibleStartIndex + visibleRange - 1 ||
-                        activeIndex === visibleStartIndex + visibleRange - 2))) {
-                      dot.classList.remove('size-mid');
-                      dot.classList.add('size-large');
-                  }
-              } else {
-                  // All other inactive dots get the large size
-                  dot.classList.add('size-large');
-              }
-          }
-      }
   
       // Override CardSystem's updateUI method to include our dot updates
       const originalUpdateUI = CardSystem.updateUI;
@@ -209,24 +85,6 @@
           // Call original method first
           originalUpdateUI.call(this);
   
-          // Then add our Instagram-style dot updates
-          updateInstagramStyleDots(this.activeCardIndex);
-      };
-  
-      // CORE FUNCTION: Move to a specific card with animation
-      function moveToCard(index, shouldAnimate = true) {
-          // Always cancel any ongoing animations
-          if (isAnimating) {
-              clearTimeout(container._animationResetTimer);
-              container.style.transition = 'none';
-              container.scrollLeft = getCurrentCardScrollPosition();
-              void container.offsetWidth;
-          }
-  
-          // Enforce boundaries
-          index = Math.max(0, Math.min(flipCards.length - 1, index));
-  
-          // OPTIMIZATION: Only reset scroll on cards that need it
           // Don't loop through ALL cards - just the currently flipped one
           if (CardSystem.currentlyFlippedCard) {
               const cardBack = CardSystem.currentlyFlippedCard.querySelector('.flip-card-back');
@@ -247,62 +105,102 @@
                   }, 50);
               }
           }
+      }
   
+      /**
+       * REVISED: This is the core navigation function for mobile.
+       * The key fix is in the `else` block for `shouldAnimate`, where it now
+       * correctly resets the state flags for instant moves.
+       */
+      function moveToCard(index, shouldAnimate = true) {
+          // Cancel any ongoing animations to make the carousel interruptible.
+          if (isAnimating) {
+              clearTimeout(container._animationResetTimer);
+              container.style.transition = 'none';
+              container.scrollLeft = getCurrentCardScrollPosition();
+              void container.offsetWidth; // Force reflow
+          }
+          
+          // Ensure index is valid and refers to a visible card.
+          if (index < 0 || index >= flipCards.length || !flipCards[index]) return;
+          if (flipCards[index].classList.contains('filtered')) {
+              console.warn(`Attempted to move to a filtered card at index ${index}. Aborting.`);
+              return;
+          }
+          
           // Store the pending target card index
           pendingCardIndex = index;
-  
+      
           // Update CardSystem state
           CardSystem.activeCardIndex = index;
+          
+          // Update UI elements like active classes and highlights
           CardSystem.updateUI();
-  
-          // Update active/inactive card styles after changing index
           resetCardHighlights();
-  
-          // Get target card
+      
+          // Get the target card and calculate its centered position
           const targetCard = flipCards[index];
-  
-          // SIMPLIFIED: Direct calculation without complex positioning logic
+          if (!targetCard) return;
           const containerWidth = container.offsetWidth;
           const cardWidth = targetCard.offsetWidth;
-          const targetScrollLeft = targetCard.offsetLeft - (containerWidth - cardWidth) / 2;
-  
-          // Apply smooth scroll animation if requested
+          const cardLeft = targetCard.offsetLeft;
+          let targetScrollLeft = cardLeft - (containerWidth - cardWidth) / 2;
+          
+          // Prevent scrolling past the carousel boundaries
+          const maxScroll = container.scrollWidth - container.offsetWidth;
+          targetScrollLeft = Math.max(0, Math.min(maxScroll, targetScrollLeft));
+          
+          // Apply animation or perform an instant move
           if (shouldAnimate) {
               container.style.scrollBehavior = 'smooth';
-  
-              // Use a more refined, smoother transition for recentering
               container.style.transition = `all ${TRANSITION_DURATION}ms ${RECENTERING_EASING}`;
               isAnimating = true;
-              swipeInProgress = true; // Prevent new swipes until animation completes
+              swipeInProgress = true;
           } else {
               container.style.scrollBehavior = 'auto';
               container.style.transition = 'none';
+              
+              // *** THE FIX ***
+              // Explicitly reset all state flags for instant moves. This prevents the
+              // swiping mechanism from getting stuck after a filter is applied.
+              isAnimating = false;
+              swipeInProgress = false;
+              pendingCardIndex = -1;
+              if(container._animationResetTimer) {
+                  clearTimeout(container._animationResetTimer);
+              }
           }
-  
-          // Scroll to target position
+          
+          // Execute the scroll
           container.scrollLeft = targetScrollLeft;
-  
-          // Reset animation state after a delay
+          
+          // Set a timer to clean up flags after an animated move
           if (shouldAnimate) {
               container._animationResetTimer = setTimeout(() => {
                   isAnimating = false;
-                  swipeInProgress = false; // Allow new swipes after animation completes
-                  pendingCardIndex = -1; // Reset pending card index
+                  swipeInProgress = false;
+                  pendingCardIndex = -1;
                   container.style.scrollBehavior = 'auto';
                   container.style.transition = '';
+                  
+                  // Ensure final position is pixel-perfect after animation
+                  const finalScrollLeft = Math.max(0, Math.min(maxScroll, targetScrollLeft));
+                  if (Math.abs(container.scrollLeft - finalScrollLeft) > 1) {
+                      container.scrollLeft = finalScrollLeft;
+                  }
               }, TRANSITION_DURATION + 50);
           }
       }
-  
-      // Move to next card (Instagram-style)
+      
+      // Move to next card (Instagram-style) - skip filtered cards
       function moveToNextCard() {
-          const nextIndex = Math.min(flipCards.length - 1, CardSystem.activeCardIndex + 1);
+          const nextIndex = CardSystem.findNextVisibleIndex(CardSystem.activeCardIndex);
           moveToCard(nextIndex);
       }
   
-      // Move to previous card (Instagram-style)
+      // Move to previous card (Instagram-style) - skip filtered cards
       function moveToPrevCard() {
-          const prevIndex = Math.max(0, CardSystem.activeCardIndex - 1);
+          const prevIndex = CardSystem.findPrevVisibleIndex(CardSystem.activeCardIndex);
           moveToCard(prevIndex);
       }
   
@@ -367,140 +265,108 @@
       };
   
       container._touchmoveHandler = function(e) {
-          // Only proceed if touch is active and not on a flipped card
+        if (CardSystem.isFiltering) return;
           if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
   
-          // OPTIMIZATION: Use requestAnimationFrame for smoother dragging
           if (this._touchMoveRAF) {
               cancelAnimationFrame(this._touchMoveRAF);
           }
   
           this._touchMoveRAF = requestAnimationFrame(() => {
-              // Update current touch position
               touchCurrentX = e.touches[0].clientX;
-  
-              // Calculate velocity less frequently - only every 60ms
-              const now = Date.now();
-              if (now - lastDragTimestamp > 60) {
-                  const timeDelta = now - lastDragTimestamp;
-                  if (timeDelta > 0) {
-                      dragVelocity = (touchCurrentX - lastDragX) / timeDelta;
-                  }
-                  lastDragX = touchCurrentX;
-                  lastDragTimestamp = now;
-              }
-  
-              // Calculate drag distance with 1:1 mapping
               const touchDistance = touchCurrentX - touchStartX;
+              const currentDirection = Math.sign(touchDistance);
   
-              // Determine current swipe direction - use simple math operation
-              const currentDirection = Math.sign(touchDistance); // -1, 0, or 1
-  
-              // Only apply edge resistance (not general resistance)
               let effectiveDistance = touchDistance;
-              if ((CardSystem.activeCardIndex === 0 && touchDistance > 0) ||
-                  (CardSystem.activeCardIndex === flipCards.length - 1 && touchDistance < 0)) {
-                  // Apply resistance only at the edges (first and last card)
+              if ((CardSystem.activeCardIndex === 0 && touchDistance > 0) || (CardSystem.activeCardIndex === flipCards.length - 1 && touchDistance < 0)) {
                   effectiveDistance = touchDistance * 0.3;
               }
   
-              // Apply the drag immediately with no artificial resistance
               currentDragOffset = effectiveDistance;
               container.scrollLeft = initialScrollLeft - currentDragOffset;
   
-              // OPTIMIZATION: Only calculate card width once per drag
               if (!this._currentCardWidth) {
                   this._currentCardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
               }
               const cardWidth = this._currentCardWidth;
-  
-              // Calculate progress towards activating next/prev card
               const progress = Math.abs(effectiveDistance) / (cardWidth * POSITION_THRESHOLD);
   
-              // OPTIMIZATION: Cache DOM queries
               const targetedCard = document.querySelector('.card-targeted');
   
-              // IMPORTANT: If we've moved below the threshold, reset card highlights
               if (progress < 0.5) {
-                  // We've moved back enough to reset to the original card
                   if (targetedCard) {
                       resetCardHighlights();
                   }
               } else {
-                  // We're above the threshold - show preview of next/prev card
-                  if (currentDirection < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
-                      // Highlight next card
-                      const nextCard = flipCards[CardSystem.activeCardIndex + 1];
-                      highlightTargetCard(nextCard);
-                  } else if (currentDirection > 0 && CardSystem.activeCardIndex > 0) {
-                      // Highlight previous card
-                      const prevCard = flipCards[CardSystem.activeCardIndex - 1];
-                      highlightTargetCard(prevCard);
+                  // *** THIS IS THE CRITICAL FIX FOR SWIPE-PREVIEW ***
+                  if (currentDirection < 0) { // Swiping left
+                      const nextVisibleIndex = CardSystem.findNextVisibleIndex(CardSystem.activeCardIndex);
+                      if (nextVisibleIndex !== CardSystem.activeCardIndex) {
+                          highlightTargetCard(flipCards[nextVisibleIndex]);
+                      }
+                  } else if (currentDirection > 0) { // Swiping right
+                      const prevVisibleIndex = CardSystem.findPrevVisibleIndex(CardSystem.activeCardIndex);
+                      if (prevVisibleIndex !== CardSystem.activeCardIndex) {
+                          highlightTargetCard(flipCards[prevVisibleIndex]);
+                      }
                   }
               }
           });
-  
-          // Prevent default to disable native scrolling
           e.preventDefault();
       };
   
       container._touchendHandler = function(e) {
-          // BUGFIX: Clean up requestAnimationFrame to prevent memory leaks
+        if (CardSystem.isFiltering) return;
+          // Clean up RAF to prevent memory leaks
           if (this._touchMoveRAF) {
               cancelAnimationFrame(this._touchMoveRAF);
               this._touchMoveRAF = null;
           }
   
-          // Reset cached card width
           this._currentCardWidth = null;
   
-          // Only proceed if touch is active and not on a flipped card
-          if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
+          if (!isTouchActive || CardSystem.currentlyFlippedCard) {
+              isTouchActive = false;
+              return;
+          }
   
-          // Get final touch position
           touchEndX = e.changedTouches[0].clientX;
           const touchDuration = Date.now() - touchStartTime;
           const touchDistance = touchEndX - touchStartX;
           const absTouchDistance = Math.abs(touchDistance);
   
-          // Get card width for threshold calculations
-          const cardWidth = flipCards[CardSystem.activeCardIndex].offsetWidth;
+          const currentCard = flipCards[CardSystem.activeCardIndex];
+          if (!currentCard) {
+              isTouchActive = false;
+              return;
+          }
+          
+          const cardWidth = currentCard.offsetWidth;
           const thresholdDistance = cardWidth * POSITION_THRESHOLD;
   
-          // Check if there's a preactivated/targeted card
+          // If a card was pre-activated during the swipe, finalize that move.
           if (document.querySelector('.card-targeted')) {
-              // Handle the preactivated card with our improved function
-              console.log("Touch end with targeted card - finalizing activation");
               finalizeCardActivation();
               isTouchActive = false;
               return;
           }
   
-          // If no card is highlighted but we have a swipe, handle it with normal navigation
+          // Otherwise, determine the target based on swipe distance and speed.
           let targetIndex = CardSystem.activeCardIndex;
+          const isSwipe = absTouchDistance > thresholdDistance || (touchDuration < SWIPE_TIMEOUT && absTouchDistance > SWIPE_THRESHOLD);
   
-          if (absTouchDistance > thresholdDistance ||
-              (touchDuration < SWIPE_TIMEOUT && absTouchDistance > SWIPE_THRESHOLD)) {
-  
-              // Determine swipe direction and target
-              if (touchDistance > 0 && CardSystem.activeCardIndex > 0) {
-                  // Right swipe - previous card
-                  targetIndex = CardSystem.activeCardIndex - 1;
-              } else if (touchDistance < 0 && CardSystem.activeCardIndex < flipCards.length - 1) {
-                  // Left swipe - next card
-                  targetIndex = CardSystem.activeCardIndex + 1;
+          if (isSwipe) {
+              // *** USE FILTER-AWARE HELPERS FOR SWIPE NAVIGATION ***
+              if (touchDistance > 0) { // Right swipe
+                  targetIndex = CardSystem.findPrevVisibleIndex(CardSystem.activeCardIndex);
+              } else { // Left swipe
+                  targetIndex = CardSystem.findNextVisibleIndex(CardSystem.activeCardIndex);
               }
           }
   
-          // Reset all card highlights
+          // Always snap back, either to the new card or the original one.
           resetCardHighlights();
-  
-          // Apply improved transition for smoother recentering
-          container.style.scrollBehavior = 'smooth';
-  
-          // Use a more natural easing curve for recentering
-          container.style.transition = `all ${TRANSITION_DURATION}ms ${RECENTERING_EASING}`;
-          moveToCard(targetIndex);
+          moveToCard(targetIndex, true); // Animate the snap
   
           isTouchActive = false;
       };
@@ -528,14 +394,12 @@
           if (!highlightTargetCard.activeStyle) {
               highlightTargetCard.activeStyle = `
                   opacity: 1 !important;
-                  transform: scale(1) !important;
-                  transition: opacity 0.25s ease, transform 0.28s ease !important;
+                  transition: opacity 0.25s ease !important;
               `;
   
               highlightTargetCard.inactiveStyle = `
                   opacity: 0.7 !important;
-                  transform: scale(0.95) !important;
-                  transition: opacity 0.25s ease, transform 0.28s ease !important;
+                  transition: opacity 0.25s ease !important;
               `;
           }
   
@@ -556,14 +420,12 @@
           if (!resetCardHighlights.activeStyle) {
               resetCardHighlights.activeStyle = `
                   opacity: 1 !important;
-                  transform: scale(1) !important;
-                  transition: opacity 0.25s ease, transform 0.28s ease !important;
+                  transition: opacity 0.25s ease !important;
               `;
   
               resetCardHighlights.inactiveStyle = `
                   opacity: 0.7 !important;
-                  transform: scale(0.95) !important;
-                  transition: opacity 0.25s ease, transform 0.28s ease !important;
+                  transition: opacity 0.25s ease !important;
               `;
           }
   
@@ -728,7 +590,7 @@
   
           // Reset manual flipping flag after a delay
           setTimeout(() => {
-              CardSystem.isManuallyFlipped = false;
+              CardSystem.isManuallyFlipping = false;
           }, TRANSITION_DURATION);
       }
   
@@ -1362,20 +1224,16 @@
                   console.log("Resize - hiding logo for landscape");
               } else if (!isAnyCardFlipped && !isOverlayActive) {
                   // Special handling for landscape to portrait rotation through resize
-                  if (wasLandscape && nowPortrait) {
-                      // Handle landscape to portrait via resize
   
-                  } else {
-                      // Standard resize in portrait mode - normal logo display
-                      // Only reset visibility/opacity/display/transition, let CSS handle appearance
+                  // Standard resize in portrait mode - normal logo display
+                  // Only reset visibility/opacity/display/transition, let CSS handle appearance
   logoContainer.style.opacity = '1';
   logoContainer.style.visibility = 'visible';
   logoContainer.style.display = '';
   logoContainer.style.transition = 'opacity 0.3s ease';
-                      logoContainer.style.opacity = '1';
-                      logoContainer.style.visibility = 'visible';
-                      logoContainer.style.display = '';
-                  }
+                  logoContainer.style.opacity = '1';
+                  logoContainer.style.visibility = 'visible';
+                  logoContainer.style.display = '';
               }
   
               // Only run layout recalculation if we haven't already done it
@@ -1920,8 +1778,6 @@
                   // Force a reflow to ensure the visibility update takes effect
                   void cardIndicator.offsetHeight;
   
-                  // Update the dots to ensure they're in the correct state
-                  updateInstagramStyleDots(CardSystem.activeCardIndex);
               }
           }
   
@@ -1973,8 +1829,8 @@
               // Get current and target indices
               const currentIndex = CardSystem.activeCardIndex;
               const targetIndex = xDistance < 0 ?
-                  Math.min(flipCards.length - 1, currentIndex + 1) :
-                  Math.max(0, currentIndex - 1);
+                  CardSystem.findNextVisibleIndex(currentIndex) :
+                  CardSystem.findPrevVisibleIndex(currentIndex);
   
               if (targetIndex !== currentIndex) {
                   // Close current overlay first
@@ -2448,6 +2304,12 @@
       window.addEventListener('resize', updateContainerPaddingAndCenterCards);
       window.addEventListener('orientationchange', updateContainerPaddingAndCenterCards);
       // === END DYNAMIC HEADER/LOGO LAYOUT SYNC FIX ===
+
+      // --- EXPOSE PUBLIC METHODS ---
+      // Make key functions available to other scripts like filters.js
+      window.CardSystem.moveToCard = moveToCard;
+      window.CardSystem.resetCardHighlights = resetCardHighlights;
+      // --- END EXPOSE PUBLIC METHODS ---
   })();
   
   // Browser detection for Safari vs Chrome positioning
@@ -2560,12 +2422,7 @@
   
     // Uncomment this line to add debug info
     // window.addEventListener('load', addDebugInfo);
+    window.CardSystem.moveToCard = moveToCard;
+      window.CardSystem.resetCardHighlights = resetCardHighlights;
   })();
-  
-  // Let's add a debugging version of updateLogoPosition that logs all relevant values
-  function debugLogoPosition(caller) {
-      // Logo positioning debug logic removed as requested
-      // We're keeping the function to maintain any references to it
-      // but removing all the actual positioning logic
-      return null;
-  }
+// --- END OF FILE mobile.js ---
