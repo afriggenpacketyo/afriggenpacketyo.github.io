@@ -2422,7 +2422,7 @@
 
     // Uncomment this line to add debug info
     // window.addEventListener('load', addDebugInfo);
-    window.CardSystem.moveToCard = moveToCard;
+    // window.CardSystem.moveToCard = moveToCard;
       window.CardSystem.resetCardHighlights = resetCardHighlights;
   })();
 // --- END OF FILE mobile.js ---
