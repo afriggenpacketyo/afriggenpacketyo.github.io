@@ -4,12 +4,12 @@ window.hamburgerMenu = {
   menuContent: null,
   hamburger: null,
   isOpen: false,
-  
+
   init() {
     this.overlay = document.getElementById('menu-overlay');
     this.menuContent = document.querySelector('.menu-content');
     this.hamburger = document.querySelector('.header-hamburger');
-    
+
     if (this.hamburger) {
       this.hamburger.addEventListener('click', () => {
         if (this.isOpen) {
@@ -19,7 +19,7 @@ window.hamburgerMenu = {
         }
       });
     }
-    
+
     // Add click-outside-to-close functionality
     if (this.overlay) {
       this.overlay.addEventListener('click', (e) => {
@@ -29,81 +29,163 @@ window.hamburgerMenu = {
         }
       });
     }
+
+    // Add Safari mobile specific touch event prevention
+    this.addSafariScrollPrevention();
   },
-  
+
+  addSafariScrollPrevention() {
+    // Detect Safari mobile
+    const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+                           /Safari/.test(navigator.userAgent) &&
+                           !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+
+    if (!isSafariMobile) return;
+
+    // Add touch event listeners to prevent scroll chaining
+    if (this.overlay) {
+      this.overlay.addEventListener('touchstart', this.preventScrollChaining.bind(this), { passive: false });
+      this.overlay.addEventListener('touchmove', this.preventScrollChaining.bind(this), { passive: false });
+    }
+
+    // Add specific scroll boundary handling for textareas
+    document.addEventListener('touchmove', this.handleTextareaScrollBounds.bind(this), { passive: false });
+  },
+
+  handleTextareaScrollBounds(e) {
+    if (!this.isOpen) return;
+
+    const target = e.target;
+    const isTextarea = target.tagName === 'TEXTAREA' || target.id === 'excludes-input';
+    const isMenuContent = target.closest('.menu-content');
+    const isExcludesContainer = target.closest('.excludes-content');
+
+    // If touching menu content or excludes container but not the textarea, prevent scrolling
+    if ((isMenuContent || isExcludesContainer) && !isTextarea) {
+      e.preventDefault();
+      return;
+    }
+
+    if (!isTextarea) return;
+
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+    const deltaY = e.touches[0].clientY - (this.lastTouchY || e.touches[0].clientY);
+    this.lastTouchY = e.touches[0].clientY;
+
+    // Check if at top or bottom boundary
+    const atTop = scrollTop === 0;
+    const atBottom = scrollTop + clientHeight >= scrollHeight;
+
+    // Prevent scroll chaining when trying to scroll beyond bounds
+    if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+      e.preventDefault();
+    }
+  },
+
+  preventScrollChaining(e) {
+    // Only prevent if the target is not the excludes input or menu content
+    const target = e.target;
+    const isExcludesInput = target.id === 'excludes-input' || target.tagName === 'TEXTAREA';
+    const isMenuContent = target.closest('.menu-content');
+    const isOverlayBackground = target === this.overlay;
+
+    // Always allow touches on excludes input
+    if (isExcludesInput) {
+      return;
+    }
+
+    // Allow touches on menu content for navigation/closing
+    if (isMenuContent && !isOverlayBackground) {
+      return;
+    }
+
+    // For overlay background clicks (to close), allow but prevent scrolling
+    if (isOverlayBackground) {
+      if (e.type === 'touchmove') {
+        e.preventDefault();
+      }
+      return;
+    }
+
+    // Prevent everything else
+    e.preventDefault();
+  },
+
   open() {
     if (!this.overlay) return;
-    
+
     // Store current scroll position and freeze body
     const currentScrollY = window.scrollY;
     document.documentElement.style.setProperty('--body-scroll-top', `-${currentScrollY}px`);
     document.body.classList.add('menu-overlay-active');
-    
+
     this.overlay.classList.add('show');
     this.hamburger?.classList.add('active');
     this.isOpen = true;
-    
+
     // Disable keyboard navigation while overlay is open
     // Use the function exposed by CardSystem in desktop.js
     if (window.CardSystem && typeof window.CardSystem.detachKeyboardHandlers === 'function') {
       window.CardSystem.detachKeyboardHandlers();
     }
   },
-  
+
   close() {
     if (!this.overlay) return;
-    
+
     // Unfreeze body and restore scroll position
     if (document.body.classList.contains('menu-overlay-active')) {
       const bodyScrollTop = document.documentElement.style.getPropertyValue('--body-scroll-top');
       const scrollY = bodyScrollTop ? parseInt(bodyScrollTop.replace('px', '').replace('-', '')) : 0;
-      
+
       document.body.classList.remove('menu-overlay-active');
       document.documentElement.style.removeProperty('--body-scroll-top');
-      
+
       setTimeout(() => {
         window.scrollTo(0, scrollY);
       }, 0);
     }
-    
+
     this.overlay.classList.remove('show', 'filter-mode');
     this.hamburger?.classList.remove('active');
     this.isOpen = false;
-    
+
     // Reset menu content to original state
     this.resetToOriginalMenu();
-    
+
     // Re-enable keyboard navigation after overlay is closed
     // Use the function exposed by CardSystem in desktop.js
     if (window.CardSystem && typeof window.CardSystem.attachKeyboardHandlers === 'function') {
       window.CardSystem.attachKeyboardHandlers();
     }
   },
-  
+
   enterFilterMode() {
     if (this.overlay) {
       this.overlay.classList.add('filter-mode');
     }
   },
-  
+
   exitFilterMode() {
     if (this.overlay) {
       this.overlay.classList.remove('filter-mode');
     }
     this.resetToOriginalMenu();
   },
-  
+
   resetToOriginalMenu() {
     if (!this.menuContent) return;
-    
+
     // Hide filter/excludes content
     const filterContent = this.menuContent.querySelector('.filter-content');
     const excludesContent = this.menuContent.querySelector('.excludes-content');
-    
+
     if (filterContent) {
       filterContent.classList.remove('active');
       filterContent.style.display = 'none';
-      
+
       // Reset filter options to clean state
       const filterOptions = filterContent.querySelectorAll('.filter-option');
       filterOptions.forEach(option => {
@@ -116,17 +198,17 @@ window.hamburgerMenu = {
         option.style.filter = 'none';
       });
     }
-    
+
     if (excludesContent) {
       excludesContent.classList.remove('active');
       excludesContent.style.display = 'none';
     }
-    
+
     // Show original menu
     const originalMenu = this.menuContent.querySelector('.original-menu');
     if (originalMenu) {
       originalMenu.style.display = 'block';
-      
+
       const menuLinks = originalMenu.querySelectorAll('a');
       menuLinks.forEach(link => {
         link.style.display = 'block';
@@ -136,7 +218,7 @@ window.hamburgerMenu = {
         link.classList.remove('text-fade-blur', 'text-wave');
         link.style.animationDuration = '';
         link.style.transform = '';
-        
+
         // Restore original text if it was split into letters
         if (link.querySelector('.letter')) {
           const letters = link.querySelectorAll('.letter');

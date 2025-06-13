@@ -51,6 +51,10 @@ html.dark-mode .header-hamburger span {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Prevent scroll chaining on Safari mobile */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: none;
+  touch-action: none;
 }
 
 /* Dark mode overlay */
@@ -92,6 +96,10 @@ html.dark-mode .menu-overlay {
   /* Hide scrollbar while maintaining scrolling ability */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
+  /* Allow controlled scrolling within menu content */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 /* Hide scrollbar for webkit browsers */
@@ -143,7 +151,7 @@ html.dark-mode .menu-content {
   .menu-content a:hover {
     background-color: #f5f5f5;
   }
-  
+
   html.dark-mode .menu-content a:hover {
     background-color: #333;
   }
@@ -154,12 +162,12 @@ html.dark-mode .menu-content {
   .menu-content a {
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   .menu-content a:active {
     background-color: #e9ecef;
     transition: background-color 0.1s ease;
   }
-  
+
   html.dark-mode .menu-content a:active {
     background-color: #404040;
   }
@@ -503,25 +511,25 @@ html.dark-mode .excludes-actions button:hover {
     width: 95vw;
     padding: 1.5rem;
   }
-  
+
   .menu-overlay.filter-mode .menu-content {
     width: 95vw;
     min-height: 300px;
   }
-  
+
   .filter-options {
     grid-template-columns: 1fr;
   }
-  
+
   .excludes-content {
     padding: 1rem;
   }
-  
+
   .excludes-actions {
     flex-direction: column;
     gap: 0.75rem !important;
   }
-  
+
   .excludes-actions button {
     width: 100%;
     padding: 1rem !important;
@@ -577,7 +585,7 @@ body.menu-overlay-active {
   font-weight: bold;
   font-size: 1.2rem;
   text-transform: uppercase;
-  text-shadow: 
+  text-shadow:
     -1px -1px 0 #000,
     1px -1px 0 #000,
     -1px 1px 0 #000,
@@ -620,12 +628,74 @@ html.dark-mode .filter-option.coming-soon:active {
   .filter-option.coming-soon {
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   .filter-option.coming-soon:active {
     background-color: inherit;
   }
-  
+
   html.dark-mode .filter-option.coming-soon:active {
     background-color: inherit;
   }
+}
+
+/* Safari mobile specific - prevent touch events from bubbling up */
+@media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
+  .menu-overlay {
+    -webkit-overflow-scrolling: none;
+    overscroll-behavior: none;
+    touch-action: pan-y; /* Allow vertical panning for closing */
+  }
+
+  /* Ensure textbox scrolling works on Safari mobile with boundaries */
+  #excludes-input {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none; /* Prevent chaining when at bounds */
+    touch-action: pan-y;
+    overflow-y: auto;
+    max-height: 200px; /* Ensure it's scrollable */
+  }
+
+  /* Prevent scrolling on excludes container but allow on textbox */
+  .excludes-content {
+    overflow: hidden; /* Prevent container scrolling */
+    overscroll-behavior: none;
+    touch-action: none; /* Block touch scrolling on container */
+  }
+
+  /* Override for the textbox inside excludes container */
+  .excludes-content #excludes-input {
+    touch-action: pan-y; /* Allow scrolling only on textbox */
+    overflow-y: auto;
+  }
+
+  /* Allow menu content scrolling but contain it strictly */
+  .menu-content {
+    overscroll-behavior: none; /* Prevent any scroll chaining */
+    -webkit-overflow-scrolling: none; /* Disable scrolling on container */
+    touch-action: none; /* Block touch scrolling on menu container */
+    overflow: hidden; /* Prevent container scrolling */
+  }
+
+  /* Prevent body scroll when overlay is active */
+  body.menu-overlay-active {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    -webkit-overflow-scrolling: none;
+    overscroll-behavior: none;
+  }
+}
+
+/* Enhanced scroll prevention for Safari mobile */
+.menu-content,
+.excludes-content,
+#excludes-input,
+.menu-content textarea {
+  -webkit-overflow-scrolling: touch !important;
+  overflow-y: auto !important;
+  touch-action: pan-y !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  overscroll-behavior: contain !important;
 }

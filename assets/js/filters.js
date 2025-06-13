@@ -15,12 +15,12 @@ function unfreezeBody() {
 function showFilters() {
   const menuContent = document.querySelector('.menu-content');
   const overlay = document.getElementById('menu-overlay');
-  
+
   if (!menuContent || !overlay) return;
 
   const menuLinks = menuContent.querySelectorAll('.original-menu a');
   const animationPromises = [];
-  
+
   menuLinks.forEach((link, index) => {
     const promise = new Promise((resolve) => {
       link.classList.add('text-fade-blur');
@@ -30,13 +30,13 @@ function showFilters() {
     });
     animationPromises.push(promise);
   });
-  
+
   Promise.all(animationPromises).then(() => {
     const originalMenu = menuContent.querySelector('.original-menu');
     if (originalMenu) originalMenu.style.display = 'none';
-    
+
     if (window.hamburgerMenu) window.hamburgerMenu.enterFilterMode();
-    
+
     showFilterContent();
   });
 }
@@ -70,7 +70,7 @@ function showFilterContent() {
       </div>
     `;
     menuContent.appendChild(filterContent);
-    
+
     filterContent.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => selectFilter(e.currentTarget.dataset.filterType));
     });
@@ -98,11 +98,11 @@ function showFilterContent() {
       infoBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Handle mobile touch toggle
         if ('ontouchstart' in window) {
           infoBtnContainer.classList.toggle('show-tooltip');
-          
+
           // Hide tooltip after 3 seconds on mobile
           setTimeout(() => {
             infoBtnContainer.classList.remove('show-tooltip');
@@ -131,7 +131,7 @@ function showExcludesSubmenu() {
 function showExcludesContent() {
   const menuContent = document.querySelector('.menu-content');
   const existingExcludes = localStorage.getItem('Excludes') || '';
-  
+
   let excludesContent = menuContent.querySelector('.excludes-content');
   if (!excludesContent) {
     excludesContent = document.createElement('div');
@@ -149,7 +149,7 @@ function showExcludesContent() {
   } else {
     document.getElementById('excludes-input').value = existingExcludes;
   }
-  
+
   excludesContent.style.display = 'block';
   setTimeout(() => document.getElementById('excludes-input').focus(), 100);
 }
@@ -164,12 +164,12 @@ function saveExcludes(event) {
   const textarea = document.getElementById('excludes-input');
   if (!textarea) return;
   localStorage.setItem('Excludes', textarea.value.trim());
-  
+
   const saveButton = event.target;
   const originalText = saveButton.textContent;
   saveButton.textContent = 'Saved!';
   saveButton.style.background = '#28a745';
-  
+
   setTimeout(() => {
     saveButton.textContent = originalText;
     saveButton.style.background = '#dc3545';
@@ -253,7 +253,7 @@ function applyFilters() {
   console.log('Applying filters...');
 
   // --- STEP 1: Disable conflicting event listeners ---
-  window.CardSystem.isFiltering = true; 
+  window.CardSystem.isFiltering = true;
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const hasFilters = !!excludes;
@@ -270,7 +270,7 @@ function applyFilters() {
     window.CardSystem.isFiltering = false;
     console.log("Filtering complete. Event listeners re-enabled.");
   }, 500);
-  
+
   unfreezeBody();
   if (window.hamburgerMenu) {
     window.hamburgerMenu.close();
@@ -285,9 +285,9 @@ function filterCards(excludes) {
   CardSystem.flipCards.forEach((card, index) => {
     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-    
+
     const shouldHide = excludeTerms.some(term => summary.includes(term));
-    
+
     card.classList.toggle('filtered', shouldHide);
 
     if (!shouldHide && firstVisibleIndex === -1) {
@@ -301,10 +301,10 @@ function filterCards(excludes) {
 
 function showAllCards() {
   console.log('No filters active, showing all cards.');
-  
+
   // Remove .filtered class from all cards
   CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
-  
+
   // Reposition the view back to the very first card.
   repositionViewAfterFilter(0);
 }
