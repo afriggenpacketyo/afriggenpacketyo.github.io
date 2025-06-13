@@ -649,10 +649,14 @@ html.dark-mode .filter-option.coming-soon:active {
   /* Ensure textbox scrolling works on Safari mobile with boundaries */
   #excludes-input {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none; /* Prevent chaining when at bounds */
+    overscroll-behavior: none !important; /* Prevent chaining when at bounds */
     touch-action: pan-y;
     overflow-y: auto;
     max-height: 200px; /* Ensure it's scrollable */
+    /* Additional Safari-specific containment */
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   /* Prevent scrolling on excludes container but allow on textbox */

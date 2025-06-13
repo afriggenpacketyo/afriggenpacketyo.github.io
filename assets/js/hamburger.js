@@ -50,9 +50,7 @@ window.hamburgerMenu = {
 
     // Add specific scroll boundary handling for textareas
     document.addEventListener('touchmove', this.handleTextareaScrollBounds.bind(this), { passive: false });
-  },
-
-  handleTextareaScrollBounds(e) {
+  },  handleTextareaScrollBounds(e) {
     if (!this.isOpen) return;
 
     const target = e.target;
@@ -71,16 +69,24 @@ window.hamburgerMenu = {
     const scrollTop = target.scrollTop;
     const scrollHeight = target.scrollHeight;
     const clientHeight = target.clientHeight;
-    const deltaY = e.touches[0].clientY - (this.lastTouchY || e.touches[0].clientY);
-    this.lastTouchY = e.touches[0].clientY;
 
-    // Check if at top or bottom boundary
-    const atTop = scrollTop === 0;
-    const atBottom = scrollTop + clientHeight >= scrollHeight;
+    // Calculate scroll direction from touch movement
+    const currentTouchY = e.touches[0].clientY;
+    const deltaY = currentTouchY - (this.lastTouchY || currentTouchY);
+    this.lastTouchY = currentTouchY;
 
-    // Prevent scroll chaining when trying to scroll beyond bounds
-    if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+    // Check if at boundaries
+    const atTop = scrollTop <= 0;
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 1; // Small buffer for precision
+
+    // Always prevent scroll chaining when at bounds OR when not enough content to scroll
+    const cannotScroll = scrollHeight <= clientHeight;
+    const scrollingUp = deltaY > 0;
+    const scrollingDown = deltaY < 0;
+
+    if (cannotScroll || (atTop && scrollingUp) || (atBottom && scrollingDown)) {
       e.preventDefault();
+      e.stopPropagation();
     }
   },
 
