@@ -21,10 +21,10 @@ function autoApplyFiltersOnLoad() {
     console.log('Skipping auto-apply during initialization');
     return;
   }
-  
+
   const shouldAutoApply = localStorage.getItem('autoApplyFilters') === 'true';
   const hasExcludes = localStorage.getItem('Excludes');
-  
+
   if (shouldAutoApply && hasExcludes) {
     console.log('Auto-applying filters on page load...');
     // Wait a bit longer to ensure mobile layout is completely stable
@@ -37,10 +37,10 @@ function autoApplyFiltersOnLoad() {
 // Silent version of applyFilters that doesn't block touch events
 function applyFiltersQuietly() {
   console.log('Applying filters quietly...');
-  
+
   // Don't block touch events during quiet filtering
   // window.CardSystem.isFiltering = true; // REMOVED - this was causing the issue
-  
+
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const hasFilters = !!excludes;
 
@@ -49,7 +49,7 @@ function applyFiltersQuietly() {
   } else {
     filterCardsQuietly(excludes);
   }
-  
+
   console.log("Quiet filtering complete.");
 }
 
@@ -62,9 +62,9 @@ function filterCardsQuietly(excludes) {
   CardSystem.flipCards.forEach((card, index) => {
     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-    
+
     const shouldHide = excludeTerms.some(term => summary.includes(term));
-    
+
     card.classList.toggle('filtered', shouldHide);
 
     if (!shouldHide && firstVisibleIndex === -1) {
@@ -72,25 +72,41 @@ function filterCardsQuietly(excludes) {
     }
   });
 
-  // Update the active index without triggering full repositioning
+  // Update the active index and center the first visible card
   if (firstVisibleIndex !== -1) {
     CardSystem.activeCardIndex = firstVisibleIndex;
     if (typeof CardSystem.updateUI === 'function') {
       CardSystem.updateUI();
+    }
+
+    // Actually center the first visible card
+    const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
+    if (isMobile && typeof CardSystem.moveToCard === 'function') {
+      CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
+    } else if (!isMobile && typeof CardSystem.scrollToCard === 'function') {
+      CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
     }
   }
 }
 
 function showAllCardsQuietly() {
   console.log('No filters active, showing all cards quietly.');
-  
+
   // Remove .filtered class from all cards
   CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
-  
-  // Update UI without repositioning
+
+  // Update UI and center the first card
   CardSystem.activeCardIndex = 0;
   if (typeof CardSystem.updateUI === 'function') {
     CardSystem.updateUI();
+  }
+
+  // Actually center the first card
+  const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
+  if (isMobile && typeof CardSystem.moveToCard === 'function') {
+    CardSystem.moveToCard(0, false); // false for instant move
+  } else if (!isMobile && typeof CardSystem.scrollToCard === 'function') {
+    CardSystem.scrollToCard(0, false); // false for instant move
   }
 }
 
@@ -98,12 +114,12 @@ function showAllCardsQuietly() {
 function showFilters() {
   const menuContent = document.querySelector('.menu-content');
   const overlay = document.getElementById('menu-overlay');
-  
+
   if (!menuContent || !overlay) return;
 
   const menuLinks = menuContent.querySelectorAll('.original-menu a');
   const animationPromises = [];
-  
+
   menuLinks.forEach((link, index) => {
     const promise = new Promise((resolve) => {
       link.classList.add('text-fade-blur');
@@ -113,13 +129,13 @@ function showFilters() {
     });
     animationPromises.push(promise);
   });
-  
+
   Promise.all(animationPromises).then(() => {
     const originalMenu = menuContent.querySelector('.original-menu');
     if (originalMenu) originalMenu.style.display = 'none';
-    
+
     if (window.hamburgerMenu) window.hamburgerMenu.enterFilterMode();
-    
+
     showFilterContent();
   });
 }
@@ -153,7 +169,7 @@ function showFilterContent() {
       </div>
     `;
     menuContent.appendChild(filterContent);
-    
+
     filterContent.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => selectFilter(e.currentTarget.dataset.filterType));
     });
@@ -181,11 +197,11 @@ function showFilterContent() {
       infoBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Handle mobile touch toggle
         if ('ontouchstart' in window) {
           infoBtnContainer.classList.toggle('show-tooltip');
-          
+
           // Hide tooltip after 3 seconds on mobile
           setTimeout(() => {
             infoBtnContainer.classList.remove('show-tooltip');
@@ -214,15 +230,15 @@ function showExcludesSubmenu() {
 function showExcludesContent() {
   const menuContent = document.querySelector('.menu-content');
   const existingExcludes = localStorage.getItem('Excludes') || '';
-  
+
   let excludesContent = menuContent.querySelector('.excludes-content');
   if (!excludesContent) {
     excludesContent = document.createElement('div');
     excludesContent.className = 'excludes-content';
     excludesContent.innerHTML = `
       <h3>Exclude Terms</h3>
-      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Hide summaries containing<br>these terms (comma-separated):</p>
-      <textarea id="excludes-input" placeholder="e.g., tariffs, drought" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingExcludes}</textarea>
+      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Enter terms to hide summaries (comma-separated).</p>
+      <textarea id="excludes-input" placeholder="e.g., politics, sports" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingExcludes}</textarea>
       <div class="excludes-actions" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
         <button onclick="goBackToFilters()" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Back</button>
         <button onclick="saveExcludes(event)" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Save Excludes</button>
@@ -232,7 +248,7 @@ function showExcludesContent() {
   } else {
     document.getElementById('excludes-input').value = existingExcludes;
   }
-  
+
   excludesContent.style.display = 'block';
   setTimeout(() => document.getElementById('excludes-input').focus(), 100);
 }
@@ -247,12 +263,12 @@ function saveExcludes(event) {
   const textarea = document.getElementById('excludes-input');
   if (!textarea) return;
   localStorage.setItem('Excludes', textarea.value.trim());
-  
+
   const saveButton = event.target;
   const originalText = saveButton.textContent;
   saveButton.textContent = 'Saved!';
   saveButton.style.background = '#28a745';
-  
+
   setTimeout(() => {
     saveButton.textContent = originalText;
     saveButton.style.background = '#dc3545';
@@ -336,7 +352,7 @@ function applyFilters() {
   console.log('Applying filters...');
 
   // --- STEP 1: Disable conflicting event listeners ---
-  window.CardSystem.isFiltering = true; 
+  window.CardSystem.isFiltering = true;
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const hasFilters = !!excludes;
@@ -353,7 +369,7 @@ function applyFilters() {
     window.CardSystem.isFiltering = false;
     console.log("Filtering complete. Event listeners re-enabled.");
   }, 500);
-  
+
   unfreezeBody();
   if (window.hamburgerMenu) {
     window.hamburgerMenu.close();
@@ -368,9 +384,9 @@ function filterCards(excludes) {
   CardSystem.flipCards.forEach((card, index) => {
     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-    
+
     const shouldHide = excludeTerms.some(term => summary.includes(term));
-    
+
     card.classList.toggle('filtered', shouldHide);
 
     if (!shouldHide && firstVisibleIndex === -1) {
@@ -384,10 +400,10 @@ function filterCards(excludes) {
 
 function showAllCards() {
   console.log('No filters active, showing all cards.');
-  
+
   // Remove .filtered class from all cards
   CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
-  
+
   // Reposition the view back to the very first card.
   repositionViewAfterFilter(0);
 }
