@@ -1,5 +1,8 @@
 // --- START OF FILE filters.js ---
 
+// Add initialization flag to prevent conflicts with mobile.js
+let isInitializing = true;
+
 // (This utility function remains the same)
 function unfreezeBody() {
   if (document.body.classList.contains('menu-overlay-active')) {
@@ -8,6 +11,86 @@ function unfreezeBody() {
     document.body.classList.remove('menu-overlay-active');
     document.documentElement.style.removeProperty('--body-scroll-top');
     setTimeout(() => { window.scrollTo(0, scrollY); }, 0);
+  }
+}
+
+// Auto-apply filters on page load if enabled
+function autoApplyFiltersOnLoad() {
+  // Don't auto-apply during initialization
+  if (isInitializing) {
+    console.log('Skipping auto-apply during initialization');
+    return;
+  }
+  
+  const shouldAutoApply = localStorage.getItem('autoApplyFilters') === 'true';
+  const hasExcludes = localStorage.getItem('Excludes');
+  
+  if (shouldAutoApply && hasExcludes) {
+    console.log('Auto-applying filters on page load...');
+    // Wait a bit longer to ensure mobile layout is completely stable
+    setTimeout(() => {
+      applyFiltersQuietly();
+    }, 200); // Increased from 100ms to 200ms
+  }
+}
+
+// Silent version of applyFilters that doesn't block touch events
+function applyFiltersQuietly() {
+  console.log('Applying filters quietly...');
+  
+  // Don't block touch events during quiet filtering
+  // window.CardSystem.isFiltering = true; // REMOVED - this was causing the issue
+  
+  const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
+  const hasFilters = !!excludes;
+
+  if (!hasFilters) {
+    showAllCardsQuietly();
+  } else {
+    filterCardsQuietly(excludes);
+  }
+  
+  console.log("Quiet filtering complete.");
+}
+
+// Quiet versions that don't trigger full repositioning
+function filterCardsQuietly(excludes) {
+  const excludeTerms = excludes.split(',').map(term => term.trim()).filter(Boolean);
+  let firstVisibleIndex = -1;
+
+  // Apply the .filtered class to hide cards and find the first visible one
+  CardSystem.flipCards.forEach((card, index) => {
+    const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
+    const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
+    
+    const shouldHide = excludeTerms.some(term => summary.includes(term));
+    
+    card.classList.toggle('filtered', shouldHide);
+
+    if (!shouldHide && firstVisibleIndex === -1) {
+      firstVisibleIndex = index;
+    }
+  });
+
+  // Update the active index without triggering full repositioning
+  if (firstVisibleIndex !== -1) {
+    CardSystem.activeCardIndex = firstVisibleIndex;
+    if (typeof CardSystem.updateUI === 'function') {
+      CardSystem.updateUI();
+    }
+  }
+}
+
+function showAllCardsQuietly() {
+  console.log('No filters active, showing all cards quietly.');
+  
+  // Remove .filtered class from all cards
+  CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
+  
+  // Update UI without repositioning
+  CardSystem.activeCardIndex = 0;
+  if (typeof CardSystem.updateUI === 'function') {
+    CardSystem.updateUI();
   }
 }
 
@@ -308,6 +391,16 @@ function showAllCards() {
   // Reposition the view back to the very first card.
   repositionViewAfterFilter(0);
 }
+
+// Function to mark initialization as complete and trigger auto-apply if needed
+function completeInitialization() {
+  isInitializing = false;
+  console.log('Filters initialization complete, checking for auto-apply...');
+  autoApplyFiltersOnLoad();
+}
+
+// Expose the function globally so mobile.js can call it
+window.filtersCompleteInitialization = completeInitialization;
 
 /**
  * REWRITTEN: This function now correctly sequences the state update, UI update,

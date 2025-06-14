@@ -1259,299 +1259,93 @@
           // Even if in landscape, we'll still calculate positions as if the logo is there
           const logoContainer = document.querySelector('.logo-container');
           if (logoContainer) {
-              // Just control visibility, not position calculations
-              if (startInLandscape) {
-                  logoContainer.style.opacity = '0';
-                  logoContainer.style.visibility = 'hidden';
-              }
+              logoContainer.style.opacity = startInLandscape ? '0' : '1';
           }
 
-
-          // Define waitForCardMeasurements function with timeout and faster polling
+          // Define waitForCardMeasurements function with improved timeout handling
           function waitForCardMeasurements() {
               return new Promise((resolve, reject) => {
-                  // OPTIMIZATION: Check immediately first
-                  if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
-                      resolve();
-                      return;
+                  let attempts = 0;
+                  const maxAttempts = 25; // Increased attempts
+
+                  function checkMeasurements() {
+                      attempts++;
+
+                      // Don't reject, just resolve with warning to prevent blocking
+                      if (attempts > maxAttempts) {
+                          console.warn('Card measurement timeout after', maxAttempts, 'attempts - continuing anyway');
+                          resolve(); // Continue instead of rejecting
+                          return;
+                      }
+
+                      const firstCard = flipCards[0];
+                      if (!firstCard) {
+                          setTimeout(checkMeasurements, 30); // Faster polling
+                          return;
+                      }
+
+                      const width = firstCard.offsetWidth;
+                      const height = firstCard.offsetHeight;
+
+                      if (width > 0 && height > 0) {
+                          console.log(`Cards measured after ${attempts} attempts: ${width}x${height}`);
+                          resolve();
+                      } else {
+                          setTimeout(checkMeasurements, 30); // Faster polling
+                      }
                   }
 
-                  let attempts = 0;
-                  const checkCards = setInterval(() => {
-                      if (container?.offsetWidth > 0 && flipCards[0]?.offsetWidth > 0) {
-                          clearInterval(checkCards);
-                          resolve();
-                      } else if (attempts >= 25) { // Reduced timeout to 2.5 seconds
-                          clearInterval(checkCards);
-                          // Fallback to basic initialization if measurement fails
-                          console.warn('Card measurement timed out, using fallback initialization');
-                          resolve();
-                      }
-                      attempts++;
-                  }, 100);
+                  checkMeasurements();
               });
           }
 
-          // Add initial CSS to hide cards until positioned
-          const style = document.createElement('style');
-          style.textContent = `
-              .card-container {
-                  visibility: hidden;
-                  opacity: 0;
-                  transition: opacity 0.5s ease;
-              }
-              .initialized .card-container {
-                  visibility: visible;
-                  opacity: 1;
-              }
-          `;
-          document.head.appendChild(style);
-
-          // Completely revised initializeSequence
+          // Completely revised initializeSequence with better error handling
           async function initializeSequence() {
               try {
-                  // STEP 1: Add a CSS blocker to prevent ANY rendering of cards until we're ready
-                  const styleBlocker = document.createElement('style');
-                  styleBlocker.id = 'init-blocker';
-                  styleBlocker.textContent = `
-                      .flip-cards-container {
-                          opacity: 0 !important;
-                          visibility: hidden !important;
-                      }
-                      .logo-container {
-                          opacity: 0 !important;
-                          visibility: hidden !important;
-                      }
-                      .card-indicator {
-                          opacity: 0 !important;
-                      }
-                  `;
-                  document.head.appendChild(styleBlocker);
-
-                  // Set inline styles to reinforce our CSS blocking
-                  container.style.visibility = 'hidden';
-                  container.style.opacity = '0';
-
-                  // Handle logo and indicators
-                  const logoContainer = document.querySelector('.logo-container');
-                  if (logoContainer) {
-                      logoContainer.style.visibility = 'hidden';
-                      logoContainer.style.opacity = '0';
-                  }
-
-                  const cardIndicator = document.querySelector('.card-indicator');
-                  if (cardIndicator) {
-                      cardIndicator.style.opacity = '0';
-                  }
-
-                  // STEP 2: Wait for cards to be measurable
+                  // Wait for cards to be properly measured (now won't reject)
                   await waitForCardMeasurements();
 
-                  // STEP 3: Configure card container with transitions disabled
-                  // Absolutely prevent transitions during setup
-                  container.style.transition = 'none !important';
-                  container.style.webkitTransition = 'none !important';
-                  container.style.scrollBehavior = 'auto';
-
-                  // Add left/right padding
+                  // Setup edge padding
                   addEdgeCardPadding();
 
-                  // Fix vertical positioning
-                  fixVerticalPositioning();
+                  // Center first card with enhanced positioning
+                  centerFirstCardOnLoad();
 
-                  // Set initial card state
-                  CardSystem.activeCardIndex = 0;
-                  CardSystem.updateUI();
-
-                  // Position the first card in center - CRITICAL STEP
-                  const firstCard = flipCards[0];
-                  const containerWidth = container.offsetWidth;
-                  const cardWidth = firstCard.offsetWidth;
-                  const targetScrollLeft = firstCard.offsetLeft - (containerWidth - cardWidth) / 2;
-
-                  // Explicitly position without animation
-                  container.scrollLeft = targetScrollLeft;
-
-                  // Apply highlight states
-                  resetCardHighlights();
-
-                  // STEP 4: Force reflows to ensure all layout calculations are complete
-                  void document.body.offsetHeight;
-                  void container.offsetHeight;
-
-                  // CRITICAL FIX: Add an absolute position container that covers everything
-                  // while we finalize positioning
-                  const positionBlocker = document.createElement('div');
-                  positionBlocker.style.cssText = `
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      width: 100%;
-                      height: 100%;
-                      background-color: white;
-                      z-index: 9999;
-                      opacity: 1;
-                      transition: opacity 0.5s ease;
-                  `;
-                  document.body.appendChild(positionBlocker);
-
-                  // Show header
-                  toggleHeaderBanner(true);
-
-                  // Force another layout calculation
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                  void document.documentElement.offsetHeight;
-
-                  // STEP 5: Calculate logo position
-                  const header = document.querySelector('header');
-                  const activeCard = flipCards[CardSystem.activeCardIndex];
-
-                  if (header && activeCard && logoContainer) {
-                      // Force reflow for accurate measurements
-                      void header.offsetHeight;
-                      void activeCard.offsetHeight;
-
-                      // Get precise measurements
-                      const headerRect = header.getBoundingClientRect();
-                      const cardRect = activeCard.getBoundingClientRect();
-
-                      // Calculate available space
-                      const headerBottom = headerRect.bottom;
-                      const cardTop = cardRect.top;
-
-                      // Set CSS variables for logo positioning
-                      document.documentElement.style.setProperty('--header-bottom', `${headerBottom}px`);
-                      document.documentElement.style.setProperty('--card-top', `${cardTop}px`);
-
-                      // Update or create style element for logo positioning
-                      let styleEl = document.getElementById('logo-position-style');
-                      if (!styleEl) {
-                          styleEl = document.createElement('style');
-                          styleEl.id = 'logo-position-style';
-                          document.head.appendChild(styleEl);
-                      }
-
-                      styleEl.textContent = `
-                          .logo-container {
-                              position: fixed !important;
-                              top: calc((var(--header-bottom) + var(--card-top)) / 2) !important;
-                              left: 50% !important;
-                              transform: translate(-50%, -50%) !important;
-                              margin: 0 !important;
-                              padding: 0 !important;
-                          }
-                      `;
-
-                      // Store the position for later reference
-                      finalLogoPosition = headerBottom + ((cardTop - headerBottom) / 2);
-
-                      // Log for debugging
-                      console.log(`LAYOUT READY - measurements complete:`);
-                      console.log(`Header bottom: ${headerBottom}px`);
-                      console.log(`Card top: ${cardTop}px`);
-                      console.log(`Available space: ${cardTop - headerBottom}px`);
-                      console.log(`Vertical midpoint: ${headerBottom + ((cardTop - headerBottom) / 2)}px`);
+                  // Initialize logo positioning only if not in landscape
+                  if (!startInLandscape) {
+                      setTimeout(() => {
+                          calculateAndPositionLogo();
+                      }, 200);
                   }
 
-                  // STEP 6: Set up fade-in transitions BEFORE making elements visible
-                  // We set these while elements are still hidden
-                  if (logoContainer) {
-                      logoContainer.style.transition = 'opacity 0.5s ease';
-                  }
+                  // Mark body as initialized for CSS transitions
+                  document.body.classList.add('initialized');
 
-                  if (cardIndicator) {
-                      cardIndicator.style.transition = 'opacity 0.5s ease';
-                  }
-
-                  container.style.transition = 'opacity 0.5s ease';
-
-                  // STEP 7: Remove the style blocker but keep the position blocker
-                  if (styleBlocker && styleBlocker.parentNode) {
-                      styleBlocker.parentNode.removeChild(styleBlocker);
-                  }
-
-                  // STEP 8: NOW make everything visible underneath the position blocker
-                  container.style.visibility = 'visible';
-                  container.style.opacity = '1';
-
-                  if (logoContainer) {
-                      logoContainer.style.visibility = 'visible';
-                      logoContainer.style.opacity = '1';
-                  }
-
-                  if (cardIndicator) {
-                      cardIndicator.style.opacity = '1';
-                  }
-
-                  // STEP 9: Once everything is completely positioned AND visible underneath,
-                  // fade out the position blocker to reveal the perfectly positioned content
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                  positionBlocker.style.opacity = '0';
-
-                  // Remove the position blocker after the fade
+                  // Final cleanup and settings
                   setTimeout(() => {
-                      if (positionBlocker.parentNode) {
-                          positionBlocker.parentNode.removeChild(positionBlocker);
-                      }
-                  }, 500);
+                      fixVerticalPositioning();
+                      console.log('Mobile initialization complete');
+                  }, 100);
 
-                  console.log("Initialization complete - clean fade-in with no sliding effect");
-
-                  // Before making elements visible in step 8, check landscape mode again
-                  // (in case it changed during initialization)
-                  const nowInLandscape = isPhoneLandscape();
-
-                  // STEP 8 modification: Handle logo visibility based on screen orientation
-                  if (logoContainer) {
-                      if (nowInLandscape) {
-                          // Keep logo hidden for landscape
-                          logoContainer.style.cssText = `
-                              opacity: 0 !important;
-                              visibility: hidden !important;
-                              transition: none !important;
-                              display: none !important;
-                          `;
-                      } else {
-                          // Show logo for portrait
-                          logoContainer.style.visibility = 'visible';
-                          logoContainer.style.opacity = '1';
-                      }
-                  }
-
-                  // After initial setup, enforce card position
-                  const isLandscape = isPhoneLandscape();
-                  enforceCardPosition(CardSystem.activeCardIndex, isLandscape);
-
-                  console.log("Core initialization complete - clean fade-in.");
               } catch (error) {
                   console.error('Initialization failed:', error);
-                  console.error('Error details:', error.message);
-
-                  // If initialization fails, at least make everything visible
-                  // Remove the blocker style in case of error
-                  const styleBlocker = document.getElementById('init-blocker');
-                  if (styleBlocker && styleBlocker.parentNode) {
-                      styleBlocker.parentNode.removeChild(styleBlocker);
-                  }
-
-                  container.style.visibility = 'visible';
-                  container.style.opacity = '1';
-
-                  const logoContainer = document.querySelector('.logo-container');
-                  if (logoContainer) {
-                      logoContainer.style.visibility = 'visible';
-                      logoContainer.style.opacity = '1';
-                  }
-
-                  const cardIndicator = document.querySelector('.card-indicator');
-                  if (cardIndicator) {
-                      cardIndicator.style.opacity = '1';
-                  }
+                  // Still try to show something even if initialization fails
+                  document.body.classList.add('initialized');
               }
           }
 
           // Start initialization
-          initializeSequence();
+          initializeSequence().then(() => {
+              // Call filters after successful initialization
+              setTimeout(() => {
+                  notifyFiltersInitComplete();
+              }, 500); // Reasonable delay after init completes
+          }).catch(() => {
+              // Still notify filters even if init failed
+              setTimeout(() => {
+                  notifyFiltersInitComplete();
+              }, 1000);
+          });
       }
 
       // Replace the current initialization code with this enhanced version
@@ -1560,6 +1354,18 @@
       } else {
           window.addEventListener('load', initialize);
       }
+
+      // Call filters completion after mobile initialization is done
+      function notifyFiltersInitComplete() {
+          if (typeof window.filtersCompleteInitialization === 'function') {
+              console.log('Mobile init complete, notifying filters...');
+              window.filtersCompleteInitialization();
+          }
+      }          // Add this to the end of the successful initialization sequence
+          // Wait for the layout to be completely stable before allowing auto-filters
+          setTimeout(() => {
+              notifyFiltersInitComplete();
+          }, 1500); // Give mobile layout more time to stabilize before auto-apply
 
       // Function to create the overlay
       function createOverlay() {
@@ -1817,6 +1623,7 @@
 
           // Calculate distances
           const xDistance = touchEndX - overlayTouchStartX;
+          const touchDistance = touchEndX - touchStartX;
           const absXDistance = Math.abs(xDistance);
           const yDistance = touchEndY - overlayTouchStartY;
           const absYDistance = Math.abs(yDistance);
