@@ -430,6 +430,22 @@ html.dark-mode .excludes-content p {
   color: #ccc;
 }
 
+/* Excludes Actions */
+.excludes-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  margin-top: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+/* Ensure excludes buttons within actions container have proper margins */
+.excludes-actions .excludes-btn {
+  margin: 0 !important; /* Remove individual margins, let flexbox gap handle spacing */
+}
+
 /* Excludes Buttons */
 .excludes-content .excludes-btn {
   display: flex;
@@ -808,13 +824,14 @@ body.chrome-mobile-overlay-active {
   }
 
   .excludes-actions {
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: center !important; /* Ensure center alignment in column layout */
   }
 
-  .excludes-actions button {
-    width: 100%;
-    padding: 1rem;
+  .excludes-actions .excludes-btn {
+    margin: 0 !important; /* Maintain zero margins on mobile */
+    width: 200px !important; /* Consistent width for mobile */
   }
 }
 
