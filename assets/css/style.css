@@ -37,7 +37,7 @@
     --box-shadow-strong: 0 8px 16px rgba(0, 0, 0, 0.2);
     --box-shadow-highlight: 0 8px 30px rgba(0, 0, 0, 0.25);
   }
-  
+
   html.dark-mode {
     /* Dark mode overrides */
     --background-main: #181c20;
@@ -51,37 +51,37 @@
     --indicator-dot-active: #39fffd;
     /* Card and transition variables remain the same */
   }
-  
+
   /* Now all color, background, and text styles use these variables. */
-  
-  
+
+
     * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
-  
+
   /* =========================
      2. RESET & BASE LAYOUT
      ========================= */
-  
+
     /* Desktop-only class to prevent scrollbar during card transitions */
   html.desktop-prevent-scrollbar {
     overflow-y: hidden !important;
   }
-  
+
   /* When active (to account for specificity), ensure no vertical scrollbar appears */
   html.desktop-prevent-scrollbar body,
   html.desktop-prevent-scrollbar .container,
   html.desktop-prevent-scrollbar .container.with-coverflow {
     overflow-y: hidden !important;
   }
-  
-    
+
+
     /* Hide scrollbars on desktop - ensure they never appear visually but maintain scrolling function */
     /* Removed desktop scrollbar hiding rules to allow scrollbars to show on desktop when there is overflow. If you want to customize the appearance of scrollbars on desktop, you can add custom styling here (optional). */
-  
+
     @media (hover: hover) and (pointer: fine) {
       /* Example: Uncomment and customize for styled scrollbars on desktop
       ::-webkit-scrollbar {
@@ -94,8 +94,8 @@
       }
       */
     }
-  
-      
+
+
     body {
     display: flex;
     justify-content: center;
@@ -106,11 +106,11 @@
     background: var(--background-main);
     color: var(--text-main);
   }
-  
+
   /* =========================
      3. LAYOUT & CONTAINER
      ========================= */
-  
+
     /* --- Chrome Idle/Restore Robustness Fixes --- */
   /* Ensure all flex/grid children can shrink properly */
   .container, .container.with-coverflow {
@@ -130,7 +130,7 @@
     min-width: 0;
     min-height: 0;
   }
-  
+
   /* Header controls row for mobile layout */
   .header-controls-row {
     display: flex;
@@ -142,7 +142,7 @@
     z-index: 10;
     min-height: 40px;
   }
-  
+
   /* Header logo row */
   .header-logo-row {
     display: flex;
@@ -155,7 +155,7 @@
     height: 40px;
     z-index: 20;
   }
-  
+
   /* Header logo container positioning */
   .header-logo-container {
     position: absolute;
@@ -168,7 +168,7 @@
     align-items: center;
     z-index: 20;
   }
-  
+
   /* Header logo styling */
   .header-logo {
     max-width: var(--logo-max-width-mobile, 60px);
@@ -176,7 +176,7 @@
     width: 60px;
     object-fit: contain;
   }
-  
+
   /* Control logo visibility based on screen size */
   @media (hover: hover) and (pointer: fine) {
     /* Desktop: Show outside logo, hide header logo */
@@ -191,8 +191,8 @@
       visibility: hidden;
     }
   }
-  
-  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) { 
+
+  @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     /* Mobile: Hide outside logo, show header logo */
     .logo-container {
       display: none !important;
@@ -211,7 +211,7 @@
     position: relative;
     padding-top: 40px; /* Add space for the absolutely positioned logo */
   }
-  
+
     .header-toggle-switch {
       display: flex;
       align-items: center;
@@ -309,11 +309,11 @@
       min-width: 0;
       overflow-x: hidden;
     }
-  
+
     /* =========================
      4. CARD STYLES (SHARED)
      ========================= */
-  
+
   @media (hover: hover) and (pointer: fine) {
   .card-link-rectangle {
     min-height: 10px !important;
@@ -328,10 +328,10 @@
   @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
    .card-link-rectangle {
     display: none !important;
-   } 
+   }
   }
-  
-  
+
+
     .flip-card {
       flex: 0 0 var(--card-width);
       height: var(--card-height);
@@ -374,13 +374,13 @@
       display: flex;
       z-index: 1;
     }
-    
+
     /* Add text scaling for more convincing transitions */
     .flip-card-front *, .flip-card-back * {
       transition: all var(--transition-flip);
       transform-origin: center center;
     }
-    
+
     /* Only add transition properties to card back elements */
     .flip-card-back h3,
     .flip-card-back p,
@@ -389,7 +389,7 @@
       transition: transform 0.4s ease, opacity 0.4s ease;
       transform-origin: center center;
     }
-    
+
     /* Define a specific CSS class that will be added when transitioning from flipped to not flipped */
     .flip-card.was-flipped .flip-card-back h3,
     .flip-card.was-flipped .flip-card-back p,
@@ -420,7 +420,7 @@
       align-items: center;
       padding: 20px 20px 30px;
       box-shadow: var(--box-shadow-strong);
-  
+
       position: relative;
     }
     .flip-card-back {
@@ -449,7 +449,7 @@
         padding: 20px 20px 0 20px !important;
       }
     }
-  
+
     /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
     @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       html.dark-mode .flip-card.active .flip-card-front {
@@ -464,7 +464,7 @@
       html.dark-mode .flip-card.active .flip-card-front strong,
       html.dark-mode .flip-card.active .flip-card-front em {
         color: #e0e0e0;
-  
+
         border: none;
       }
     }
@@ -510,7 +510,7 @@
       position: relative;
       text-align: center;
     }
-  
+
     @media (hover: hover) and (pointer: fine) {
       .flip-card-back a:hover,
       .flip-card-front a:hover {
@@ -522,7 +522,7 @@
         border: 2px solid var(--primary-blue);
       }
     }
-  
+
     /* =============================================================
        UI ELEMENTS
        ============================================================= */
@@ -536,7 +536,7 @@
     .score-high { background: var(--primary-green); }
     .score-medium { background: var(--primary-orange); }
     .score-low { background: var(--primary-red); }
-  
+
     .card-indicator {
       display: flex;
       justify-content: center;
@@ -585,7 +585,7 @@
       background: var(--indicator-dot-active);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-  
+
     /* =============================================================
        PAGE HEADER
        ============================================================= */
@@ -625,7 +625,7 @@
       margin-top: 5px;
       color: #666;
     }
-  
+
     /* =============================================================
        SUMMARY TEXT
        ============================================================= */
@@ -643,11 +643,11 @@
       transform: scale(1.125);
       margin-bottom: 0.5em;
     }
-  
+
     /* =============================================================
        DESKTOP/PC STYLES
        ============================================================= */
-  
+
   @media (hover: hover) and (pointer: fine) {
     .flip-card.flipped .flip-card-back {
       scrollbar-width: none; /* Firefox */
@@ -656,7 +656,7 @@
       display: none; /* Chrome, Safari, Opera */
     }
     .flip-card.flipped .flip-card-back .swipe-indicator {
-  
+
       position: sticky;
       bottom: 0;
       left: 0;
@@ -704,27 +704,27 @@
       padding: 0 12px;
     }
   }
-  
+
     @media (hover: hover) and (pointer: fine) {
       /* Desktop dark mode card styles - clean implementation */
       html.dark-mode .container.with-coverflow .flip-card-inner {
         background: transparent;
       }
-      
+
       /* Ensure scale(0.9) applies to inactive cards in desktop dark mode */
       html.dark-mode .container.with-coverflow .flip-card:not(.active) {
         opacity: 0.65;
         transform: scale(0.9);
         z-index: 1;
       }
-      
+
       /* Active card should have no transform and be at full scale */
       html.dark-mode .container.with-coverflow .flip-card.active {
         opacity: 1;
         transform: scale(1);
         z-index: 2;
       }
-      
+
       .container::-webkit-scrollbar { display: none; }
       .container {
         display: flex;
@@ -791,12 +791,12 @@
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
       }
-      
+
       /* Give container a dark background in dark mode to prevent white edges */
       html.dark-mode .container.with-coverflow {
         background-color: #181c20;
       }
-      
+
       /* Prevent scrollbars during flip animation */
       .container.with-coverflow {
         /* This overflow is for the container overall */
@@ -827,7 +827,7 @@
       html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
         background: var(--primary-blue);
         color: #fff;
-  
+
         /* Toned-down box shadow for desktop: less neon, less spread, less intensity */
         box-shadow: 0 0 4px 1px #5ecbff88, 0 0 8px 2px #39fffd55;
         border: 1px solid rgba(94, 203, 255, 0.18);
@@ -851,12 +851,12 @@
         border: 0; /* Remove any borders that might create edges */
         outline: none;
       }
-      
+
       /* Blur effect removed */
       .container.with-coverflow .flip-card-back::after {
         display: none;
       }
-      
+
       /* Make sure links are always clickable on desktop */
       .container.with-coverflow .flip-card-back a,
       .container.with-coverflow .flip-card.flipped .flip-card-back a {
@@ -883,13 +883,13 @@
       html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
         background: var(--primary-blue);
         color: #fff;
-  
+
         /* Neon box shadow to match mobile */
         box-shadow: 0 0 4px 1px #5ecbff, 0 0 8px 2px #39fffd;
         border: 1px solid rgba(94, 203, 255, 0.2);
       }
     }
-  
+
     /* =============================================================
        MOBILE STYLES
        ============================================================= */
@@ -924,14 +924,14 @@
         box-shadow: none;
         border: none;
       }
-      
+
       /* Preserve the 90% scale for inactive cards in dark mode */
       html.dark-mode .container .flip-card:not(.active) {
         opacity: 0.65;
         transform: scale(0.9);
         z-index: 1;
       }
-      
+
       html.dark-mode .container .flip-card-inner {
         /* Card inner is completely transparent in all states to avoid rectangle effect */
         background: transparent;
@@ -949,7 +949,7 @@
       }
       /* Keep preactivated and active rules below as-is */
       /* If needed, you can keep the original rule as a fallback for other cases, but for non-activated, non-preactivated cards, use the purple. */
-      
+
       html.dark-mode .container .flip-card .flip-card-back {
         background: rgba(35, 39, 46, 0.85);
         color: #5ecbff;
@@ -960,12 +960,12 @@
         color: #e0e0e0;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       }
-      
+
       /* Blur effect removed */
       html.dark-mode .flip-card.flipped .flip-card-back {
         background: rgba(35, 39, 46, 0.85);
-  
-  
+
+
         margin: 0;
         box-sizing: border-box;
         /* Keep standard width for content */
@@ -980,7 +980,7 @@
         margin-right: -25px;
         width: calc(90vw + 50px) !important;
       }
-      
+
       /* Blur effect removed */
       html.dark-mode .flip-card.flipped .flip-card-back::before {
         content: '';
@@ -990,12 +990,12 @@
         right: -25px;
         bottom: -25px;
         background: inherit;
-  
-  
+
+
         z-index: -1;
         border-radius: inherit;
       }
-      
+
       /* Ensure the fade overlay for flipped cards extends fully */
       /* Mobile-specific dark mode fixes */
       /* This is a critical fix for mobile dark mode */
@@ -1013,7 +1013,7 @@
           pointer-events: none;
           z-index: 2;
         }
-        
+
         /* The flipped card case where we need to extend the width */
         html.dark-mode .flip-card.flipped .flip-card-back::after {
           /* Extend the width to match the expanded card */
@@ -1033,11 +1033,11 @@
         border: 1.5px solid #7c6fd8;
         outline: none;
       }
-  
+
       /* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
       html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
       html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
-  
+
       html.dark-mode .container .flip-card.active .flip-card-front,
       html.dark-mode .container .flip-card.preactivated .flip-card-front,
       html.dark-mode .flip-card.active .flip-card-front,
@@ -1057,17 +1057,17 @@
       }
       html.dark-mode .flip-card.active .flip-card-front * {
         color: #e0e0e0;
-  
+
         border: none;
       }
-  
+
       /* Keep inner card transparent to avoid rectangular appearance */
       html.dark-mode .container .flip-card.active .flip-card-inner {
         background: transparent;
         box-shadow: none;
         border: none;
       }
-      
+
       html.dark-mode .container .flip-card.active .flip-card-back {
         background: var(--primary-blue);
         color: #fff;
@@ -1122,9 +1122,9 @@
         transform: scale(1.2);
         width: 100%;
       }
-  
+
     }
-  
+
     /* =============================================================
        JS-CONTROLLED STYLES
        ============================================================= */
@@ -1156,7 +1156,7 @@
       margin-top: 25px !important;
       margin-bottom: 15px !important;
     }
-  
+
     .filter-actions {
       margin-top: 2rem;
       display: flex;
@@ -1184,7 +1184,7 @@
       background: #007bff;
       color: white;
     }
-  
+
     /* =============================================================
        LOGO STYLES
        ============================================================= */
@@ -1211,7 +1211,7 @@
       .site-logo {
         max-width: var(--logo-max-width-mobile, 60px);
       }
-  
+
       html.dark-mode .logo-container img.site-logo,
       html.dark-mode .header-logo-container  {
         box-shadow:
@@ -1222,7 +1222,7 @@
         transition: filter 0.3s, box-shadow 0.3s;
       }
     }
-  
+
     /* --- DARK MODE LOGO: Only apply effect to image, not container --- */
     @media (hover: hover) and (pointer: fine) {
     html.dark-mode .site-logo {
@@ -1235,8 +1235,8 @@
       transition: filter 0.3s, box-shadow 0.3s;
     }
   }
-  
-  
+
+
     /* Exception: hide logo for mobile landscape via display:none as before */
     @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
       .logo-container {
@@ -1246,12 +1246,12 @@
         transition: none;
       }
     }
-  
+
     /* =============================================================
        OVERLAY & WEBVIEW/SPECIAL BROWSER STYLES
        (Grouped, deduplicated, and comments added for clarity)
        ============================================================= */
-  
+
     /* === Base Overlay Styles === */
     .card-overlay {
       position: fixed;
@@ -1264,7 +1264,7 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity var(--transition-medium);
-  
+
     }
     /* === Overlay: always use original light mode blur and background for all modes === */
     .card-overlay, html.dark-mode .card-overlay {
@@ -1346,7 +1346,7 @@
         flex-direction: column;
       }
     }
-  
+
     html.dark-mode .overlay-content {
       position: fixed;
       top: 0;
@@ -1416,13 +1416,13 @@
     }
     .overlay-close:before { transform: rotate(45deg); }
     .overlay-close:after { transform: rotate(-45deg); }
-  
+
     /* Hide original flipped card when overlay is active */
     .card-overlay.active ~ .container .flip-card.flipped {
       visibility: hidden;
       background: rgba(0, 0, 0, 0.75) !important;
     }
-  
+
     /* === Swipe Indicator Styles === */
     @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     /* Sticky swipe-indicator at bottom of overlay-content */
@@ -1492,8 +1492,8 @@
       mask-image: linear-gradient(to top, black 60%, transparent 100%);
     }
   }
-  
-  
+
+
     @media (hover: hover) and (pointer: fine) {
       .overlay-content {
     position: fixed;
@@ -1518,7 +1518,7 @@
   .overlay-content .swipe-indicator {
     border: none !important;
     box-shadow: none !important;
-  
+
     position: absolute;
     left: 50%;
     top: 90%;
@@ -1540,7 +1540,7 @@
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
     mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
   }
-  
+
     /* Desktop dark mode header override */
     html.dark-mode .page-header,
     html.dark-mode .page-header h1,
@@ -1557,12 +1557,12 @@
     html.dark-mode .page-header {
       background: #181c20 !important;
     }
-  
+
   @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     .overlay-content .swipe-indicator {
     border: none !important;
     box-shadow: none !important;
-  
+
       position: fixed;
       left: 0;
       right: 0;
@@ -1572,14 +1572,14 @@
       z-index: 1100;
     }
   }
-  
+
     }
-  
+
     /* Only use fixed/viewport style for fullscreen overlays on mobile */
     @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     /* Remove fixed/viewport swipe-indicator for overlays, handled above */
-  
-  
+
+
     html.dark-mode .swipe-indicator {
     color: rgba(94,203,255,0.8);
     /* Simplified gradient to avoid artifacts */
@@ -1620,10 +1620,10 @@
     vertical-align: middle;
     -webkit-tap-highlight-color: transparent;
   }
-  
+
     /* Ensure overlay-content does not have extra bottom padding */
     .overlay-content { padding-bottom: 0 !important; }
-  
+
     /* === Browser-Specific Styles === */
     body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
     body.safari-mobile .card-overlay,
@@ -1641,7 +1641,7 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity var(--transition-medium);
-  
+
     }
     body.safari-mobile .card-overlay.active,
     body.chrome-android .card-overlay.active,
@@ -1693,7 +1693,7 @@
     }
     /* Removed browser-specific overlay mask-image fade for .flip-card-back */
     /* Removed browser-specific dark mode overlay mask-image fade for .flip-card-back */
-  
+
     body.safari-mobile .overlay-content .flip-card-back-content,
     body.chrome-android .overlay-content .flip-card-back-content,
     body.chrome-ios .overlay-content .flip-card-back-content,
@@ -1710,7 +1710,7 @@
     body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
       visibility: hidden;
     }
-  
+
     body.chrome-android .overlay-content .flip-card-back > *:last-child,
     body.chrome-ios .overlay-content .flip-card-back > *:last-child,
     body.webview .overlay-content .flip-card-back > *:last-child,
@@ -1755,23 +1755,23 @@
         transition: none !important;
       }
     }
-  
+
     /* =============================================================
        Remove tap/click highlight on mobile links
        ============================================================= */
     a, a:active, a:focus {
       -webkit-tap-highlight-color: transparent;
     }
-  
+
     @media (hover: hover) and (pointer: fine) {
       /* Basic hover style for non-card links */
-      a:hover:not(.flip-card-back a):not(.flip-card-front a), 
+      a:hover:not(.flip-card-back a):not(.flip-card-front a),
       a:focus-visible:not(.flip-card-back a):not(.flip-card-front a) {
         color: var(--primary-blue-dark);
         text-decoration: underline;
       }
     }
-  
+
     /* Mobile dark mode logo styles */
   @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
     html.dark-mode .logo-container img.site-logo,
@@ -1787,15 +1787,15 @@
       transition: filter 0.3s, box-shadow 0.3s;
     }
   }
-  
-  
+
+
   /* =============================================================
        END OF STYLE.CSS
        ============================================================= */
   html, body {
     overflow-y: hidden !important;
   }
-  
+
   /* === DARK MODE REFINED === */
   html.dark-mode body {
     background: #181c20 !important;
@@ -1811,7 +1811,7 @@
   html.dark-mode .page-header h1, html.dark-mode .site-title {
     color: #5ecbff !important;
   }
-  
+
   html.dark-mode .container {
     background: #23272e !important;
     color: #5ecbff !important;
@@ -1834,8 +1834,8 @@
     background: transparent;
     transition: transform 0.6s;
   }
-  
-  
+
+
   /* Force active card front (unflipped) and inner to match in dark mode */
   /* Card container in dark mode - base styles for all viewports */
   html.dark-mode .flip-card {
@@ -1844,14 +1844,14 @@
     box-shadow: none !important;
     border: none !important;
   }
-  
+
   /* Ensure inactive cards keep 90% scale in dark mode (global) */
   html.dark-mode .flip-card:not(.active) {
     opacity: 0.65;
     transform: scale(0.9);
     z-index: 1;
   }
-  
+
   /* Active card in dark mode - base styles for all viewports */
   html.dark-mode .flip-card.active {
     background: transparent !important;
@@ -1873,7 +1873,7 @@
     background: var(--primary-blue) !important;
     border-radius: var(--card-radius);
   }
-  
+
   /* Keep inner transparent */
   html.dark-mode .flip-card.active .flip-card-inner {
     background: transparent !important;
@@ -1884,7 +1884,7 @@
     text-shadow: none !important;
     box-shadow: var(--box-shadow-highlight) !important;
   }
-  
+
   html.dark-mode .menu-overlay {
     background: rgba(20,20,20,0.92) !important;
     transition: background 0.3s;
@@ -1914,11 +1914,11 @@
     text-shadow: 0 0 1.5px #5ecbff;
     transition: color 0.3s, text-shadow 0.3s;
   }
-  html.dark-mode a:hover,
+  /* html.dark-mode a:hover,
   html.dark-mode .menu-content a:hover {
     color: #fff !important;
     background: #1a4c6e !important;
-  }
+  } */
     }
     @media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
       .swipe-indicator:before, .swipe-indicator:after {
@@ -1932,7 +1932,7 @@
       margin-top: 30px;
       }
     }
-  
+
     @media (hover: hover) and (pointer: fine) {
        .header-mobile-content {
         display: none;

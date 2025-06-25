@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var rect = document.createElement('div');
       rect.className = 'card-link-rectangle';
       link.parentNode.insertBefore(rect, link.nextSibling);
-    }    
+    }
   });
 
   // --- SCRIPT LOADER ---
@@ -49,10 +49,10 @@ document.addEventListener('DOMContentLoaded', function() {
   async function initializeApp() {
       try {
           await loadScript('assets/js/common.js?v=20250606');
-          
+
           const platformScript = isMobile ? 'assets/js/mobile.js?v=20250606' : 'assets/js/desktop.js?v=20250606';
           await loadScript(platformScript);
-          
+
           // Now that platform-specific functions are exposed on CardSystem,
           // we can load the scripts that depend on them.
           await Promise.all([

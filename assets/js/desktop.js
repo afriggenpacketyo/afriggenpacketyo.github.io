@@ -439,23 +439,23 @@
                 }
             } else {
                 // Unflipping - use a different approach to prevent scrollbar
-                
+
                 // 1. Create full-viewport overlay to block scrollbar appearance
                 const overlay = document.createElement('div');
                 overlay.id = 'scrollbar-blocker';
                 overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:1000; pointer-events:none;';
                 document.body.appendChild(overlay);
-                
+
                 // 2. Force a specific height on the body and viewport
                 const viewportHeight = window.innerHeight;
                 document.body.style.height = `${viewportHeight}px`;
                 document.documentElement.style.height = `${viewportHeight}px`;
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
-                
+
                 // 3. Store current scroll position
                 const scrollY = window.scrollY;
-                
+
                 // 4. Execute card deflipping with text scaling
                 // Add was-flipped class to trigger text scaling during deflip
                 this.classList.add('was-flipped');
@@ -473,28 +473,28 @@
                     }
                 }
                 // === END swipe-indicator removal ===
-                
+
                 // 5. Directly handle height change with inline styles for instant transition
                 const originalHeight = 400; // Match the height in adjustCardHeight
                 this.style.height = `${originalHeight}px`;
                 this.querySelector('.flip-card-inner').style.height = '100%';
                 this.querySelector('.flip-card-back').style.minHeight = '100%';
                 CardSystem.currentlyFlippedCard = null;
-                
+
                 // 6. Wait for transition to complete, then restore everything
                 setTimeout(() => {
                     // Remove overlay
                     if (document.getElementById('scrollbar-blocker')) {
                         document.getElementById('scrollbar-blocker').remove();
                     }
-                    
+
                     // Restore scroll position and overflow handling
                     document.body.style.height = '';
                     document.documentElement.style.height = '';
                     document.body.style.overflow = '';
                     document.documentElement.style.overflow = '';
                     window.scrollTo(0, scrollY);
-                    
+
                     // Remove the was-flipped class when the transition is complete
                     this.classList.remove('was-flipped');
                 }, 400); // Match transition duration
@@ -1284,7 +1284,7 @@
 
     // Call during initialization
     document.addEventListener('DOMContentLoaded', initLogoVisibility);
-    
+
     // Override the card height adjustment method to prevent scrollbars when deflipping
     const originalAdjustCardHeight = CardSystem.adjustCardHeight;
     CardSystem.adjustCardHeight = function(card, setHeight = false) {
@@ -1293,14 +1293,14 @@
             // Store current document state
             const htmlStyle = document.documentElement.style.overflow;
             const bodyStyle = document.body.style.overflow;
-            
+
             // Apply overflow:hidden to prevent scrollbar
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
-            
+
             // Call original method to perform height adjustment
             originalAdjustCardHeight.call(this, card, setHeight);
-            
+
             // Restore the original overflow settings after a slight delay
             setTimeout(() => {
                 document.documentElement.style.overflow = htmlStyle;
@@ -1317,10 +1317,10 @@
     initSmoothScrolling();
     initSmoothDotTransitions();
     addCardOpacityTransitions();
-    
+
     // Attach keyboard handlers
     attachKeyboardHandlers();
-    
+
     console.log("iPod-style cover flow initialized");
 
     // Initial positioning

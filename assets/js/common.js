@@ -32,10 +32,10 @@ window.CardSystem = {
                 this.container.style.paddingTop = minPadding + 'px';
             }
         }
-        
+
         // Find the correct active index if the current one is filtered
         this.ensureActiveCardVisible();
-        
+
         // Update card active classes
         this.flipCards.forEach((card, i) => {
             card.classList.toggle('active', i === this.activeCardIndex);
@@ -46,7 +46,7 @@ window.CardSystem = {
         document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
             const card = this.flipCards[i];
             const isFiltered = card && card.classList.contains('filtered');
-            
+
             dot.classList.toggle('active', i === this.activeCardIndex);
             dot.classList.toggle('filtered', isFiltered);
 
@@ -62,7 +62,7 @@ window.CardSystem = {
             // Only hide dots if there's an active overlay (hamburger menu)
             const overlay = document.querySelector('.hamburger-overlay');
             const isOverlayActive = overlay && overlay.style.display !== 'none';
-            
+
             if (isOverlayActive) {
                 // Hide dots only when overlay is active
                 cardIndicator.style.opacity = '0';
@@ -122,7 +122,7 @@ window.CardSystem = {
                     }
                 }
             }
-            
+
             if (newMasterActiveIndex !== -1) {
                 masterActiveIndex = newMasterActiveIndex; // Update masterActiveIndex to the new visible one
                 activeDotMaster = allDots[masterActiveIndex];
@@ -176,7 +176,7 @@ window.CardSystem = {
             // First, update all non-active visible dots
             visibleDots.forEach((dot, vIndex) => {
                 if (dot === activeVisibleDot) return; // Skip the active dot for now
-                
+
                 if (isDotClick) {
                     dot.style.transition = 'all 0.2s ease';
                 } else {
@@ -184,12 +184,12 @@ window.CardSystem = {
                 }
                 this.updateFilterAwareDotState(dot, vIndex, visibleActiveIndex, visibleDots);
             });
-            
+
             // Then, handle the active dot with its specific transitions and delays
             if (activeVisibleDot) {
                 if (!isDotClick && this.previousVisibleActiveIndex !== visibleActiveIndex) { // Sequential swipe
                     if (visibleDots.length > 0 && visibleDots[0]) visibleDots[0].offsetHeight; // Force reflow
-                    
+
                     // Check if the new active dot was 'size-mid' before this update cycle
                     // This check relies on updateFilterAwareDotState from the *previous* call to updateUI
                     // or how classes were before this function started manipulating them.
@@ -199,9 +199,9 @@ window.CardSystem = {
                         activeVisibleDot.classList.remove('size-mid');
                         activeVisibleDot.classList.add('size-large'); // Intermediate state
                         activeVisibleDot.style.transition = 'all 0.1s ease';
-                        
+
                         if (visibleDots.length > 0 && visibleDots[0]) visibleDots[0].offsetHeight; // Reflow for intermediate state
-                        
+
                         setTimeout(() => {
                             if (activeVisibleDot) {
                                 activeVisibleDot.style.transition = 'all 0.2s ease';
@@ -289,7 +289,7 @@ window.CardSystem = {
                     // Only hide if there's an active overlay, otherwise keep visible
                     const overlay = document.querySelector('.hamburger-overlay');
                     const isOverlayActive = overlay && overlay.style.display !== 'none';
-                    
+
                     if (!isOverlayActive) {
                         cardIndicator.style.opacity = '1';
                         cardIndicator.style.pointerEvents = 'auto';
@@ -434,7 +434,7 @@ window.CardSystem = {
         this.updateUI();
 
         console.log("CardSystem initialized");
-        
+
         // Check for auto-apply filters immediately after initialization
         this.checkAutoApplyFilters();
     },
@@ -443,13 +443,13 @@ window.CardSystem = {
     checkAutoApplyFilters: function() {
         if (localStorage.getItem('autoApplyFilters') === 'true') {
             const excludes = localStorage.getItem('Excludes') || '';
-            
+
             if (excludes.trim()) {
                 console.log('Auto-applying filters during CardSystem initialization...');
-                
+
                 // Apply filters immediately
                 this.isFiltering = true;
-                
+
                 // Apply the filtering logic directly here
                 const excludeTerms = excludes.toLowerCase().split(',').map(term => term.trim()).filter(Boolean);
                 let firstVisibleIndex = -1;
@@ -457,9 +457,9 @@ window.CardSystem = {
                 this.flipCards.forEach((card, index) => {
                     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
                     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-                    
+
                     const shouldHide = excludeTerms.some(term => summary.includes(term));
-                    
+
                     card.classList.toggle('filtered', shouldHide);
 
                     if (!shouldHide && firstVisibleIndex === -1) {

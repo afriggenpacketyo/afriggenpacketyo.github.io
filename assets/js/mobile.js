@@ -1015,100 +1015,48 @@
           }, 50);
       }
 
-      // Function to toggle logo visibility with smoother transitions
+      // Add this function for consistent aspect ratio detection
+      function isPhoneLandscape() {
+          const mediaQuery = window.matchMedia("(max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse)");
+          return mediaQuery.matches;
+      }
+
+      // Simplified logo visibility function - only handles show/hide, no positioning
       function toggleLogoVisibility(show) {
           const logoContainer = document.querySelector('.logo-container');
           if (!logoContainer) return;
-      // Add this function for consistent aspect ratio detectionn    function isPhoneLandscape() {n        const mediaQuery = window.matchMedia("(max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse)");n        return mediaQuery.matches;n    }n
-          // Only hide if it's a phone in landscape or we're explicitly hiding
+
+          // Hide in landscape mode or when explicitly hidden
           if (isPhoneLandscape() || !show) {
               logoContainer.style.opacity = '0';
               logoContainer.style.visibility = 'hidden';
+              logoContainer.style.display = 'none';
           } else {
-              // Show in all other cases
-              // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease'; // Reset to default visible state
+              // Show in all other cases - let CSS handle positioning
+              logoContainer.style.opacity = '1';
+              logoContainer.style.visibility = 'visible';
+              logoContainer.style.display = '';
+              logoContainer.style.transition = 'opacity 0.3s ease';
           }
       }
 
-      // Function to set appropriate logo position class
-      function setLogoPositionClass() {
-          // Logo positioning logic removed as requested
-          // We're keeping the function to maintain any references to it
-          // but removing all the actual positioning logic
-          return;
-      }
-
-      // Update the initLogoVisibility function to check for landscape mode on load
+      // Initialize logo visibility on page load
       function initLogoVisibility() {
           const logoContainer = document.querySelector('.logo-container');
           if (!logoContainer) return;
 
           // Start with default visible state
-          // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease';
+          logoContainer.style.opacity = '1';
+          logoContainer.style.visibility = 'visible';
+          logoContainer.style.display = '';
+          logoContainer.style.transition = 'opacity 0.3s ease';
 
-          // Only hide if card is flipped
-          isAnyCardFlipped = CardSystem.currentlyFlippedCard !== null || isOverlayActive;
-          if (isAnyCardFlipped) {
+          // Hide if in landscape mode or if card is flipped
+          if (isPhoneLandscape() || CardSystem.currentlyFlippedCard !== null || isOverlayActive) {
               logoContainer.style.opacity = '0';
               logoContainer.style.visibility = 'hidden';
+              logoContainer.style.display = 'none';
           }
-      }
-
-      // Update the toggleLogoVisibility function to use our shared isPhoneLandscape function
-      function toggleLogoVisibility(show) {
-          const logoContainer = document.querySelector('.logo-container');
-          if (!logoContainer) return;
-
-          // Use our shared function for consistent detection
-          if (isPhoneLandscape()) {
-              // Force immediate hiding with !important styles for phones in landscape
-              logoContainer.style.opacity = '0';
-  logoContainer.style.visibility = 'hidden';
-  logoContainer.style.transition = 'none';
-  logoContainer.style.display = 'none';
-              console.log("toggleLogoVisibility - hiding logo for landscape");
-              return;
-          }
-
-          // Normal behavior for portrait or tablets/desktops
-          if (show) {
-              // Reset any !important styles first
-              // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease';
-              logoContainer.style.opacity = '1';
-              logoContainer.style.visibility = 'visible';
-              logoContainer.style.display = '';
-              logoContainer.style.transition = 'opacity 0.3s ease';
-          } else {
-              // Reset any !important styles first
-              // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease';
-              logoContainer.style.opacity = '0';
-              logoContainer.style.visibility = 'hidden';
-              logoContainer.style.transition = 'opacity 0.3s ease';
-          }
-      }
-
-      // Add this function to completely recalculate logo position from scratch
-      function calculateAndPositionLogo(forceHideFirst = false) {
-          // Logo positioning calculation logic removed as requested
-          // We're keeping the function to maintain any references to it
-          // but removing all the actual positioning logic
-          return false;
       }
 
       // Update the orientation change handler
@@ -1123,7 +1071,7 @@
               // Update header visibility based on orientation
               updateHeaderVisibility();
 
-              // Update logo visibility based on orientation
+              // Update logo visibility based on orientation - simplified logic
               if (isCurrentlyLandscape) {
                   toggleLogoVisibility(false);
               } else if (!isAnyCardFlipped && !isOverlayActive) {
@@ -1138,217 +1086,103 @@
           }, 150);
       });
 
-      // Add this function to ensure logo positioning is correct when coming from landscape
-      function forceLogoRepositioning() {
-          if (isPhoneLandscape()) return; // Skip if we're still in landscape
-
-          const logoContainer = document.querySelector('.logo-container');
-          const header = document.querySelector('header');
-          const activeCard = flipCards[CardSystem.activeCardIndex];
-
-          if (!logoContainer || !header || !activeCard) return;
-
-          // First hide the logo
-          logoContainer.style.transition = 'none';
-          logoContainer.style.opacity = '0';
-
-          // Force reflow
-          void document.documentElement.offsetHeight;
-          void header.offsetHeight;
-          void activeCard.offsetHeight;
-
-          // Calculate the proper position
-          const headerRect = header.getBoundingClientRect();
-          const cardRect = activeCard.getBoundingClientRect();
-          const headerBottom = headerRect.bottom;
-          const cardTop = cardRect.top;
-          const midPoint = headerBottom + ((cardTop - headerBottom) / 2);
-
-          // Set position while still invisible
-          logoContainer.style.position = 'fixed';
-          logoContainer.style.top = `${midPoint}px`;
-          logoContainer.style.left = '50%';
-          logoContainer.style.transform = 'translate(-50%, -50%)';
-
-          // Store position
-          finalLogoPosition = midPoint;
-
-          // Force another reflow
-          void logoContainer.offsetHeight;
-
-          // Now fade in
-          setTimeout(() => {
-              if (isAnyCardFlipped || isOverlayActive) return; // Don't show if a card is flipped
-
-              logoContainer.style.transition = 'opacity 0.3s ease';
-              logoContainer.style.opacity = '1';
-              logoContainer.style.visibility = 'visible';
-
-              console.log("Force repositioned logo at: ", midPoint);
-          }, 50);
-      }
-
-      // Update the resize handler to use our improved functions
+      // Simplified resize handler - only handles logo visibility
       window.addEventListener('resize', function() {
           clearTimeout(resizeDebounceTimer);
           resizeDebounceTimer = setTimeout(() => {
               // Update header visibility
               updateHeaderVisibility();
 
-              // Detect orientation change
-              const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-              const orientationChanged = currentOrientation !== lastScreenOrientation;
-              const wasLandscape = lastScreenOrientation === 'landscape';
-              const nowPortrait = currentOrientation === 'portrait';
-
-              // Update orientation tracking
-              lastScreenOrientation = currentOrientation;
-
-              console.log(`Resize detected: ${window.innerWidth}x${window.innerHeight}`);
-              console.log(`Orientation: was ${lastScreenOrientation}, now ${currentOrientation}`);
-
-              // Check for landscape mode status
+              // Simple logo visibility logic
               const inLandscape = isPhoneLandscape();
-
               const logoContainer = document.querySelector('.logo-container');
-              if (!logoContainer) return;
 
-              if (inLandscape) {
-                  // Hide logo in landscape
-                  logoContainer.style.cssText = `
-                      opacity: 0 !important;
-                      visibility: hidden !important;
-                      transition: none !important;
-                      display: none !important;
-                  `;
-                  console.log("Resize - hiding logo for landscape");
-              } else if (!isAnyCardFlipped && !isOverlayActive) {
-                  // Special handling for landscape to portrait rotation through resize
-
-                  // Standard resize in portrait mode - normal logo display
-                  // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease';
-                  logoContainer.style.opacity = '1';
-                  logoContainer.style.visibility = 'visible';
-                  logoContainer.style.display = '';
-              }
-
-              // Only run layout recalculation if we haven't already done it
-              if (!(wasLandscape && nowPortrait)) {
-                  if (orientationChanged) {
-                      recalculateEntireLayout();
-                  } else {
-                      // For minor changes, just ensure cards are centered
-                      moveToCard(CardSystem.activeCardIndex, false);
+              if (logoContainer) {
+                  if (inLandscape) {
+                      // Hide logo in landscape
+                      logoContainer.style.opacity = '0';
+                      logoContainer.style.visibility = 'hidden';
+                      logoContainer.style.display = 'none';
+                      console.log("Resize - hiding logo for landscape");
+                  } else if (!isAnyCardFlipped && !isOverlayActive) {
+                      // Show logo in portrait mode if no card is flipped
+                      logoContainer.style.opacity = '1';
+                      logoContainer.style.visibility = 'visible';
+                      logoContainer.style.display = '';
+                      logoContainer.style.transition = 'opacity 0.3s ease';
                   }
               }
+
+              // Ensure cards are centered
+              moveToCard(CardSystem.activeCardIndex, false);
           }, 150);
       });
 
-      // Enhanced initialization function with proper waitForCardMeasurements
+      // Simplified initialization function
       async function initialize() {
           console.log("Initializing mobile card system...");
 
-          // Check landscape mode and update header visibility immediately
           const startInLandscape = isPhoneLandscape();
           updateHeaderVisibility();
 
-          // Even if in landscape, we'll still calculate positions as if the logo is there
-          const logoContainer = document.querySelector('.logo-container');
-          if (logoContainer) {
-              logoContainer.style.opacity = startInLandscape ? '0' : '1';
-          }
+          // Initialize logo visibility
+          initLogoVisibility();
 
-          // Define waitForCardMeasurements function with improved timeout handling
           function waitForCardMeasurements() {
-              return new Promise((resolve, reject) => {
+              return new Promise((resolve) => {
                   let attempts = 0;
-                  const maxAttempts = 25; // Increased attempts
-
+                  const maxAttempts = 25;
                   function checkMeasurements() {
                       attempts++;
-
-                      // Don't reject, just resolve with warning to prevent blocking
                       if (attempts > maxAttempts) {
-                          console.warn('Card measurement timeout after', maxAttempts, 'attempts - continuing anyway');
-                          resolve(); // Continue instead of rejecting
-                          return;
-                      }
-
-                      const firstCard = flipCards[0];
-                      if (!firstCard) {
-                          setTimeout(checkMeasurements, 30); // Faster polling
-                          return;
-                      }
-
-                      const width = firstCard.offsetWidth;
-                      const height = firstCard.offsetHeight;
-
-                      if (width > 0 && height > 0) {
-                          console.log(`Cards measured after ${attempts} attempts: ${width}x${height}`);
+                          console.warn('Card measurement timeout - continuing anyway');
                           resolve();
-                      } else {
-                          setTimeout(checkMeasurements, 30); // Faster polling
+                          return;
                       }
+                      const firstCard = flipCards[0];
+                      if (!firstCard || firstCard.offsetWidth === 0) {
+                          setTimeout(checkMeasurements, 30);
+                          return;
+                      }
+                      console.log(`Cards measured after ${attempts} attempts.`);
+                      resolve();
                   }
-
                   checkMeasurements();
               });
           }
 
-          // Completely revised initializeSequence with better error handling
           async function initializeSequence() {
               try {
-                  // Wait for cards to be properly measured (now won't reject)
                   await waitForCardMeasurements();
-
-                  // Setup edge padding
                   addEdgeCardPadding();
-
-                  // Center first card with enhanced positioning
                   centerFirstCardOnLoad();
-
-                  // Initialize logo positioning only if not in landscape
-                  if (!startInLandscape) {
-                      setTimeout(() => {
-                          calculateAndPositionLogo();
-                      }, 200);
-                  }
-
-                  // Mark body as initialized for CSS transitions
                   document.body.classList.add('initialized');
-
-                  // Final cleanup and settings
                   setTimeout(() => {
                       fixVerticalPositioning();
-                      console.log('Mobile initialization complete');
-                  }, 100);
+                      console.log('Mobile initialization complete. Firing mobileLayoutReady event.');
 
+                      // Announce that the layout is ready for the splash screen
+                      document.dispatchEvent(new CustomEvent('mobileLayoutReady'));
+
+                  }, 100);
               } catch (error) {
                   console.error('Initialization failed:', error);
-                  // Still try to show something even if initialization fails
                   document.body.classList.add('initialized');
               }
           }
 
-          // Start initialization
-          initializeSequence().then(() => {
-              // Call filters after successful initialization
-              setTimeout(() => {
-                  notifyFiltersInitComplete();
-              }, 500); // Reasonable delay after init completes
-          }).catch(() => {
-              // Still notify filters even if init failed
-              setTimeout(() => {
-                  notifyFiltersInitComplete();
-              }, 1000);
-          });
+          initializeSequence();
       }
 
-      // Replace the current initialization code with this enhanced version
+      // Add a function to be called by the splash screen for the final re-centering
+      window.CardSystem.forceRecenter = () => {
+        if (typeof moveToCard === 'function') {
+            console.log('Splash requested final recenter on card:', CardSystem.activeCardIndex);
+            moveToCard(CardSystem.activeCardIndex, false); // false for instant move
+        }
+      };
+
+      // Run initialize when the page loads
       if (document.readyState === 'complete') {
           initialize();
       } else {
@@ -1361,11 +1195,7 @@
               console.log('Mobile init complete, notifying filters...');
               window.filtersCompleteInitialization();
           }
-      }          // Add this to the end of the successful initialization sequence
-          // Wait for the layout to be completely stable before allowing auto-filters
-          setTimeout(() => {
-              notifyFiltersInitComplete();
-          }, 1500); // Give mobile layout more time to stabilize before auto-apply
+      }
 
       // Function to create the overlay
       function createOverlay() {
@@ -1691,116 +1521,20 @@
           }
       }
 
-      // Add this event handler to specifically address Safari mobile focus issues
+      // Focus event handler simplified to only handle logo visibility
       window.addEventListener('focus', function() {
-          // Add a small delay to ensure the browser has fully restored the view
           setTimeout(() => {
-              // Only recalculate if we're not in a flipped card state
-              if (!isAnyCardFlipped && !isOverlayActive) {
-                  console.log("Focus event: Fixing logo position");
-
-                  // Hide the logo immediately
+              // Only show logo if not in flipped card state and not in landscape
+              if (!isAnyCardFlipped && !isOverlayActive && !isPhoneLandscape()) {
                   const logoContainer = document.querySelector('.logo-container');
                   if (logoContainer) {
-                      logoContainer.style.transition = 'none';
-                      logoContainer.style.opacity = '0';
-
-                      // Short timeout to ensure browser is ready
-                      setTimeout(() => {
-                          // Apply class-based positioning
-                          setLogoPositionClass();
-
-                          // Fade logo back in
-                          logoContainer.style.transition = 'opacity 0.3s ease';
-                          logoContainer.style.opacity = '1';
-
-                          console.log("Logo position restored after focus");
-                      }, 100);
+                      logoContainer.style.opacity = '1';
+                      logoContainer.style.visibility = 'visible';
+                      logoContainer.style.display = '';
+                      logoContainer.style.transition = 'opacity 0.3s ease';
                   }
               }
           }, 100);
-      });
-
-      // Also add a resize handler to catch manual resizing on desktop or iPad split-screen changes
-      window.addEventListener('resize', function() {
-          clearTimeout(resizeDebounceTimer);
-          resizeDebounceTimer = setTimeout(() => {
-              // Check aspect ratio on resize too
-              const viewportWidth = window.innerWidth;
-              const viewportHeight = window.innerHeight;
-              const aspectRatio = viewportWidth / viewportHeight;
-              const isPhoneLandscape = aspectRatio > 1.7 && viewportHeight < 500 && viewportWidth < 1024;
-
-              const logoContainer = document.querySelector('.logo-container');
-              if (!logoContainer) return;
-
-              if (isPhoneLandscape) {
-                  // Force hiding for phone landscape during resize
-                  logoContainer.style.cssText = `
-                      opacity: 0 !important;
-                      visibility: hidden !important;
-                      transition: none !important;
-                      display: none !important;
-                  `;
-              } else if (!isAnyCardFlipped) {
-                  // Show logo if not a phone landscape and no card is flipped
-                  // Only reset visibility/opacity/display/transition, let CSS handle appearance
-  logoContainer.style.opacity = '1';
-  logoContainer.style.visibility = 'visible';
-  logoContainer.style.display = '';
-  logoContainer.style.transition = 'opacity 0.3s ease';
-                  logoContainer.style.opacity = '1';
-                  logoContainer.style.visibility = 'visible';
-                  logoContainer.style.display = '';
-              }
-
-              // The existing resize handler calls recalculateEntireLayout for orientation changes
-              // and moveToCard for other resize events
-          }, 150);
-      });
-
-      // Single function to update logo position via CSS variables
-      function updateLogoPositionVariables() {
-          const header = document.querySelector('header');
-          const activeCard = flipCards[CardSystem.activeCardIndex];
-
-          if (!header || !activeCard) return;
-
-          // Force reflow for accurate measurements
-          void header.offsetHeight;
-          void activeCard.offsetHeight;
-
-          // Get measurements
-          const headerRect = header.getBoundingClientRect();
-          const cardRect = activeCard.getBoundingClientRect();
-
-          // Update CSS variables
-          document.documentElement.style.setProperty('--header-bottom', `${headerRect.bottom}px`);
-          document.documentElement.style.setProperty('--card-top', `${cardRect.top}px`);
-      }
-
-      // Update orientation change handler
-      window.addEventListener('orientationchange', function() {
-          const logoContainer = document.querySelector('.logo-container');
-          if (!logoContainer) return;
-
-          // Hide logo during transition
-          logoContainer.style.opacity = '0';
-
-          setTimeout(() => {
-              const isInLandscape = isPhoneLandscape();
-
-              if (!isInLandscape && !isAnyCardFlipped && !isOverlayActive) {
-                  // Update position variables
-                  updateLogoPositionVariables();
-
-                  // Show logo with transition
-                  requestAnimationFrame(() => {
-                      logoContainer.style.transition = 'opacity 0.3s ease';
-                      logoContainer.style.opacity = '1';
-                  });
-              }
-          }, 150);
       });
 
       // Add this function to recalculate layout without logo positioning
@@ -2115,7 +1849,14 @@
       // --- EXPOSE PUBLIC METHODS ---
       // Make key functions available to other scripts like filters.js
       window.CardSystem.moveToCard = moveToCard;
-      window.CardSystem.resetCardHighlights = resetCardHighlights;
+    window.CardSystem.resetCardHighlights = resetCardHighlights;
+    // *** ADD THIS: A function for the splash orchestrator to call for final positioning ***
+    window.CardSystem.forceRecenter = () => {
+        if (typeof moveToCard === 'function') {
+            console.log('Splash requested final recenter on card:', CardSystem.activeCardIndex);
+            moveToCard(CardSystem.activeCardIndex, false); // false for instant move
+        }
+    };
       // --- END EXPOSE PUBLIC METHODS ---
   })();
 

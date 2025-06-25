@@ -3,17 +3,101 @@
 // Add initialization flag to prevent conflicts with mobile.js
 let isInitializing = true;
 
-// (This utility function remains the same)
-function unfreezeBody() {
+// Comprehensive body locking utilities for all browsers
+function applyBodyLock() {
+  // Only store scroll position if body is not already locked
+  // This prevents overwriting the original scroll position
+  if (!document.body.classList.contains('menu-overlay-active')) {
+    const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.style.setProperty('--body-scroll-top', `-${currentScrollY}px`);
+  }
+
+  // Apply main body locking class
+  document.body.classList.add('menu-overlay-active');
+
+  // Add browser-specific classes for enhanced scroll prevention
+  const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+                         /Safari/.test(navigator.userAgent) &&
+                         !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+  const isChromeMobile = /Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent) ||
+                         /iPhone|iPad|iPod/.test(navigator.userAgent) && /CriOS/.test(navigator.userAgent);
+
+  if (isSafariMobile) {
+    document.body.classList.add('safari-mobile-overlay-active');
+    document.documentElement.classList.add('safari-mobile-overlay-active');
+  }
+
+  if (isChromeMobile) {
+    document.body.classList.add('chrome-mobile-overlay-active');
+    document.documentElement.classList.add('chrome-mobile-overlay-active');
+
+    // Only apply additional Chrome mobile fixes if not already applied
+    if (!document.body.style.position || document.body.style.position !== 'fixed') {
+      const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+
+      // Additional Chrome mobile fixes for keyboard handling
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${currentScrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+      document.body.style.overflow = 'hidden';
+
+      // Prevent viewport scaling on input focus
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport && !viewport.getAttribute('data-original-content')) {
+        viewport.setAttribute('data-original-content', viewport.content);
+        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      }
+    }
+  }
+}
+
+function removeBodyLock() {
   if (document.body.classList.contains('menu-overlay-active')) {
     const bodyScrollTop = document.documentElement.style.getPropertyValue('--body-scroll-top');
     const scrollY = bodyScrollTop ? parseInt(bodyScrollTop.replace('px', '').replace('-', '')) : 0;
+
+    // Check if Chrome mobile fixes were applied
+    const isChromeMobile = document.body.classList.contains('chrome-mobile-overlay-active');
+
+    // Remove all body locking classes
     document.body.classList.remove('menu-overlay-active');
+    document.body.classList.remove('safari-mobile-overlay-active');
+    document.body.classList.remove('chrome-mobile-overlay-active');
+    document.documentElement.classList.remove('safari-mobile-overlay-active');
+    document.documentElement.classList.remove('chrome-mobile-overlay-active');
+
+    // Clean up Chrome mobile specific styles
+    if (isChromeMobile) {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.overflow = '';
+
+      // Restore original viewport settings
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport && viewport.getAttribute('data-original-content')) {
+        viewport.content = viewport.getAttribute('data-original-content');
+        viewport.removeAttribute('data-original-content');
+      }
+    }
+
     document.documentElement.style.removeProperty('--body-scroll-top');
     setTimeout(() => { window.scrollTo(0, scrollY); }, 0);
   }
 }
 
+// (This utility function remains the same but now uses removeBodyLock)
+function unfreezeBody() {
+  removeBodyLock();
+}
+
+// Auto-apply filters on page load if enabled
 // Auto-apply filters on page load if enabled
 function autoApplyFiltersOnLoad() {
   // Don't auto-apply during initialization
@@ -27,10 +111,8 @@ function autoApplyFiltersOnLoad() {
 
   if (shouldAutoApply && hasExcludes) {
     console.log('Auto-applying filters on page load...');
-    // Wait a bit longer to ensure mobile layout is completely stable
-    setTimeout(() => {
-      applyFiltersQuietly();
-    }, 200); // Increased from 100ms to 200ms
+    // *** THE FIX: No more timeout needed. The layout is guaranteed to be stable. ***
+    applyFiltersQuietly();
   }
 }
 
@@ -150,14 +232,14 @@ function showFilterContent() {
     filterContent.innerHTML = `
       <h3>Filter Options</h3>
       <div class="filter-options">
-        <div class="filter-option" data-filter-type="excludes"><h4>Excludes</h4></div>
-        <div class="filter-option coming-soon" data-filter-type="includes"><h4>Includes</h4><span class="coming-soon-text">Coming Soon</span></div>
-        <div class="filter-option coming-soon" data-filter-type="topic"><h4>Topic</h4><span class="coming-soon-text">Coming Soon</span></div>
-        <div class="filter-option coming-soon" data-filter-type="optimism"><h4>Optimism Score</h4><span class="coming-soon-text">Coming Soon</span></div>
+        <a href="#" class="filter-option" data-filter-type="excludes">Excludes</a>
+        <a href="#" class="filter-option coming-soon" data-filter-type="includes">Includes<span class="coming-soon-text">Coming Soon</span></a>
+        <a href="#" class="filter-option coming-soon" data-filter-type="topic">Topic<span class="coming-soon-text">Coming Soon</span></a>
+        <a href="#" class="filter-option coming-soon" data-filter-type="optimism">Optimism Score<span class="coming-soon-text">Coming Soon</span></a>
       </div>
-      <div class="filter-actions" style="margin-top: 2rem;">
-        <button onclick="goBackToMenu()" class="main-btn main-btn-secondary" style="padding: 0.85rem 2rem; background: #f8f9fa; color: #007bff; border: 2px solid #007bff; border-radius: 10px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer; transition: background 0.2s, color 0.2s; margin-right: 1rem;">Back</button>
-        <button onclick="applyFilters()" class="main-btn" style="padding: 0.85rem 2rem; background: #007bff; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: background 0.2s, color 0.2s;">Apply</button>
+      <div class="filter-actions">
+        <a href="#" onclick="goBackToMenu(); return false;" class="main-btn main-btn-secondary">Back</a>
+        <a href="#" onclick="applyFilters(); return false;" class="main-btn">Apply</a>
       </div>
       <div class="auto-apply-option" style="margin: 1.5rem 0 0 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; text-align: center;">
         <input type="checkbox" id="auto-apply-filters" style="margin-right: 0.5rem; transform: scale(1.2); vertical-align: middle;">
@@ -171,7 +253,13 @@ function showFilterContent() {
     menuContent.appendChild(filterContent);
 
     filterContent.querySelectorAll('.filter-option').forEach(option => {
-      option.addEventListener('click', (e) => selectFilter(e.currentTarget.dataset.filterType));
+      option.addEventListener('click', (e) => {
+        e.preventDefault();
+        const filterType = e.currentTarget.dataset.filterType;
+        if (!e.currentTarget.classList.contains('coming-soon')) {
+          selectFilter(filterType);
+        }
+      });
     });
 
     // Add event listener for auto-apply checkbox and label
@@ -212,7 +300,31 @@ function showFilterContent() {
   }
 
   filterContent.style.display = 'block';
-  filterContent.classList.add('active');
+
+  // Handle the forward transition with JavaScript (like the back transition)
+  // Set initial state
+  filterContent.style.opacity = '0';
+  filterContent.style.transform = 'scale(0.85)';
+  filterContent.style.transition = 'transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s cubic-bezier(0.4,0,0.2,1)';
+
+  // Force a reflow to ensure initial state is applied
+  filterContent.offsetHeight;
+
+  // Apply the final state
+  setTimeout(() => {
+    filterContent.style.opacity = '1';
+    filterContent.style.transform = 'scale(1)';
+  }, 0);
+
+  // Clean up transition after animation completes
+  setTimeout(() => {
+    filterContent.style.transition = '';
+  }, 400);
+
+  // Refresh the button event listeners for the 3D effect
+  if (window.hamburgerMenu && typeof window.hamburgerMenu.refreshMenuLinks === 'function') {
+    window.hamburgerMenu.refreshMenuLinks();
+  }
 }
 
 function selectFilter(filterType) {
@@ -239,44 +351,143 @@ function showExcludesContent() {
       <h3>Exclude Terms</h3>
       <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Skip article summaries with<br>these words (comma-separated):</p>
       <textarea id="excludes-input" placeholder="e.g., tariffs, drought" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingExcludes}</textarea>
-      <div class="excludes-actions" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
-        <button onclick="goBackToFilters()" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Back</button>
-        <button onclick="saveExcludes(event)" style="padding: 0.75rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">Save Excludes</button>
+      <div class="excludes-actions" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#" onclick="goBackToFilters(); return false;" class="excludes-btn excludes-btn-secondary">Back</a>
+        <a href="#" onclick="saveExcludes(event); return false;" class="excludes-btn">Save Excludes</a>
       </div>
     `;
     menuContent.appendChild(excludesContent);
+
+    // Set up input event listeners immediately after creation
+    setupExcludesInputListeners();
   } else {
     document.getElementById('excludes-input').value = existingExcludes;
   }
 
   excludesContent.style.display = 'block';
-  setTimeout(() => document.getElementById('excludes-input').focus(), 100);
+
+  // Reset save button state when showing excludes content
+  const saveButton = excludesContent.querySelector('.excludes-btn:not(.excludes-btn-secondary)');
+  if (saveButton) {
+    // Clear any pending timeout and reset state
+    if (saveButtonTimeout) {
+      clearTimeout(saveButtonTimeout);
+      saveButtonTimeout = null;
+    }
+    isSaveButtonActive = false;
+    saveButton.textContent = 'Save Excludes';
+    saveButton.style.background = '#dc3545';
+  }
+
+  // Refresh the button event listeners for the 3D effect
+  if (window.hamburgerMenu && typeof window.hamburgerMenu.refreshMenuLinks === 'function') {
+    window.hamburgerMenu.refreshMenuLinks();
+  }
+
+  // Apply body lock BEFORE focusing the input to prevent Chrome mobile keyboard issues
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile) {
+    // Body is already locked from hamburger menu, just focus the input
+    setTimeout(() => {
+      const input = document.getElementById('excludes-input');
+      if (input) {
+        input.focus();
+      }
+    }, 50);
+  } else {
+    // Desktop - no auto-focus to preserve placeholder text until user clicks
+    // User can manually click the textarea when ready to type
+  }
+}
+
+// Separate function to set up input event listeners
+function setupExcludesInputListeners() {
+  const excludesInput = document.getElementById('excludes-input');
+  if (!excludesInput) return;
+
+  // Remove any existing listeners to prevent duplicates
+  excludesInput.removeEventListener('focus', handleExcludesInputFocus);
+  excludesInput.removeEventListener('blur', handleExcludesInputBlur);
+
+  // Add new listeners
+  excludesInput.addEventListener('focus', handleExcludesInputFocus);
+  excludesInput.addEventListener('blur', handleExcludesInputBlur);
+}
+
+// Separate handler functions for better control
+function handleExcludesInputFocus() {
+  const overlay = document.querySelector('.excludes-content');
+  if (overlay && overlay.style.display !== 'none') {
+    // Ensure body lock is applied when input is focused on mobile devices
+    // This is crucial for preventing keyboard-induced scrolling glitches
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      // Always reinforce body lock when textarea gets focus on mobile
+      applyBodyLock();
+    }
+  }
+}
+
+function handleExcludesInputBlur() {
+  // Don't remove body lock on blur - let the menu close handle it
+  // This prevents the page from jumping when the user taps outside the input
 }
 
 function goBackToFilters() {
   const excludesContent = document.querySelector('.excludes-content');
-  if (excludesContent) excludesContent.style.display = 'none';
+  if (excludesContent) {
+    excludesContent.style.display = 'none';
+
+    // Clean up input listeners when hiding excludes content
+    const excludesInput = document.getElementById('excludes-input');
+    if (excludesInput) {
+      excludesInput.removeEventListener('focus', handleExcludesInputFocus);
+      excludesInput.removeEventListener('blur', handleExcludesInputBlur);
+      excludesInput.blur(); // Ensure input loses focus
+    }
+  }
+
   showFilterContent();
 }
+
+// Variable to track save button state and timeout
+let saveButtonTimeout = null;
+let isSaveButtonActive = false;
 
 function saveExcludes(event) {
   const textarea = document.getElementById('excludes-input');
   if (!textarea) return;
+
+  // Prevent multiple clicks while save is in progress
+  if (isSaveButtonActive) return;
+
   localStorage.setItem('Excludes', textarea.value.trim());
 
   const saveButton = event.target;
-  const originalText = saveButton.textContent;
+  const originalText = 'Save Excludes'; // Always use the known original text
+
+  // Set button state
+  isSaveButtonActive = true;
   saveButton.textContent = 'Saved!';
   saveButton.style.background = '#28a745';
 
-  setTimeout(() => {
+  // Clear any existing timeout
+  if (saveButtonTimeout) {
+    clearTimeout(saveButtonTimeout);
+  }
+
+  // Set new timeout
+  saveButtonTimeout = setTimeout(() => {
     saveButton.textContent = originalText;
     saveButton.style.background = '#dc3545';
+    isSaveButtonActive = false;
+    saveButtonTimeout = null;
   }, 1500);
 }
 
 function goBackToMenu() {
-  unfreezeBody();
+  // Don't remove body lock - the hamburger menu is still open
+  // unfreezeBody(); // REMOVED - this was causing the body to unlock
   const menuContent = document.querySelector('.menu-content');
   const filterContent = document.querySelector('.filter-content');
   if (filterContent && filterContent.classList.contains('active')) {
@@ -370,9 +581,9 @@ function applyFilters() {
     console.log("Filtering complete. Event listeners re-enabled.");
   }, 500);
 
-  unfreezeBody();
+  // Only remove body lock when actually closing the hamburger menu
   if (window.hamburgerMenu) {
-    window.hamburgerMenu.close();
+    window.hamburgerMenu.close(); // This will handle removing body lock properly
   }
 }
 
@@ -473,4 +684,29 @@ function repositionViewAfterFilter(newActiveIndex) {
         }
     }
 }
+
+// Function to handle cases where the page loads with the menu already open
+function initializeExcludesOverlayIfVisible() {
+  const excludesContent = document.querySelector('.excludes-content');
+  if (excludesContent && excludesContent.style.display !== 'none') {
+    // Ensure body lock is applied if excludes overlay is already visible
+    if (!document.body.classList.contains('menu-overlay-active')) {
+      applyBodyLock();
+    }
+
+    // Set up input listeners if they haven't been set up yet
+    const excludesInput = document.getElementById('excludes-input');
+    if (excludesInput) {
+      setupExcludesInputListeners();
+    }
+  }
+}
+
+// Call this function when the filters module is initialized
+// This should be called after DOM is ready but before user interaction
+window.addEventListener('DOMContentLoaded', function() {
+  // Small delay to ensure all other initialization is complete
+  setTimeout(initializeExcludesOverlayIfVisible, 100);
+});
+
 // --- END OF FILE filters.js ---

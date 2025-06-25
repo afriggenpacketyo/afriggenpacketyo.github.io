@@ -1,4 +1,58 @@
-/* Hamburger Menu Styles - Preserve original styles with dark/light mode support */
+/* CSS Custom Properties for easy customization */
+:root {
+  --menu-btn-width: 280px;
+  --menu-btn-height: 60px;
+  --main-action-btn-width: 140px; /* Easy to change Apply/Back button width */
+  --main-action-btn-height: 60px;
+  --excludes-btn-width: 200px;
+  --excludes-btn-height: 50px;
+
+  --menu-overlay-bg: rgba(0, 0, 0, 0.8);
+  --menu-content-bg: #fff;
+  --menu-content-color: #333;
+  --btn-bg: #f8f9fa;
+  --btn-border: #e9ecef;
+  --btn-shadow: 0 4px 0 #e9ecef;
+  --btn-hover-bg: #e9ecef;
+  --btn-pressed-shadow: 0 2px 0 #e9ecef;
+
+  --primary-btn-bg: #007bff;
+  --primary-btn-border: #0056b3;
+  --primary-btn-shadow: 0 4px 0 #0056b3;
+  --primary-btn-hover: #0056b3;
+  --primary-btn-pressed-shadow: 0 2px 0 #004085;
+
+  --secondary-btn-bg: #6c757d;
+  --secondary-btn-border: #495057;
+  --secondary-btn-shadow: 0 4px 0 #495057;
+  --secondary-btn-hover: #545b62;
+  --secondary-btn-pressed-shadow: 0 2px 0 #3d4142;
+}
+
+html.dark-mode {
+  --menu-overlay-bg: rgba(0, 0, 0, 0.95);
+  --menu-content-bg: #1a1a1a;
+  --menu-content-color: #5ecbff;
+  --btn-bg: #23272e;
+  --btn-border: #3a4250;
+  --btn-shadow: 0 4px 0 #3a4250;
+  --btn-hover-bg: #2d333b;
+  --btn-pressed-shadow: 0 2px 0 #3a4250;
+
+  --primary-btn-bg: #0d6efd;
+  --primary-btn-border: #0a58ca;
+  --primary-btn-shadow: 0 4px 0 #0a58ca;
+  --primary-btn-hover: #0a58ca;
+  --primary-btn-pressed-shadow: 0 2px 0 #084298;
+
+  --secondary-btn-bg: #495057;
+  --secondary-btn-border: #343a40;
+  --secondary-btn-shadow: 0 4px 0 #343a40;
+  --secondary-btn-hover: #343a40;
+  --secondary-btn-pressed-shadow: 0 2px 0 #212529;
+}
+
+/* Hamburger Menu Styles */
 .header-hamburger {
   display: flex;
   flex-direction: column;
@@ -8,6 +62,10 @@
   cursor: pointer;
   padding: 5px;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .header-hamburger span {
@@ -19,7 +77,6 @@
   transition: all 0.3s ease;
 }
 
-/* Dark mode hamburger */
 html.dark-mode .header-hamburger span {
   background-color: #5ecbff;
 }
@@ -36,14 +93,14 @@ html.dark-mode .header-hamburger span {
   transform: rotate(-45deg) translate(7px, -7px);
 }
 
-/* Menu Overlay - Resizable */
+/* Menu Overlay */
 .menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--menu-overlay-bg);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -51,18 +108,11 @@ html.dark-mode .header-hamburger span {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Prevent scroll chaining on Safari mobile */
   overscroll-behavior: none;
   -webkit-overflow-scrolling: none;
   touch-action: none;
 }
 
-/* Dark mode overlay */
-html.dark-mode .menu-overlay {
-  background-color: rgba(0, 0, 0, 0.95);
-}
-
-/* Dark mode overlay */
 @media (prefers-color-scheme: dark) {
   .menu-overlay {
     background-color: rgba(0, 0, 0, 0.95);
@@ -74,9 +124,10 @@ html.dark-mode .menu-overlay {
   visibility: visible;
 }
 
-/* Menu Content - This is what gets resized */
+/* Menu Content */
 .menu-content {
-  background-color: #fff;
+  background-color: var(--menu-content-bg);
+  color: var(--menu-content-color);
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
@@ -85,110 +136,138 @@ html.dark-mode .menu-overlay {
   overflow-y: auto;
   transform: scale(0.8);
   transition: all 0.3s ease;
-  /* Default menu size */
-  width: 300px;
+  width: 320px;
+  min-width: 320px;
   min-height: 200px;
-  color: #333;
-  /* Prevent premature resizing during text animation */
-  transition-delay: 0s;
-  /* Contain layout shifts from animations */
   contain: layout;
-  /* Hide scrollbar while maintaining scrolling ability */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  /* Allow controlled scrolling within menu content */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: width, min-width, min-height;
 }
 
-/* Hide scrollbar for webkit browsers */
 .menu-content::-webkit-scrollbar {
   display: none;
-}
-
-/* Prevent overlay from resizing during text animations */
-.menu-overlay:not(.filter-mode) .menu-content {
-  width: 300px !important;
-  min-height: 200px !important;
-  /* Lock dimensions during animation */
-  max-height: 300px !important;
-}
-
-/* Dark mode menu content */
-html.dark-mode .menu-content {
-  background-color: #1a1a1a;
-  color: #5ecbff;
 }
 
 .menu-overlay.show .menu-content {
   transform: scale(1);
 }
 
-/* Filter mode - enlarged to match flip-card overlay */
 .menu-overlay.filter-mode .menu-content {
   width: min(600px, 90vw);
   min-height: 400px;
   max-height: 80vh;
 }
 
-.menu-content a {
-  display: block;
-  padding: 1rem;
-  color: #333;
+/* Base Button Styles */
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--menu-btn-width);
+  height: var(--menu-btn-height);
+  padding: 15px 20px;
+  margin: 0.8rem auto;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--menu-content-color);
   text-decoration: none;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.2s ease;
+  border: 2px solid var(--btn-border);
+  border-radius: 12px;
+  background-color: var(--btn-bg);
+  transition: all 0.2s ease;
   position: relative;
+  font-weight: 500;
+  box-shadow: var(--btn-shadow);
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.menu-btn:first-child {
+  margin-top: 0.4rem;
+}
+
+.menu-btn:last-child {
+  margin-bottom: 0.4rem;
+}
+
+/* Apply button styles to all menu content links */
+.menu-content a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--menu-btn-width);
+  height: var(--menu-btn-height);
+  padding: 15px 20px;
+  margin: 0.8rem auto;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--menu-content-color);
+  text-decoration: none;
+  border: 2px solid var(--btn-border);
+  border-radius: 12px;
+  background-color: var(--btn-bg);
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+  box-shadow: var(--btn-shadow);
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
 .menu-content a:first-child {
-  border-top: 1px solid #eee;
+  margin-top: 0.4rem;
 }
 
-/* Desktop hover states only */
-@media (hover: hover) and (pointer: fine) {
-  .menu-content a:hover {
-    background-color: #f5f5f5;
-  }
-
-  html.dark-mode .menu-content a:hover {
-    background-color: #333;
-  }
+.menu-content a:last-child {
+  margin-bottom: 0.4rem;
 }
 
-/* Mobile tap feedback - quick flash instead of sticky hover */
-@media (hover: none) and (pointer: coarse) {
-  .menu-content a {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .menu-content a:active {
-    background-color: #e9ecef;
-    transition: background-color 0.1s ease;
-  }
-
-  html.dark-mode .menu-content a:active {
-    background-color: #404040;
-  }
+/* Primary Button (Apply button) */
+.menu-btn.primary,
+.filter-content .main-btn {
+  width: var(--main-action-btn-width);
+  height: var(--main-action-btn-height);
+  background-color: var(--primary-btn-bg);
+  color: white;
+  border-color: var(--primary-btn-border);
+  box-shadow: var(--primary-btn-shadow);
 }
 
-/* Dark mode links */
-html.dark-mode .menu-content a {
-  color: #5ecbff;
-  border-bottom: 1px solid #333;
+/* Secondary Button (Back button) */
+.menu-btn.secondary,
+.filter-content .main-btn-secondary {
+  width: var(--main-action-btn-width);
+  height: var(--main-action-btn-height);
+  background-color: var(--secondary-btn-bg);
+  color: white;
+  border-color: var(--secondary-btn-border);
+  box-shadow: var(--secondary-btn-shadow);
 }
 
-html.dark-mode .menu-content a:first-child {
-  border-top: 1px solid #333;
-}
-
-/* Filter content styles */
+/* Filter Options */
 .filter-content {
   display: none;
   transform: scale(0.85);
   opacity: 0;
-  transition: transform 0.28s cubic-bezier(0.42,0,0.58,1), opacity 0.28s cubic-bezier(0.42,0,0.58,1);
   transform-origin: center center;
   will-change: transform, opacity;
 }
@@ -200,38 +279,67 @@ html.dark-mode .menu-content a:first-child {
 }
 
 .filter-options {
-  display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 0.3rem;
   align-items: stretch;
   margin: 2rem 0 2.5rem 0;
   width: 100%;
 }
 
-.filter-option {
-  background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 18px;
-  padding: 1.3rem 1rem;
-  margin: 0 0.3rem;
-  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
-  text-align: center;
-  min-height: 70px;
-  position: relative;
+/* Filter Actions - Force row layout */
+.filter-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  margin-top: 1.5rem !important;
 }
 
-.filter-option:hover,
-.filter-option:focus {
-  border-color: #007bff;
-  background: #e9ecef;
-  box-shadow: 0 4px 24px rgba(30, 80, 200, 0.10);
-  outline: none;
+/* Ensure filter action buttons are consistent and equal sized */
+.filter-actions .main-btn,
+.filter-actions .main-btn-secondary {
+  width: 120px !important;
+  height: var(--main-action-btn-height) !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  flex: 0 0 120px !important;
+  margin: 0 !important;
+  padding: 12px 16px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--menu-btn-width);
+  height: var(--menu-btn-height);
+  padding: 1.3rem 1rem;
+  margin: 0 0.3rem;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--menu-content-color);
+  text-decoration: none;
+  border: 2px solid var(--btn-border);
+  border-radius: 18px;
+  background-color: var(--btn-bg);
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10);
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  min-height: 70px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .filter-option h4 {
@@ -246,6 +354,10 @@ html.dark-mode .menu-content a:first-child {
   height: 100%;
 }
 
+html.dark-mode .filter-option h4 {
+  color: #4bb5ff;
+}
+
 .filter-option p {
   margin: 0;
   font-size: 1.02em;
@@ -253,45 +365,143 @@ html.dark-mode .menu-content a:first-child {
   font-weight: 400;
 }
 
-@media (max-width: 600px) {
-  .filter-option {
-    font-size: 1.09rem;
-    padding: 1.05rem 0.7rem 0.95rem 0.7rem;
-    border-radius: 15px;
-  }
-  .filter-options {
-    gap: 1rem;
-    margin: 1.1rem 0 1.5rem 0;
-  }
-}
-
-html.dark-mode .filter-option {
-  background: #181c22;
-  border: 2px solid #3a4250;
-  color: #5ecbff;
-}
-
-html.dark-mode .filter-option:hover,
-html.dark-mode .filter-option:focus {
-  border-color: #3ca0ff;
-  background: #232b36;
-}
-
-html.dark-mode .filter-option h4 {
-  color: #4bb5ff;
-}
-
 html.dark-mode .filter-option p {
   color: #b4c7d9;
 }
 
-/* Auto-apply option styles */
+/* Coming Soon Styles */
+.filter-option.coming-soon {
+  opacity: 0.6;
+  cursor: default;
+  background-color: #f1f3f4;
+  color: #6c757d;
+  border-color: #dee2e6;
+  box-shadow: 0 4px 0 #dee2e6;
+}
+
+html.dark-mode .filter-option.coming-soon {
+  background-color: #1a1e25;
+  color: #6c757d;
+  border-color: #2d333b;
+  box-shadow: 0 4px 0 #2d333b;
+}
+
+.coming-soon-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  color: #ff8c00;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  letter-spacing: 0.05em;
+  z-index: 10;
+  padding: 0.2em 0.5em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Excludes Content */
+.excludes-content {
+  display: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.excludes-content.active {
+  display: block;
+}
+
+.excludes-content h3 {
+  margin-bottom: 1rem;
+  color: var(--menu-content-color);
+  font-size: 1.5rem;
+}
+
+.excludes-content p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+html.dark-mode .excludes-content p {
+  color: #ccc;
+}
+
+/* Excludes Buttons */
+.excludes-content .excludes-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--excludes-btn-width);
+  height: var(--excludes-btn-height);
+  padding: 12px 20px;
+  margin: 0.5rem;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+  border: 2px solid #dc3545;
+  border-radius: 12px;
+  background-color: #dc3545;
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+  box-shadow: 0 4px 0 #c82333;
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.excludes-content .excludes-btn-secondary {
+  background-color: var(--secondary-btn-bg);
+  border-color: var(--secondary-btn-border);
+  box-shadow: var(--secondary-btn-shadow);
+}
+
+/* Excludes Input */
+#excludes-input {
+  background-color: var(--menu-content-bg);
+  color: var(--menu-content-color);
+  border: 2px solid var(--btn-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#excludes-input:focus {
+  outline: none;
+  border-color: #5ecbff;
+}
+
+/* Hide placeholder on desktop when clicked/focused (cursor ready) */
+@media (hover: hover) and (pointer: fine) {
+  #excludes-input:focus::placeholder {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* Hide placeholder on mobile only when actively interacting (focus + hover) */
+@media (hover: none) and (pointer: coarse) {
+  #excludes-input:focus:hover::placeholder {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* Auto-apply option */
 .auto-apply-option {
   margin: 1.5rem 0;
   padding: 1rem;
-  background: #f8f9fa;
+  background: var(--btn-bg);
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--btn-border);
 }
 
 .auto-apply-option label {
@@ -299,7 +509,7 @@ html.dark-mode .filter-option p {
   align-items: center;
   cursor: pointer;
   font-size: 0.95rem;
-  color: #495057;
+  color: var(--menu-content-color);
 }
 
 .auto-apply-option input[type="checkbox"] {
@@ -310,22 +520,14 @@ html.dark-mode .filter-option p {
 .auto-apply-option p {
   margin: 0.5rem 0 0 1.6rem;
   font-size: 0.85rem;
-  color: #6c757d;
-}
-
-html.dark-mode .auto-apply-option {
-  background: #2d2d2d;
-  border-color: #444;
-}
-
-html.dark-mode .auto-apply-option label {
-  color: #5ecbff;
+  color: #666;
 }
 
 html.dark-mode .auto-apply-option p {
   color: #b4c7d9;
 }
 
+/* Info tooltip */
 .info-btn-container {
   position: relative;
   margin-left: 0.5rem;
@@ -335,7 +537,7 @@ html.dark-mode .auto-apply-option p {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #007bff;
+  background: var(--primary-btn-bg);
   color: white;
   border: none;
   font-size: 12px;
@@ -349,6 +551,11 @@ html.dark-mode .auto-apply-option p {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
+html.dark-mode .auto-apply-option .info-btn {
+  background: #5ecbff;
+  color: #1a1a1a;
+}
+
 .info-tooltip {
   position: absolute;
   bottom: 25px;
@@ -359,15 +566,19 @@ html.dark-mode .auto-apply-option p {
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
-  white-space: nowrap;
-  max-width: 200px;
   white-space: normal;
+  max-width: 200px;
   text-align: center;
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s ease;
   z-index: 1000;
   pointer-events: none;
+}
+
+html.dark-mode .info-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
 }
 
 .info-tooltip::after {
@@ -380,135 +591,210 @@ html.dark-mode .auto-apply-option p {
   border-top-color: rgba(0, 0, 0, 0.9);
 }
 
-/* Desktop hover */
-@media (hover: hover) and (pointer: fine) {
-  .info-btn-container:hover .info-tooltip {
-    opacity: 1;
-    visibility: visible;
-  }
-}
-
-/* Mobile touch */
-@media (hover: none) and (pointer: coarse) {
-  .info-btn-container.show-tooltip .info-tooltip {
-    opacity: 1;
-    visibility: visible;
-  }
-}
-
-html.dark-mode .auto-apply-option .info-btn {
-  background: #5ecbff;
-  color: #1a1a1a;
-}
-
-html.dark-mode .info-tooltip {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1a1a1a;
-}
-
 html.dark-mode .info-tooltip::after {
   border-top-color: rgba(255, 255, 255, 0.95);
 }
 
-
-/* Excludes content styles */
-.excludes-content {
-  display: none;
-  transform-origin: center center;
-  will-change: transform, opacity;
-}
-
-.excludes-content.active {
-  display: block;
-}
-
-.excludes-content h3 {
-  margin-bottom: 1rem;
-  color: #333;
-  font-size: 1.5rem;
-}
-
-html.dark-mode .excludes-content h3 {
-  color: #5ecbff;
-}
-
-.excludes-content p {
-  margin-bottom: 1rem;
-  color: #666;
-}
-
-html.dark-mode .excludes-content p {
-  color: #ccc;
-}
-
-#excludes-input {
-  background-color: #fff;
-  color: #333;
-  border: 2px solid #e9ecef;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-#excludes-input:focus {
-  outline: none;
-  border-color: #5ecbff;
-}
-
-html.dark-mode #excludes-input {
-  background-color: #2d2d2d;
-  color: #5ecbff;
-  border-color: #444;
-}
-
-html.dark-mode #excludes-input:focus {
-  border-color: #5ecbff;
-}
-
-.excludes-actions button {
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.excludes-actions button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-html.dark-mode .excludes-actions button:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-/* Text animation styles */
+/* Text animation */
 .text-fade-blur {
   animation: fadeAndBlur 0.75s ease-out forwards;
 }
 
 @keyframes fadeAndBlur {
-  0% {
+  0% { opacity: 1; filter: blur(0px); }
+  25% { opacity: 0.8; filter: blur(1px); }
+  50% { opacity: 0.5; filter: blur(3px); }
+  75% { opacity: 0.2; filter: blur(6px); }
+  100% { opacity: 0; filter: blur(10px); }
+}
+
+/* Card filtering */
+.flip-card.filtered,
+.flip-card.filtered-hidden {
+  display: none;
+}
+
+.indicator-dot.filtered {
+  display: none;
+}
+
+.flip-card {
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+}
+
+/* Body locking for mobile */
+body.menu-overlay-active,
+body.safari-mobile-overlay-active,
+body.chrome-mobile-overlay-active {
+  position: fixed;
+  top: var(--body-scroll-top, 0);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  -webkit-overflow-scrolling: none;
+  overscroll-behavior: none;
+}
+
+/* Hover States */
+@media (hover: hover) and (pointer: fine) {
+  .menu-btn:hover,
+  .menu-content a:hover,
+  .filter-option:not(.coming-soon):hover {
+    background-color: var(--btn-hover-bg);
+    transform: translateY(2px);
+    box-shadow: var(--btn-pressed-shadow);
+  }
+
+  .menu-btn.primary:hover,
+  .filter-content .main-btn:hover {
+    background-color: var(--primary-btn-hover);
+    box-shadow: var(--primary-btn-pressed-shadow);
+  }
+
+  .menu-btn.secondary:hover,
+  .filter-content .main-btn-secondary:hover {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
+  .excludes-content .excludes-btn:hover {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c82333;
+    background-color: #c82333;
+  }
+
+  .excludes-content .excludes-btn-secondary:hover {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
+  .info-btn-container:hover .info-tooltip {
     opacity: 1;
-    filter: blur(0px);
+    visibility: visible;
   }
-  25% {
-    opacity: 0.8;
-    filter: blur(1px);
+
+  .filter-option.coming-soon:hover {
+    background-color: #f1f3f4;
+    border-color: #dee2e6;
+    box-shadow: 0 4px 0 #dee2e6;
+    transform: translateY(0);
   }
-  50% {
-    opacity: 0.5;
-    filter: blur(3px);
+
+  html.dark-mode .filter-option.coming-soon:hover {
+    background-color: #1a1e25;
+    border-color: #2d333b;
+    box-shadow: 0 4px 0 #2d333b;
   }
-  75% {
-    opacity: 0.2;
-    filter: blur(6px);
+
+  .excludes-actions button:hover {
+    background: var(--btn-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
-  100% {
-    opacity: 0;
-    filter: blur(10px);
+
+  html.dark-mode .excludes-actions button:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+}
+
+/* Mobile Press States */
+@media (hover: none) and (pointer: coarse) {
+  .menu-btn,
+  .menu-content a,
+  .filter-option,
+  .excludes-btn,
+  .header-hamburger,
+  .header-controls-row * {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+
+  .menu-btn.pressed,
+  .menu-content a.pressed,
+  .filter-option.pressed:not(.coming-soon) {
+    transform: translateY(2px);
+    box-shadow: var(--btn-pressed-shadow);
+    background-color: var(--btn-hover-bg);
+  }
+
+  .menu-btn.primary.pressed,
+  .filter-content .main-btn.pressed {
+    background-color: var(--primary-btn-hover);
+    box-shadow: var(--primary-btn-pressed-shadow);
+  }
+
+  .menu-btn.secondary.pressed,
+  .filter-content .main-btn-secondary.pressed {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
+  .excludes-content .excludes-btn.pressed {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c82333;
+    background-color: #c82333;
+  }
+
+  .excludes-content .excludes-btn-secondary.pressed {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
+  .info-btn-container.show-tooltip .info-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .filter-option.coming-soon:active {
+    background-color: inherit;
+  }
+
+  /* Enhanced mobile scrolling for Safari and Chrome */
+  .menu-overlay {
+    touch-action: pan-y;
+  }
+
+  .menu-content {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overflow-y: auto;
+    max-height: 90vh;
+  }
+
+  #excludes-input {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    touch-action: pan-y;
+    overflow-y: auto;
+    max-height: 200px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .excludes-content {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  .excludes-content #excludes-input {
+    touch-action: pan-y;
+    overflow-y: auto;
   }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .menu-content {
-    width: 95vw;
+    width: min(350px, 95vw);
+    min-width: min(350px, 95vw);
     padding: 1.5rem;
   }
 
@@ -517,224 +803,54 @@ html.dark-mode .excludes-actions button:hover {
     min-height: 300px;
   }
 
-  .filter-options {
-    grid-template-columns: 1fr;
-  }
-
   .excludes-content {
     padding: 1rem;
   }
 
   .excludes-actions {
     flex-direction: column;
-    gap: 0.75rem !important;
+    gap: 0.75rem;
   }
 
   .excludes-actions button {
     width: 100%;
-    padding: 1rem !important;
+    padding: 1rem;
   }
 }
 
-/* Filtered card states - completely remove from layout to close gaps */
-.flip-card.filtered {
-  display: none;
-}
-
-/* Hide dot indicators for filtered cards */
-.indicator-dot.filtered {
-  display: none !important;
-}
-
-/* Alternative: Complete removal from flow while maintaining structure */
-.flip-card.filtered-hidden {
-  display: none;
-}
-
-/* Smooth transition for filtering */
-.flip-card {
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
-}
-
-/* Freeze body when menu overlay is open to prevent keyboard reflow issues */
-body.menu-overlay-active {
-  position: fixed !important;
-  top: var(--body-scroll-top, 0) !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  overflow: hidden !important;
-  width: 100vw !important;
-  height: 100vh !important;
-}
-
-/* Coming Soon Overlay Styles */
-.filter-option.coming-soon {
-  opacity: 0.9;
-  cursor: not-allowed;
-  position: relative;
-  overflow: hidden;
-}
-
-.coming-soon-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-10deg);
-  color: #ff8c00; /* Orange text */
-  font-weight: bold;
-  font-size: 1.2rem;
-  text-transform: uppercase;
-  text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-  letter-spacing: 0.05em;
-  z-index: 10;
-  padding: 0.2em 0.5em;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0.55;
-}
-
-/* Remove title attribute tooltip since we now have visual indicator */
-.filter-option.coming-soon[title] {
-  pointer-events: none;
-}
-
-/* Disable hover effects for Coming Soon buttons */
-.filter-option.coming-soon:hover,
-.filter-option.coming-soon:focus,
-.filter-option.coming-soon:active {
-  border-color: #e9ecef; /* Keep original border color */
-  background: #f8f9fa; /* Keep original background color */
-  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10); /* Keep original shadow */
-  outline: none;
-}
-
-/* Dark mode version */
-html.dark-mode .filter-option.coming-soon:hover,
-html.dark-mode .filter-option.coming-soon:focus,
-html.dark-mode .filter-option.coming-soon:active {
-  border-color: #3a4250; /* Keep dark mode border color */
-  background: #181c22; /* Keep dark mode background color */
-  box-shadow: 0 2px 14px 0 rgba(0,0,0,0.10); /* Keep original shadow */
-  outline: none;
-}
-
-/* Disable mobile tap highlights on coming soon buttons */
-@media (hover: none) and (pointer: coarse) {
-  .filter-option.coming-soon {
-    -webkit-tap-highlight-color: transparent;
+@media (max-width: 600px) {
+  .filter-option {
+    font-size: 1.09rem;
+    padding: 1.05rem 0.7rem 0.95rem 0.7rem;
+    border-radius: 15px;
   }
 
-  .filter-option.coming-soon:active {
-    background-color: inherit;
-  }
-
-  html.dark-mode .filter-option.coming-soon:active {
-    background-color: inherit;
+  .filter-options {
+    gap: 0.3rem;
+    margin: 1.1rem 0 1.5rem 0;
   }
 }
 
-/* Safari mobile specific - prevent touch events from bubbling up */
-@media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
-  .menu-overlay {
-    -webkit-overflow-scrolling: none;
-    overscroll-behavior: none;
-    touch-action: pan-y; /* Allow vertical panning for closing */
-  }
-
-  /* Ensure textbox scrolling works on Safari mobile with boundaries */
-  #excludes-input {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none !important; /* Prevent chaining when at bounds */
-    touch-action: pan-y;
-    overflow-y: auto;
-    max-height: 200px; /* Ensure it's scrollable */
-    /* Additional Safari-specific containment */
-    -webkit-touch-callout: none;
-    -webkit-user-select: text;
-    user-select: text;
-  }
-
-  /* Prevent scrolling on excludes container but allow on textbox */
-  .excludes-content {
-    overflow: hidden; /* Prevent container scrolling */
-    overscroll-behavior: none;
-    touch-action: none; /* Block touch scrolling on container */
-  }
-
-  /* Override for the textbox inside excludes container */
-  .excludes-content #excludes-input {
-    touch-action: pan-y; /* Allow scrolling only on textbox */
-    overflow-y: auto;
-  }
-
-  /* Allow menu content scrolling but contain it strictly */
-  .menu-content {
-    overscroll-behavior: none; /* Prevent any scroll chaining */
-    -webkit-overflow-scrolling: touch; /* Allow smooth scrolling within */
-    touch-action: pan-y; /* Allow vertical scrolling within menu */
-    overflow-y: auto; /* Allow menu content to scroll */
-    max-height: 90vh; /* Ensure menu can scroll if needed */
-  }
-
-  /* Prevent body scroll when overlay is active */
-  body.menu-overlay-active {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    -webkit-overflow-scrolling: none;
-    overscroll-behavior: none;
-  }
+/* Perfect vertical centering for specific menu buttons */
+#menu-overlay > div > nav > a:nth-child(1),
+#menu-overlay > div > nav > a:nth-child(2),
+#menu-overlay > div > nav > a:nth-child(3) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  padding: 0 20px !important;
+  /* Remove any potential text baseline issues */
+  vertical-align: middle !important;
+  /* Ensure text doesn't shift due to font metrics */
+  font-feature-settings: normal !important;
 }
 
-/* Chrome mobile specific - prevent touch events from bubbling up */
-@media (max-width: 1170px) and (hover: none) and (pointer: coarse) {
-  /* Chrome mobile body lock */
-  body.chrome-mobile-overlay-active {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    -webkit-overflow-scrolling: none;
-    overscroll-behavior: none;
-  }
-
-  /* Chrome mobile overlay */
-  body.chrome-mobile-overlay-active .menu-overlay {
-    -webkit-overflow-scrolling: none;
-    overscroll-behavior: none;
-    touch-action: pan-y; /* Allow vertical panning for closing */
-  }
-
-  /* Chrome mobile menu content - allow scrolling with containment */
-  body.chrome-mobile-overlay-active .menu-content {
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    overflow-y: auto;
-    max-height: 90vh;
-  }
-
-  /* Chrome mobile excludes container - prevent scrolling */
-  body.chrome-mobile-overlay-active .excludes-content {
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: none;
-  }
-
-  /* Chrome mobile textbox - allow scrolling with containment */
-  body.chrome-mobile-overlay-active #excludes-input {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none !important;
-    touch-action: pan-y;
-    overflow-y: auto;
-    -webkit-touch-callout: none;
-    -webkit-user-select: text;
-    user-select: text;
-  }
+/* Remove any inherited text adjustments that might cause misalignment */
+#menu-overlay > div > nav > a:nth-child(1) *,
+#menu-overlay > div > nav > a:nth-child(2) *,
+#menu-overlay > div > nav > a:nth-child(3) * {
+  vertical-align: baseline !important;
+  line-height: inherit !important;
 }
