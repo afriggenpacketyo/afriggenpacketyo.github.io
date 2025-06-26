@@ -2,8 +2,9 @@
 :root {
   --menu-btn-width: 280px;
   --menu-btn-height: 60px;
+  --filter-option-height: 50px; /* Filter options height - slightly shorter than main buttons */
   --main-action-btn-width: 140px; /* Easy to change Apply/Back button width */
-  --main-action-btn-height: 60px;
+  --main-action-btn-height: 48px; /* Reduced from 60px to make back/apply buttons shorter */
   --excludes-btn-width: 200px;
   --excludes-btn-height: 50px;
 
@@ -315,8 +316,8 @@ html.dark-mode .header-hamburger span {
   align-items: center;
   justify-content: center;
   width: var(--menu-btn-width);
-  height: var(--menu-btn-height);
-  padding: 1.3rem 1rem;
+  height: var(--filter-option-height);
+  padding: 0.8rem 1rem;
   margin: 0 0.3rem;
   box-sizing: border-box;
   text-align: center;
@@ -337,14 +338,14 @@ html.dark-mode .header-hamburger span {
   transform: translateY(0);
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
-  min-height: 70px;
+  min-height: var(--filter-option-height);
   width: 100%;
   max-width: 100%;
 }
 
 .filter-option h4 {
   margin: 0;
-  font-size: 1.25em;
+  font-size: 1.5em; /* Increased from 1.25em for bigger text */
   font-weight: 700;
   color: #007bff;
   letter-spacing: 0.01em;
@@ -837,9 +838,15 @@ body.chrome-mobile-overlay-active {
 
 @media (max-width: 600px) {
   .filter-option {
-    font-size: 1.09rem;
-    padding: 1.05rem 0.7rem 0.95rem 0.7rem;
+    font-size: 1.15rem; /* Slightly increased for mobile */
+    padding: 0.6rem 0.7rem;
     border-radius: 15px;
+    height: var(--filter-option-height);
+    min-height: var(--filter-option-height);
+  }
+
+  .filter-option h4 {
+    font-size: 1.4em; /* Increased for mobile too */
   }
 
   .filter-options {
