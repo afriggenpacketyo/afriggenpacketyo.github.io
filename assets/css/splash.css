@@ -18,7 +18,7 @@ html.dark-mode .splash-overlay {
   background: var(--background-main, #181c20);
 }
 
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
 .splash-logo {
   width: 90vw; /* Initial large size */
   max-width: 500px; /* Add a max-width for very large screens */
@@ -113,7 +113,7 @@ body.splash-active {
 }
 
 /* Mobile bounce animation */
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
   @keyframes splash-bounce-in {
     0% {
       opacity: 0;
@@ -169,7 +169,7 @@ body.splash-active {
 }
 
 /* Mobile draw animation */
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
   @keyframes splash-draw-on {
     0% {
       opacity: 0.2;
@@ -226,7 +226,7 @@ body.splash-active {
 }
 
 /* Mobile draw fallback animation */
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
   @keyframes splash-draw-fallback {
     0% {
       opacity: 0.2;
@@ -288,7 +288,7 @@ body.splash-active {
 } 
 
 /* Mobile pixel animation */
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
   @keyframes splash-pixelate {
     0% {
       filter: blur(8px) brightness(1.2);
@@ -347,7 +347,7 @@ body.splash-active {
 }
 
 /* Mobile spin animation */
-@media (pointer: coarse) and (hover: none) {
+@media (pointer: coarse) {
   @keyframes splash-spin-in {
     0% {
       opacity: 0;

@@ -1238,7 +1238,7 @@
 
 
     /* Exception: hide logo for mobile landscape via display:none as before */
-    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (pointer: coarse) {
       .logo-container {
         opacity: 0;
         visibility: hidden;
@@ -1747,7 +1747,7 @@
       from { transform: translate(-50%, -40%); opacity: 0; }
       to { transform: translate(-50%, -50%); opacity: 1; }
     }
-    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (hover: hover) and (pointer: fine) {
+    @media (max-height: 500px) and (min-width: 400px) and (max-width: 1170px) and (orientation: landscape) and (pointer: coarse) {
       .logo-container {
         opacity: 0 !important;
         visibility: hidden !important;

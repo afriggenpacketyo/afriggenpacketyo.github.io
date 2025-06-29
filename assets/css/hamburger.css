@@ -505,7 +505,7 @@ html.dark-mode .excludes-content p {
 }
 
 /* Hide placeholder on mobile only when actively interacting (focus + hover) */
-@media (hover: none) and (pointer: coarse) {
+@media (pointer: coarse) {
   #excludes-input:focus:hover::placeholder {
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -718,7 +718,7 @@ body.chrome-mobile-overlay-active {
 }
 
 /* Mobile Press States */
-@media (hover: none) and (pointer: coarse) {
+@media (pointer: coarse) {
   .menu-btn,
   .menu-content a,
   .filter-option,
