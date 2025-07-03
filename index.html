@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google Ads -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9001531085872027"
-     crossorigin="anonymous"></script>
-<!-- Google tag (gtag.js) -->
+<!-- Google Ads & Analytics -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9001531085872027" crossorigin="anonymous"></script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-KQYDFWSK8G"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -12,46 +10,70 @@
   gtag('js', new Date());
   gtag('config', 'G-KQYDFWSK8G');
 </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Newsway Summary</title>
-  <!-- Meta tags to prevent caching -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <!-- Favicon links -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="assets/css/style.css?v=20250703162236.N.0cd7c4e8">
-  <link rel="stylesheet" href="assets/css/hamburger.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script>
+  // --- ANTI-FLICKER SCRIPT ---
+  // This must run before the body is rendered to prevent a flash of unstyled content.
+  (function() {
+    try {
+      var a = localStorage.getItem('darkMode');
+      if (a === '1' || (a === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    } catch (e) { }
+  })();
+</script>
+<title>Newsway Summary</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<script>
+  // --- Critical CSS and Deferred Loading Block ---
+  (function() {
+    const isMobile = 'ontouchstart' in window;
+    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    width: 90vw; /* Initial large size */    max-width: 500px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0);     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Default/Mobile animation - to the header logo position */  .splash-logo.splash-animate {    /* Current values seem fine for mobile where final logo is ~60px and header is at top */    transform: translateY(-45vh) scale(0.18);     /* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Mobile bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Mobile draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Mobile draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Mobile pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Mobile spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    /* width: 90vw; Initial large size */    max-width: 1000px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    /* Transition for both mobile and desktop - values will be set by the active class */    transition: transform .6s cubic-bezier(.7,.6,.3,1) 0.1s;     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Desktop animation - targets the .logo-container position */  .splash-logo.splash-animate { /* Override the mobile animation for desktop */    /*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */      /*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */      /*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */    /* Placeholder CSS - JS will override these with calculated values */    transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Desktop bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Desktop draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Desktop draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Desktop pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Desktop spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const styleElement = document.createElement('style');
+    styleElement.id = 'critical-splash-styles';
+    styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
+    document.head.appendChild(styleElement);
+
+    function loadCSS(href) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet'; link.href = href;
+      document.head.appendChild(link);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const cssFiles = isMobile 
+        ? ['common.css', 'mobile.css', 'hamburger.css'] 
+        : ['common.css', 'pc.css', 'hamburger.css'];
+      cssFiles.forEach(file => loadCSS('assets/css/' + file));
+    });
+  })();
+</script>
 </head>
 <body>
+  <div class="splash-overlay" id="splash-overlay">
+    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+  </div>
   <header class="page-header">
     <div class="header-controls-row">
-      <div class="header-hamburger" tabindex="0" aria-label="Open menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+      <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Newsway Summary</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">07/03/25 04:22 PM EDT (Next: 04:31 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">07/03/25 04:35 PM EDT (Next: 04:44 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
       </div>
-      <div class="header-logo-container">
-        <img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo">
-      </div>
-      <div class="header-toggle-switch">
-        <label class="switch">
-          <input type="checkbox" id="header-slider-toggle">
-          <span class="slider round"></span>
-        </label>
-      </div>
+      <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
+      <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Newsway Summary</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/03/25 04:22 PM EDT (New news: 04:31 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/03/25 04:35 PM EDT (New news: 04:44 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -60,25 +82,124 @@
         <a href="index.html">All News</a>
         <a href="goodnews.html">Optimistically Reported<br>News</a>
         <a onclick="showFilters()">Filters</a>
-        <!-- Add more links as needed -->
       </nav>
     </div>
   </div>
-
-  <div class="logo-container">
-    <img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="site-logo">
-  </div>
-
+  <div class="logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="site-logo"></div>
   <div class="container">
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Jack Draper Faces Upset Defeat to Marin Cilic in Wimbledon's Second Round</h2>
+          <h2>New Budget Bill Introduces Charitable Tax Deduction for Non-Itemizers</h2>
+          <div class="timestamp">2025-07-03 16:29:40 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A new budget bill signed into law introduces a significant tax break for charitable contributions, aimed at the majority of taxpayers who do not itemize deductions. The provision allows single filers to deduct up to $1,000 and married couples up to $2,000 for donations to qualified charities, directly reducing their taxable income. This change, part of a larger legislative package, makes charitable giving tax-deductible for an estimated 90% of filers who typically opt for the standard deduction. (not investment advice)</p>
+          <p>65/100</p>
+          <a href="https://www.cnbc.com/2025/07/03/trumps-budget-bill-includes-a-new-tax-break-worth-up-to-2000-dollars.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>House of Representatives Narrowly Approves Major Tax and Spending Bill</h2>
+          <div class="timestamp">2025-07-03 16:23:48 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The House has passed a sweeping tax-and-spending package in a close 218-214 vote, sending the legislation to the president for his signature. The bill, a key part of the administration's domestic agenda, includes trillions in tax cuts and increased immigration enforcement, offset by cuts to social programs like Medicaid. Despite some Republican opposition over deficit concerns, party leadership successfully secured the votes after a prolonged overnight session, marking a major political victory for the administration.</p>
+          <p>50/100</p>
+          <a href="https://www.cnbc.com/2025/07/03/trump-megabill-house-vote.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Seven People Remain Unaccounted For Following California Fireworks Warehouse Explosion</h2>
+          <div class="timestamp">2025-07-03 16:20:14 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>An explosion and subsequent fire at a fireworks warehouse in Yolo County, California, have left seven individuals unaccounted for, according to officials. The incident at Devastating Pyrotechnics on Tuesday evening triggered mandatory evacuations and sparked multiple grass fires covering approximately 80 acres. First responders are still contending with ongoing small explosions from undetonated fireworks while working to locate the missing people, whose families have gathered nearby awaiting news of their loved ones.</p>
+          <p>10/100</p>
+          <a href="https://www.cbsnews.com/news/explosion-fire-esparto-yolo-county/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Satirical Piece Imagines Founding Fathers' Reaction to Modern Legislative Process</h2>
+          <div class="timestamp">2025-07-03 16:20:00 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A satirical article from The Atlantic envisions the founding fathers observing the recent chaotic passage of a major bill through Congress, expressing mock approval for the convoluted process. The piece humorously portrays James Madison and Alexander Hamilton discussing the 940-page bill, the marathon overnight votes, and the intense political pressure as a "perfect" execution of their design. The satire highlights the stark contrast between the idealized vision of government and the messy, partisan reality of modern American lawmaking.</p>
+          <p>45/100</p>
+          <a href="https://www.theatlantic.com/newsletters/archive/2025/07/founders-250-july-4-bill-pass/683423/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>New Indictment in Suzanne Morphew Case Alleges Her Body Was Moved Multiple Times</h2>
+          <div class="timestamp">2025-07-03 16:19:37 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A new grand jury indictment against Barry Morphew reveals startling details in the murder case of his wife, Suzanne, who disappeared in 2020. Prosecutors allege that her body, discovered in 2023, was moved at least twice after her death, based on forensic analysis of her remains. The indictment also states that a chemical compound used to tranquilize wildlife, which Barry Morphew had access to, was found in her system, suggesting she was drugged before her death.</p>
+          <p>15/100</p>
+          <a href="https://www.cbsnews.com/news/suzanne-morphew-barry-morphew-colorado-murder-indictment-48-hours/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>First Lady Melania Trump Visits Young Patients at Washington D.C. Hospital</h2>
+          <div class="timestamp">2025-07-03 16:18:00 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>First Lady Melania Trump visited Children's National Hospital in Washington, D.C., as part of her "Be Best" initiative. She participated in patriotic-themed arts and crafts with young patients battling various illnesses and distributed gifts, including teddy bears and books. The visit also included the unveiling of a new rose variety, "Eternal Flame," in the hospital's healing garden, a space she previously dedicated in 2017, to offer a moment of warmth and encouragement.</p>
+          <p>85/100</p>
+          <a href="https://www.foxnews.com/health/first-lady-melania-trump-makes-heartwarming-visit-kids-hospital-be-best-event" target="_blank"><span class="news-org">Fox News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Man Impersonating Federal Officer Fatally Shot by California Deputies</h2>
+          <div class="timestamp">2025-07-03 16:16:51 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A man recently arrested for impersonating a U.S. Marshal was killed by sheriff's deputies in San Luis Obispo County, California, after he allegedly aimed a pellet gun at them. The man, identified as Andrew Biscay, was confronted by deputies following a 911 call from a woman who reported he had a history of violent behavior. Officials stated that Biscay exited his vehicle and took a shooting stance, prompting deputies to open fire; a replica handgun was found at the scene.</p>
+          <p>20/100</p>
+          <a href="https://www.latimes.com/california/story/2025-07-03/california-man-us-marshals-jacket-killed" target="_blank"><span class="news-org">LA Times</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Former Gaza Aid Security Contractor Alleges Colleagues Fired on Civilians</h2>
+          <div class="timestamp">2025-07-03 16:14:26 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A former security contractor for a US-backed aid distribution operation in Gaza has alleged that he witnessed colleagues repeatedly open fire on unarmed Palestinian civilians. Speaking to the BBC, the contractor described a culture of impunity, claiming guards used machine guns on people moving too slowly and that managers dismissed his reports of a man being shot. The aid organization, Gaza Humanitarian Foundation (GHF), has categorically denied the allegations, stating they are from a disgruntled former employee.</p>
+          <p>5/100</p>
+          <a href="https://www.bbc.com/news/articles/cnvmry71q5yo" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Jack Draper Eliminated from Wimbledon in Second-Round Upset</h2>
           <div class="timestamp">2025-07-03 16:12:10 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>British tennis player Jack Draper was unexpectedly eliminated from Wimbledon in the second round, losing to 36-year-old Croatian veteran Marin Cilic. Despite being a fourth seed and a favorite, the 23-year-old was defeated 6-4 6-3 1-6 6-4, continuing his struggle to advance past the second round at the All England Club. Draper expressed his deep disappointment with the loss, which he described as one of the toughest of his career. The match highlighted Cilic's impressive return to form after a serious knee injury, while Draper's hopes for a major run at his home Grand Slam were cut short.</p>
-          <p>35/100</p>
+          <p>British tennis player Jack Draper has been knocked out of Wimbledon in the second round, losing to 36-year-old Croatian veteran Marin Cilic. Despite being the fourth seed and a favorite, Draper struggled against Cilic's powerful performance, losing the match 6-4 6-3 1-6 6-4. This marks another early exit for the 23-year-old at the All England Club, continuing his wait for a significant run at his home Grand Slam tournament, in a surprising result for tennis fans.</p>
+          <p>55/100</p>
           <a href="https://www.bbc.com/sport/tennis/articles/c5y7vprq7lzo" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -86,12 +207,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>MP Zarah Sultana Resigns from Labour to Form New Party with Jeremy Corbyn</h2>
+          <h2>MP Zarah Sultana Leaves Labour Party to Form New Political Group with Jeremy Corbyn</h2>
           <div class="timestamp">2025-07-03 16:08:54 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Zarah Sultana, the MP for Coventry South, has announced her resignation from the Labour Party to establish a new political party alongside former leader Jeremy Corbyn. Sultana, who was suspended from Labour last year, cited the party's failure to improve lives and the political establishment's stance on the conflict in Gaza as key reasons for her departure. The new party aims to challenge what she calls a "broken" Westminster system, focusing on issues like poverty and welfare. While Corbyn has hinted at such a move, he has not officially confirmed his direct involvement in the new venture.</p>
-          <p>30/100</p>
+          <p>Zarah Sultana, a suspended Labour MP, has announced her resignation from the party to launch a new political entity alongside former leader Jeremy Corbyn. Sultana, who was stripped of the Labour whip for opposing the party's stance on a welfare policy, cited dissatisfaction with the current political establishment as her motivation. She stated the new party will challenge what she described as a "broken" system and a government complicit in the conflict in Gaza.</p>
+          <p>50/100</p>
           <a href="https://www.bbc.com/news/articles/cwyel9kgdvdo" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -99,24 +220,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. House Passes Major Republican Tax and Spending Bill, Sending It to President</h2>
-          <div class="timestamp">2025-07-03 16:08:18 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The U.S. House of Representatives has passed President Trump's signature legislative package in a narrow 218-214 vote, sending the massive bill to his desk for signing. The legislation, which includes trillions in tax cuts and increased spending on immigration and defense, overcame internal Republican opposition after intense pressure from party leadership and the president himself. Democrats uniformly opposed the bill, with House Minority Leader Hakeem Jeffries delivering a record-breaking eight-hour speech to condemn its deep cuts to social programs like Medicaid. The bill's passage marks a significant, albeit contentious, victory for the administration. (not investment advice)</p>
-          <p>45/100</p>
-          <a href="https://www.cbsnews.com/news/house-vote-big-beautiful-bill-rules-committee/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>China Focuses on Achieving Dominance in AI and Electric Vehicle Sectors</h2>
+          <h2>Report Details China's Strategic Push for Dominance in AI and Electric Vehicles</h2>
           <div class="timestamp">2025-07-03 16:07:04 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>China is intensifying its efforts to become the global leader in the critical technology sectors of artificial intelligence and electric vehicles. The country's strategy in AI leverages vast amounts of data to train new models, which could give it a significant advantage in the industry's expansion and innovation. Simultaneously, China's electric vehicle market is experiencing a fierce price war, a move aimed at solidifying its dominance both domestically and internationally. These parallel pushes highlight a concerted national strategy to control key future technologies and their associated global supply chains.</p>
+          <p>China is making a concerted effort to establish global leadership in the critical technology sectors of artificial intelligence and electric vehicles. The country's strategy involves leveraging vast amounts of data to train advanced AI models, which could accelerate innovation and expansion within its borders. Simultaneously, an intense price war within China's domestic electric vehicle market is driving competition and shaping the future of the global automotive industry, signaling a major shift in technological power.</p>
           <p>60/100</p>
           <a href="https://www.npr.org/2025/07/03/1255164449/china-works-to-dominate-in-ai-and-ev" target="_blank"><span class="news-org">NPR</span></a>
         </div>
@@ -125,12 +233,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Hakeem Jeffries Delivers Record-Breaking House Speech to Protest Republican Bill</h2>
+          <h2>Hakeem Jeffries Delivers Record-Breaking House Speech to Protest GOP Bill</h2>
           <div class="timestamp">2025-07-03 16:05:47 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>House Democratic Leader Hakeem Jeffries set a new record for the longest speech on the House floor, speaking for 8 hours and 44 minutes. His marathon address was a protest against the Republican-led tax and spending bill, which he condemned as an "immoral document." Jeffries used the extended time to criticize the legislation's cuts to healthcare and food aid, while also delaying the final vote. This act of political theater highlighted the deep partisan divide over the bill and gave Democrats a significant platform to voice their opposition, even though they could not ultimately prevent its passage.</p>
-          <p>40/100</p>
+          <p>House Democratic Leader Hakeem Jeffries set a new record for the longest speech in the chamber's history, speaking for 8 hours and 44 minutes. He used the "magic minute" privilege, which allows party leaders to speak indefinitely, to vehemently oppose the Republican-led tax and spending bill before its final vote. Jeffries criticized the legislation's cuts to social programs and tax breaks for the wealthy, using the marathon address to delay the vote and spotlight Democratic objections.</p>
+          <p>50/100</p>
           <a href="https://www.cbsnews.com/news/hakeem-jeffries-speech-house-floor-record/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -138,25 +246,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>EPA Places 139 Employees on Leave Over Unauthorized Letter</h2>
-          <div class="timestamp">2025-07-03 15:59:06 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Environmental Protection Agency has placed 139 employees on administrative leave amid an investigation into an unauthorized letter. The employees are accused of misusing their official titles and agency positions to sign a letter that allegedly misled the public about the EPA's activities. An agency spokesperson stated that the EPA has a "zero-tolerance policy" for career staff undermining the administration's agenda. This action follows the recent termination or reassignment of nearly 500 EPA employees and the elimination of the agency's Diversity, Equity, and Inclusion (DEI) and Environmental Justice offices under Administrator Lee Zeldin.</p>
-          <p>30/100</p>
-          <a href="https://www.foxnews.com/politics/epa-places-numerous-employees-leave-alleged-misuse-official-titles-unauthorized-letter" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Hollywood Actor Michael Madsen, Known for Tarantino Films, Dies at 67</h2>
+          <h2>Actor Michael Madsen, Known for Roles in Tarantino Films, Dies at 67</h2>
           <div class="timestamp">2025-07-03 15:58:37 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Veteran actor Michael Madsen, celebrated for his memorable roles in Quentin Tarantino films like "Reservoir Dogs" and "Kill Bill," has died at the age of 67. He was found unresponsive at his home in Malibu and is believed to have died from cardiac arrest. Madsen's career spanned four decades, during which he became known for portraying tough, complex characters, most notably the menacing Mr. Blonde. He is survived by his sister, actress Virginia Madsen, and four children, leaving behind a legacy as a distinctive and powerful presence in Hollywood.</p>
-          <p>15/100</p>
+          <p>Veteran actor Michael Madsen, celebrated for his memorable roles in Quentin Tarantino films like "Reservoir Dogs" and "Kill Bill," has died at the age of 67. He was found unresponsive at his home in Malibu, California, with his death reportedly due to cardiac arrest. Throughout his four-decade career, Madsen was known for his portrayals of tough, often villainous characters, most famously the ear-slicing Mr. Blonde, leaving behind a significant cinematic legacy.</p>
+          <p>25/100</p>
           <a href="https://www.bbc.com/news/articles/cnvmry62zpdo" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -164,24 +259,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Husband Re-arrested in Suzanne Morphew's Murder After New Forensic Evidence Emerges</h2>
-          <div class="timestamp">2025-07-03 15:58:14 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Barry Morphew has been arrested for a second time for the murder of his wife, Suzanne, whose remains were discovered in September 2023. The new charges follow a toxicology report that found a combination of animal tranquilizer drugs, known as BAM, in her bone marrow. Authorities state that Morphew, an avid hunter, was the only private citizen in the area with access to these specific drugs. He was previously charged in 2021, but the case was dismissed. This significant development in the high-profile case, which began with Suzanne's disappearance on Mother's Day 2020, points to a potential trial.</p>
-          <p>20/100</p>
-          <a href="https://www.cbsnews.com/news/suzanne-morphew-update-missing-colorado-mother-48-hours/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Manhunt Underway for Gunman in Fatal Shooting of Congressional Intern in Washington D.C.</h2>
+          <h2>Authorities Search for Gunman in Stray-Bullet Killing of Congressional Intern in Washington D.C.</h2>
           <div class="timestamp">2025-07-03 15:55:30 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A large-scale investigation is underway in Washington D.C. to find the suspect responsible for the shooting death of 21-year-old congressional intern Eric Tarpinian-Jachym. He was tragically killed by a stray bullet during an altercation between two groups that he was not involved in. The incident, which also wounded a woman and a 16-year-old boy, is being investigated by local police with assistance from the FBI and ATF. Authorities have recovered the suspect's vehicle and are working to enhance grainy video footage to identify the shooter in what police are calling a targeted but tragic incident.</p>
+          <p>A manhunt is underway for the suspect who killed a 21-year-old congressional intern with a stray bullet during a shooting in Washington, D.C. The victim, Eric Tarpinian-Jachym, was an intern for a Kansas representative and was not the intended target of the violence. The incident, which also injured a woman and a 16-year-old boy, occurred following an altercation between two groups, and federal authorities are now assisting local police in the investigation.</p>
           <p>10/100</p>
           <a href="https://abcnews.go.com/US/hunt-gunman-killed-congressional-intern-dc/story?id=123457307" target="_blank"><span class="news-org">ABC News</span></a>
         </div>
@@ -190,12 +272,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Mexican Boxer Julio César Chávez Jr. Arrested by ICE for Alleged Cartel Connections</h2>
+          <h2>Boxer Julio César Chávez Jr. Arrested by U.S. Immigration Officials Over Alleged Cartel Connections</h2>
           <div class="timestamp">2025-07-03 15:53:54 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Mexican boxer and former world champion Julio César Chávez Jr. has been arrested by U.S. Immigration and Customs Enforcement (ICE) in California due to alleged ties to the Sinaloa cartel. The Department of Homeland Security stated he is being processed for expedited removal from the country. Authorities claim Chávez, who is in the U.S. on an expired visa, has an active arrest warrant in Mexico for organized crime and is considered an egregious public safety threat. This arrest occurs amid the Trump administration's intensified crackdown on immigration and follows several previous legal issues for the boxer in the United States.</p>
-          <p>25/100</p>
+          <p>Mexican boxer and former world champion Julio César Chávez Jr. has been arrested by U.S. Immigration and Customs Enforcement (ICE) due to alleged ties to the Sinaloa cartel. According to the Department of Homeland Security, Chávez is being processed for expedited removal from the country. The arrest is based on an active warrant in Mexico for organized crime and his alleged affiliation with the cartel, which the U.S. government designated a foreign terror organization.</p>
+          <p>30/100</p>
           <a href="https://www.cbsnews.com/news/julio-cesar-chavez-jr-arrested-ice-homeland-security-sinaloa-cartel/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -203,11 +285,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Israeli Strikes Intensify Across Gaza, Killing Dozens Including Displaced Families</h2>
+          <h2>Intensified Israeli Strikes in Gaza Reportedly Kill Dozens, Including at a School Shelter</h2>
           <div class="timestamp">2025-07-03 15:52:22 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Israeli military operations in Gaza have intensified, resulting in at least 69 deaths on Thursday, according to rescuers. One airstrike hit a school in Gaza City being used as a shelter, killing 15 people, most of whom were women and children. The Israeli military stated it was targeting a key Hamas operative in the building. In separate incidents, dozens more were reportedly killed while trying to access humanitarian aid. These events unfold as international pressure grows for a ceasefire and hostage release deal, though significant obstacles remain between Israel and Hamas.</p>
+          <p>Israeli forces have intensified bombardments across Gaza, resulting in at least 69 deaths on Thursday, according to rescue workers. One airstrike hit a school in Gaza City that was being used as a shelter for displaced families, killing 15 people, most of whom were women and children. The Israeli military stated it was targeting a "key" Hamas operative in the area and has accused the group of using human shields, while the conflict's civilian toll continues to mount.</p>
           <p>5/100</p>
           <a href="https://www.bbc.com/news/articles/c3d1r93gg9ro" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -220,8 +302,8 @@
           <div class="timestamp">2025-07-03 15:49:25 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Nissan is recalling approximately 480,000 vehicles in the U.S. and Canada because of a manufacturing defect that could lead to engine failure while driving. The recall affects several popular models, including the Altima, Rogue, and Infiniti QX50, equipped with specific turbo engines where bearing failures have been identified. The company warns that drivers may notice abnormal engine noise or warning lights as preliminary signs of the issue. Dealers will inspect the engines for metal debris and perform necessary repairs or replacements free of charge to address the safety concern.</p>
-          <p>30/100</p>
+          <p>Nissan has issued a recall for more than 480,000 vehicles across the U.S. and Canada because of a manufacturing defect that could cause engine failure. The recall affects several models, including the Altima, Rogue, and Infiniti QX50, equipped with specific turbo engines where bearing failures could lead to a loss of power while driving. The company has advised that drivers may notice abnormal engine noise or warning lights as preliminary signs of the issue.</p>
+          <p>40/100</p>
           <a href="https://www.cbsnews.com/news/nissan-recall-engine-failure-concerns/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -233,8 +315,8 @@
           <div class="timestamp">2025-07-03 15:46:18 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A drive-by shooting outside the Artis Lounge nightclub in Chicago's River North has resulted in four deaths and at least fourteen injuries. The incident occurred as a crowd was leaving an album release party for a local rapper. Police report that occupants of a dark SUV fired into the group, and they are currently searching for three suspected shooters. The nightclub has been temporarily shut down by the city as the investigation continues into this tragic act of violence, which has deeply shaken the community.</p>
-          <p>10/100</p>
+          <p>A drive-by shooting outside a nightclub in Chicago's River North neighborhood has resulted in four deaths and fourteen injuries. The incident occurred late Wednesday night as a crowd was leaving an album release party for rapper Mello Buckzz. Police report that occupants of a dark SUV fired into the group of people on the sidewalk before fleeing the scene; no arrests have been made, and the investigation into this tragic act of violence is ongoing.</p>
+          <p>5/100</p>
           <a href="https://www.cbsnews.com/news/artis-lounge-mass-shooting-river-north-nightclub/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -242,12 +324,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>President Trump Holds Call with Vladimir Putin Amid Pause in U.S. Arms Shipments to Ukraine</h2>
+          <h2>President Trump Holds Call with Vladimir Putin Amidst Pause in U.S. Weapons Shipments to Ukraine</h2>
           <div class="timestamp">2025-07-03 15:43:04 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump held a nearly hour-long phone conversation with Russian President Vladimir Putin on Thursday. The call took place shortly after the White House confirmed a temporary halt on some U.S. weapons shipments to Ukraine, a decision attributed to concerns over dwindling American military stockpiles. According to the Kremlin, the two leaders discussed the Russia-Ukraine war and the Middle East. This development highlights ongoing diplomatic complexities as the Trump administration navigates its relationships with both Russia and Ukraine, with a call to Ukrainian President Zelenskyy planned for Friday.</p>
-          <p>35/100</p>
+          <p>President Trump spoke with Russian President Vladimir Putin on Thursday, a conversation that the Kremlin reported lasted nearly an hour. The call took place shortly after the White House confirmed a temporary halt on some U.S. military aid to Ukraine, a decision attributed to concerns over dwindling domestic stockpiles. While the White House has not detailed the call, the Kremlin stated the leaders discussed the war in Ukraine and developments in the Middle East, raising questions about international alignments.</p>
+          <p>30/100</p>
           <a href="https://www.cbsnews.com/news/trump-speaking-putin-thursday/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -255,11 +337,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Independent Study Suggests Gaza War Deaths Significantly Higher Than Official Reports</h2>
+          <h2>Independent Study Suggests Gaza War Deaths Significantly Higher Than Official Counts</h2>
           <div class="timestamp">2025-07-03 15:42:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A new independent study estimates that over 80,000 Palestinians were killed in Gaza between October 2023 and January 2025, a figure substantially higher than official counts from the Gazan Ministry of Health. Led by war researcher Michael Spagat, the study involved direct household surveys in Gaza, providing a rare on-the-ground assessment independent of official ministry records. The research suggests that while the ministry's data is accurate, it likely underreports the total number of casualties, including both violent and non-violent war-related deaths. The findings underscore the immense human cost of the conflict in the region.</p>
+          <p>A new independent study estimates that over 80,000 Palestinians were killed in Gaza between October 2023 and January 2025, a figure substantially higher than official reports. Researchers, working independently of the Hamas-run Health Ministry, surveyed households directly to gather data on both violent and non-violent war-related deaths. The findings suggest that the ministry's figures, while not exaggerated, represent a conservative minimum and that the true death toll from the conflict is much greater.</p>
           <p>5/100</p>
           <a href="https://www.dw.com/en/gaza-what-is-the-actual-death-toll-and-how-can-we-be-sure/a-73136975?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
@@ -268,12 +350,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>BBC Apologizes for Broadcasting Controversial Anti-IDF Chant at Glastonbury Festival</h2>
+          <h2>BBC Apologizes for Broadcasting Glastonbury Performance with 'Death to the IDF' Chant</h2>
           <div class="timestamp">2025-07-03 15:36:20 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The BBC has issued a formal apology after broadcasting a performance by the rap-punk group Bob Vylan at the Glastonbury festival, during which the band led the crowd in a chant of "Death to the IDF." The incident prompted a police investigation, the revocation of the band's U.S. visas, and widespread backlash. In response, BBC Director-General Tim Davie expressed deep regret, particularly to the Jewish community, and announced new policies for future live broadcasts, including keeping "high risk" acts off live streams. The broadcaster affirmed that there is no place for antisemitism on its platforms.</p>
-          <p>25/100</p>
+          <p>The BBC has issued a formal apology for broadcasting a controversial performance by the group Bob Vylan from the Glastonbury festival. During their set, the rap-punk band, known for its criticism of Israel's actions in Gaza, led the audience in a chant of "Death to the IDF." The broadcaster's director-general expressed deep regret for the "offensive and deplorable behavior," announcing policy changes for future live festival coverage to avoid broadcasting "high risk" acts.</p>
+          <p>30/100</p>
           <a href="https://www.latimes.com/entertainment-arts/music/story/2025-07-03/bbc-apologizes-for-broadcast-of-bob-vylans-controversial-glastonbury-set" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
@@ -285,8 +367,8 @@
           <div class="timestamp">2025-07-03 15:34:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Relations between Russia and Azerbaijan have become severely strained following a controversial police raid in Yekaterinburg that resulted in the deaths of two ethnic Azeri men. In response, Azerbaijan cancelled all Russian cultural events and arrested two Russian journalists, escalating a diplomatic crisis. The situation is further complicated by the downing of an Azerbaijani plane over Russia last year, which killed 38 people. Analysts suggest the events reflect a broader shift, with Baku asserting more independence and Moscow potentially losing its traditional influence in the Caucasus region.</p>
-          <p>20/100</p>
+          <p>A recent police raid in Yekaterinburg, Russia, that resulted in the death of two ethnic Azeri men has sparked a significant diplomatic crisis with Azerbaijan. Baku condemned the "unacceptable act of violence" and retaliated by cancelling cultural events and arresting Russian journalists, escalating an already strained relationship. Experts suggest the incident adds to existing tensions following the downing of an Azerbaijani plane over Russia last year, signaling a potential shift in geopolitical alliances in the Caucasus region.</p>
+          <p>25/100</p>
           <a href="https://www.dw.com/en/russia-is-moscow-losing-azerbaijan-as-an-ally/a-73147334?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -294,12 +376,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Former Diplomats Criticize Plan to Restructure State Department's Human Rights Bureau</h2>
+          <h2>Op-Ed Argues State Department Overhaul Dismantles U.S. Human Rights Focus</h2>
           <div class="timestamp">2025-07-03 15:30:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A group of former senior diplomats is raising alarms over Secretary of State Marco Rubio's plan to overhaul the State Department's Bureau of Democracy, Human Rights, and Labor (DRL). The proposed reorganization would reportedly shutter most offices devoted to human rights and lay off a majority of its expert staff. Critics argue this move will dismantle critical infrastructure, undermine decades of bipartisan foreign policy, and signal a U.S. retreat from promoting human rights globally. They contend that this decision imperils global stability and contradicts Rubio's own past support for human rights initiatives.</p>
-          <p>15/100</p>
+          <p>An opinion piece authored by former diplomats criticizes Secretary of State Marco Rubio for dismantling the State Department's human rights and global justice programs. The authors argue that the plan to shutter most offices in the Bureau of Democracy, Human Rights, and Labor (DRL) and lay off expert staff will undermine decades of bipartisan foreign policy. They contend this move sends a dangerous message that the U.S. no longer prioritizes human rights, which could empower authoritarian regimes.</p>
+          <p>20/100</p>
           <a href="https://www.latimes.com/opinion/story/2025-07-03/state-department-human-rights-marco-rubio" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
@@ -307,12 +389,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>President Trump's Legal Team Engages in Settlement Discussions with Google</h2>
+          <h2>Analysis Suggests President Trump Uses Lawsuits and Political Power to Coerce Settlements from Tech Giants</h2>
           <div class="timestamp">2025-07-03 15:18:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump's legal team has entered into settlement discussions with Google and its CEO, Sundar Pichai, regarding a 2021 lawsuit over the suspension of Trump's YouTube account. This follows previous settlements with Meta and X (formerly Twitter) where millions were paid to Trump's presidential-library fund. The lawsuit alleges illegal censorship, an argument critics find ironic given the administration's own actions against political opponents. The talks highlight a pattern of the president using the power of his office to pressure companies into settling legal disputes, regardless of the cases' original merits.</p>
-          <p>30/100</p>
+          <p>An article in The Atlantic details a pattern of President Trump using lawsuits and the power of his office to secure large financial settlements from major tech and media companies. After suing Meta, X (formerly Twitter), and Google for restricting his accounts, he obtained multi-million dollar payments from Meta and X, which went to his presidential library fund. Now, settlement discussions are reportedly underway with Google's parent company, Alphabet, raising questions about the use of executive power to influence civil litigation.</p>
+          <p>25/100</p>
           <a href="https://www.theatlantic.com/politics/archive/2025/07/trump-google-lawsuit-settlement/683420/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
       </div>
@@ -320,25 +402,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Analysis Reveals Four Key Tax Breaks in New Republican Bill Are Set to Expire in 2028</h2>
-          <div class="timestamp">2025-07-03 15:17:05 EDT</div>
+          <h2>Germany Urges China to Leverage Its Influence on Russia to End War in Ukraine</h2>
+          <div class="timestamp">2025-07-03 15:17:33 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump's major legislative bill introduces several new tax breaks, but four of its most prominent provisions are only temporary and scheduled to expire at the end of his term in 2028. These include federal income tax exemptions for tipped income and overtime pay, a deduction for interest on new auto loans, and the creation of government-funded "Trump accounts" for children. While these measures fulfill key campaign promises, their temporary nature means their long-term impact is uncertain. This structure mirrors the 2017 tax cuts, which were also set to expire before this bill made them permanent. (not investment advice)</p>
-          <p>50/100</p>
-          <a href="https://www.cnbc.com/2025/07/03/temporary-tax-breaks-in-trumps-big-beautiful-bill.html" target="_blank"><span class="news-org">CNBC</span></a>
+          <p>German Foreign Minister Johann Wadephul has publicly called on China to use its significant influence over Moscow to help bring an end to the war in Ukraine. During a press conference with his Chinese counterpart, Wang Yi, in Berlin, Wadephul stressed the importance of China's role as a global power in promoting peace and security. He appealed for concrete efforts from Beijing to bring Russia to the negotiating table and to prevent war-related goods from reaching Russia.</p>
+          <p>45/100</p>
+          <a href="https://www.yahoo.com/news/berlin-calls-china-influence-putin-191733208.html" target="_blank"><span class="news-org">Yahoo News</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>India Takes Control of Second Test After Shubman Gill's Record-Breaking 269 Runs</h2>
+          <h2>Shubman Gill's Double Century Puts India in Dominant Position Against England in Second Test</h2>
           <div class="timestamp">2025-07-03 15:16:43 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Indian captain Shubman Gill scored a monumental 269 runs, the highest score by an Indian batter in England, to put his team in a commanding position against England in the second Test at Edgbaston. India amassed a total of 587 runs, after which their bowlers swiftly dismantled England's top order, leaving them at 77-3 by the close of day two. The performance gives India a significant advantage as they aim to level the series. England now faces an immense challenge to avoid defeat, requiring an extraordinary comeback to overcome the massive first-innings deficit.</p>
-          <p>70/100</p>
+          <p>A monumental score of 269 by captain Shubman Gill has given India a commanding position after day two of the second Test against England at Edgbaston. Gill's performance, the highest ever by an Indian batter in England, propelled his team to a total of 587. In response, England's top order collapsed, leaving them at 77-3 by the close of play, facing a formidable challenge to avoid a series-leveling defeat in the closely watched cricket match.</p>
+          <p>60/100</p>
           <a href="https://www.bbc.com/sport/cricket/articles/cp86z8555r6o" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -346,24 +428,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Humanitarian Crisis in Gaza Worsens as Civilians Risk Death Seeking Food Aid</h2>
-          <div class="timestamp">2025-07-03 15:14:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The struggle for survival in Gaza has reached a critical point, with civilians facing extreme danger and violence while trying to access scarce food and aid supplies. With nearly the entire population displaced and facing acute food insecurity, many risk their lives at distribution centers, where hundreds have been killed in recent weeks. This article highlights the story of one family whose 19-year-old son was killed fetching an aid box. The situation underscores the desperate reality for Gaza's residents, caught between military conflict and a severe humanitarian blockade that makes daily survival a perilous endeavor.</p>
-          <p>0/100</p>
-          <a href="https://www.dw.com/en/trying-to-get-aid-in-gaza-killed-while-lining-up-for-food/a-73135184?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Mistakenly Deported Man Alleges Severe Beatings and Torture in Salvadoran Prison</h2>
+          <h2>Man Mistakenly Deported to El Salvador Alleges Severe Beatings and Torture in Prison</h2>
           <div class="timestamp">2025-07-03 15:11:35 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Kilmar Abrego Garcia, a man mistakenly deported from the U.S. to El Salvador, alleges he was subjected to brutal beatings and psychological torture in the notorious CECOT mega-prison. According to a court filing, he endured severe physical abuse, sleep deprivation, and threats from guards upon his arrival. His lawyers are using these details to argue against any future deportation. Abrego Garcia was returned to the U.S. by court order but was immediately detained on federal charges, while DHS continues to assert he has gang affiliations, a claim his family denies.</p>
+          <p>Kilmar Abrego Garcia, a man who was erroneously deported from the U.S. to El Salvador, claims he was subjected to brutal beatings and psychological torture in a notorious Salvadoran prison. In a court filing, his lawyers state he was held in an overcrowded cell, deprived of sleep, and kicked and struck by guards upon his arrival at the CECOT mega-prison. Abrego Garcia was returned to the U.S. by court order but was immediately detained on separate federal charges.</p>
           <p>5/100</p>
           <a href="https://www.npr.org/2025/07/03/g-s1-75775/abrego-garcia-el-salvador-prison-beaten-torture" target="_blank"><span class="news-org">NPR</span></a>
         </div>
@@ -376,7 +445,7 @@
           <div class="timestamp">2025-07-03 15:09:17 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump has secured a major legislative win with the passage of his "big, beautiful bill," a sprawling package of tax cuts and spending changes. However, this victory comes with substantial political risks for the Republican party. The bill is projected to add trillions to the national debt and will cause nearly 12 million low-income Americans to lose Medicaid coverage, according to the non-partisan Congressional Budget Office. Democrats are already preparing to campaign on these consequences, framing the legislation as a giveaway to the wealthy at the expense of social services. (not investment advice)</p>
+          <p>While the passage of his "big, beautiful bill" marks a major legislative win for President Trump, the legislation contains elements that could create future political challenges. The bill, which includes massive tax cuts and new spending on border security, is projected to add trillions to the national debt. Additionally, its significant cuts to Medicaid are expected to cause millions of Americans to lose health coverage, providing Democrats with a powerful line of attack in upcoming elections.</p>
           <p>40/100</p>
           <a href="https://www.bbc.com/news/articles/clynr0yywdeo" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -385,12 +454,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. Economy Added 147,000 Jobs in June, Exceeding Expectations</h2>
+          <h2>U.S. Labor Market Surpasses Expectations with 147,000 Jobs Added in June</h2>
           <div class="timestamp">2025-07-03 15:08:48 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The United States labor market demonstrated continued resilience in June, adding 147,000 jobs and surpassing economists' expectations. This steady growth lowered the national unemployment rate to 4.1 percent, its lowest point since February. The government and healthcare sectors saw the most significant gains, although federal employment continued to decline due to agency cuts. Despite the positive report, economists remain cautious, anticipating a potential slowdown later in the year due to trade policy uncertainties and the potential impact of tariffs on inflation and economic activity. (not investment advice)</p>
-          <p>85/100</p>
+          <p>The U.S. economy added 147,000 jobs in June, demonstrating continued resilience in the labor market despite forecasts of a slowdown. The unemployment rate fell to 4.1%, its lowest point since February, outperforming economists' predictions. Strong hiring in the government and healthcare sectors drove the growth, suggesting the job market remains on solid ground even amid economic uncertainty and the potential impact of trade tariffs. (not investment advice)</p>
+          <p>75/100</p>
           <a href="https://www.cbsnews.com/news/jobs-report-today-june-2025-economy-tariffs/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -398,11 +467,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. Pause on Arms to Ukraine Raises Concerns About Long-Term Support</h2>
+          <h2>Pause in U.S. Arms Shipments Raises Concerns for Ukraine's Long-Term Defense</h2>
           <div class="timestamp">2025-07-03 15:08:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The recent U.S. decision to pause a shipment of arms to Ukraine, including crucial air defense missiles, has heightened concerns about the reliability of American support. Although the State Department described it as a one-time event, the move comes amid strained relations between President Trump and Ukrainian President Zelenskyy. European allies have been increasing their support, but analysts note that some U.S. military systems are not easily replaceable. The pause underscores the strategic challenge for Ukraine, which is becoming increasingly reliant on European and domestic defense production as U.S. backing appears less certain.</p>
+          <p>The recent U.S. decision to pause a shipment of weapons to Ukraine, though described by officials as a one-off event, highlights the increasing uncertainty of American support for Kyiv. Analysts note that while European allies have increased their aid, they cannot easily replace critical U.S. systems like air defense and long-range artillery. This move reinforces a growing sentiment in Europe that it can no longer rely on the U.S. as a steadfast partner in Ukraine's defense.</p>
           <p>25/100</p>
           <a href="https://www.dw.com/en/one-event-arms-pause-will-be-little-comfort-to-ukraine/a-73144853?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
@@ -411,11 +480,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Singer Connie Francis Hospitalized for Extreme Pain Following Pelvic Fracture</h2>
+          <h2>Singer Connie Francis Hospitalized for Pain Following Recent Pelvic Fracture</h2>
           <div class="timestamp">2025-07-03 15:05:05 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Legendary singer Connie Francis, 87, was recently hospitalized to address "extreme pain" just a week after revealing she had suffered a pelvic fracture. The '60s pop icon, known for hits like "Stupid Cupid," has been open with fans about her health struggles, including her reliance on a wheelchair to manage hip pain. Francis, whose song "Pretty Little Baby" recently went viral on TikTok, has cancelled upcoming performances to focus on her recovery. She thanked her followers for their support while she undergoes tests to manage her condition and determine the next steps for her care.</p>
+          <p>Legendary 1950s singer Connie Francis has been hospitalized to address "extreme pain" just a week after revealing she had suffered a pelvic fracture. The 87-year-old star, known for hits like "Stupid Cupid," had recently canceled performances due to the injury. She informed fans via social media that she is receiving care and undergoing tests, and noted that she may need to rely on her wheelchair for longer than anticipated as she recovers from her condition.</p>
           <p>40/100</p>
           <a href="https://www.latimes.com/entertainment-arts/music/story/2025-07-03/connie-francis-hospitalized-extreme-pain-pelvic-fracture-pretty-little-baby" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
@@ -424,12 +493,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>New Republican Bill Heavily Favors Fossil Fuels While Ending Support for Solar and Wind</h2>
+          <h2>New Legislation Ends Key Renewable Energy Subsidies, Boosts Fossil Fuel Production</h2>
           <div class="timestamp">2025-07-03 15:04:53 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump's newly passed legislative package is set to dramatically reshape U.S. energy policy, ending decades of federal support for solar and wind power while boosting the fossil fuel industry. The law phases out key tax credits for renewables, a move that industry groups warn will undermine America's manufacturing comeback and global energy leadership. Conversely, it delivers major priorities for the oil, gas, and coal sectors, including opening more federal lands to drilling and mining, slashing royalty payments, and incentivizing carbon capture for increased oil production. (not investment advice)</p>
-          <p>20/100</p>
+          <p>The newly passed "One Big Beautiful Bill Act" fundamentally reshapes U.S. energy policy by eliminating long-standing federal support for solar and wind power while promoting fossil fuels. The law phases out crucial investment and production tax credits for renewables that have been in place for decades, a move the solar industry warns will undermine American manufacturing. Conversely, the legislation opens more federal lands to drilling, slashes royalty rates, and provides new incentives for coal production. (not investment advice)</p>
+          <p>35/100</p>
           <a href="https://www.cnbc.com/2025/07/03/trump-one-big-beautiful-bill-oil-gas-coal-solar-wind-ira-tax-incentive-repeal.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -437,11 +506,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Mortgage Rates Decline for Fifth Straight Week, Offering Opportunity for Homebuyers</h2>
+          <h2>Mortgage Rates Decline for Fifth Straight Week, Offering Potential Relief for Homebuyers</h2>
           <div class="timestamp">2025-07-03 15:03:08 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Mortgage rates have fallen for the fifth consecutive week, with the average 30-year rate now at 6.67%, providing a potential window of opportunity for prospective homebuyers. This downward trend comes as markets anticipate the Federal Reserve may cut its benchmark rate later this year, which could further lower borrowing costs. Financial experts advise that current buyers should prepare by checking their credit reports for accuracy, researching qualified real estate agents, and getting pre-approved for a mortgage. Taking these steps now could position buyers avantageously before a potential market flood if rates continue to drop. (not investment advice)</p>
+          <p>Average U.S. mortgage rates have fallen for the fifth consecutive week, reaching 6.67% for a 30-year loan, providing a glimmer of hope for prospective homebuyers. This downward trend comes amid expectations that the Federal Reserve may cut its benchmark interest rate later this year, which could further lower borrowing costs. Financial experts advise that current buyers should prepare by checking their credit and securing mortgage pre-approval to be competitive in the market. (not investment advice)</p>
           <p>80/100</p>
           <a href="https://www.cbsnews.com/news/mortgage-rates-drop-fifth-consecutive-week-buyers-july-2025/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -450,25 +519,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Tennis Star Venus Williams Reveals Years of Misdiagnosed Pain from Fibroids</h2>
-          <div class="timestamp">2025-07-03 15:02:47 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Tennis legend Venus Williams, 45, has revealed that she suffered for years from extreme period pain and anemia that doctors dismissed before she was properly treated for uterine fibroids. Williams described her symptoms as debilitating, yet was repeatedly told her discomfort was normal. She finally sought specialized treatment after seeing an ad on social media, leading to a myomectomy surgery that successfully removed the fibroids. Williams is now sharing her story to raise awareness and encourage other women to advocate for their health and not accept dismissive medical advice.</p>
-          <p>65/100</p>
-          <a href="https://www.yahoo.com/entertainment/articles/venus-williams-45-says-doctors-190247718.html" target="_blank"><span class="news-org">Yahoo News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Documentary 'Nobu' Explores the Man Behind the Global Sushi Brand</h2>
+          <h2>Documentary 'Nobu' Focuses More on Global Brand Than Culinary Art, Reviewer Says</h2>
           <div class="timestamp">2025-07-03 15:01:07 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A new documentary titled "Nobu" chronicles the life and career of Nobu Matsuhisa, the world-renowned sushi master behind the iconic restaurant empire. The film traces his journey from humble beginnings in Japan and Peru to establishing a global brand synonymous with high-end dining, aided by co-founder Robert De Niro. While the documentary offers a gentle chronological look at his life, some critics note it focuses more on his personal story and celebrity connections than the specifics of his culinary innovation. The film highlights how precision and exclusivity were key to his success in the power-dining scene of 1980s Los Angeles.</p>
-          <p>70/100</p>
+          <p>A new documentary titled "Nobu" profiles the famed sushi master Nobu Matsuhisa, but a review in the Los Angeles Times finds it focuses more on the creation of his global luxury brand than his culinary genius. The film chronicles his journey and features high-profile partners like Robert De Niro, but the reviewer suggests it often feels like a commercial. While it touches on his meticulous standards, the documentary is said to lack the intimacy and focus on the dining experience.</p>
+          <p>60/100</p>
           <a href="https://www.latimes.com/entertainment-arts/movies/story/2025-07-03/nobu-review-matsuhisa-documentary-matt-tyrnauer" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
@@ -476,12 +532,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Austria Deports Syrian National for First Time Since Civil War Began</h2>
+          <h2>Austria Deports Syrian Man, Marking First Such Removal Since Civil War Began</h2>
           <div class="timestamp">2025-07-03 15:01:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Austria has conducted its first deportation of a Syrian citizen back to Syria since the country's civil war started over 15 years ago. The 32-year-old man, who had been convicted of a crime and stripped of his refugee status, was flown to Damascus. This move makes Austria the first EU nation to repatriate someone to Syria, a country it now deems safe for return following the end of the war. The action is part of the Austrian government's tough immigration stance, but human rights groups have expressed concern, arguing the situation in post-war Syria is still uncertain.</p>
-          <p>25/100</p>
+          <p>Austria has deported a 32-year-old Syrian man convicted of a crime, marking the first time the country has sent someone back to Syria since its civil war began over 15 years ago. The Austrian Interior Minister described the move as a "tough but fair" signal regarding the country's asylum policy. While the Austrian government has deemed Syria safe for return, human rights organizations have expressed concern over the precedent, citing uncertainty about the country's stability.</p>
+          <p>20/100</p>
           <a href="https://www.dw.com/en/austria-deports-first-syrian-since-start-of-civil-war/a-73146652?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -489,12 +545,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. Citizen Sues Federal Government for $1 Million After Arrest While Filming ICE Raid</h2>
+          <h2>U.S. Citizen Arrested While Filming ICE Raid Sues Federal Government for $1 Million</h2>
           <div class="timestamp">2025-07-03 14:58:15 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A 37-year-old U.S. citizen is suing the Department of Homeland Security for $1 million after he was arrested and detained while filming an ICE raid at a Home Depot. Job Garcia, a photographer and PhD student, was tackled and held for over 24 hours despite repeatedly asserting his citizenship. His legal representatives argue the arrest was unlawful and based on his race and efforts to document government actions. The incident occurs amid escalating immigration enforcement and highlights the legal and civil rights tensions surrounding the administration's crackdown on undocumented immigrants.</p>
-          <p>20/100</p>
+          <p>A U.S. citizen who was arrested while filming an Immigration and Customs Enforcement (ICE) raid at a Home Depot is now suing the federal government for $1 million. Job Garcia, a photographer and PhD student, alleges he was tackled, wrongfully arrested, and detained for over 24 hours by federal agents despite being a citizen. His legal representatives argue the arrest was an unlawful interference with his liberty, while the Department of Homeland Security claims Garcia assaulted an agent.</p>
+          <p>30/100</p>
           <a href="https://www.theguardian.com/us-news/2025/jul/03/photographer-arrested-home-depot-ice-raid" target="_blank"><span class="news-org">The Guardian</span></a>
         </div>
       </div>
@@ -502,11 +558,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Madre Fire Becomes California's Largest Wildfire of the Year, Burning Over 35,000 Acres</h2>
+          <h2>Madre Fire Explodes in Size, Becoming California's Largest Wildfire of the Year</h2>
           <div class="timestamp">2025-07-03 14:54:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A wildfire in California's Los Padres National Forest, dubbed the Madre Fire, has rapidly grown to over 35,000 acres, making it the largest blaze in the state so far this year. The fire's exponential growth has prompted evacuation orders and highway closures in San Luis Obispo County. State, federal, and local agencies are operating in a unified command to protect communities and contain the fire, which is currently at 5% containment. The cause of the fire is under investigation as smoke spreads across neighboring counties, highlighting the ongoing wildfire threat in the region.</p>
+          <p>A wildfire in California's Los Padres National Forest has rapidly grown to over 35,000 acres, making it the largest fire in the state so far this year. The Madre Fire has prompted evacuation orders and warnings in San Luis Obispo County, with officials noting its exponential growth due to weather and fuel conditions. State and federal agencies are working in unified command to combat the blaze, which is currently 5% contained and threatening at least 50 structures.</p>
           <p>15/100</p>
           <a href="https://www.cbsnews.com/news/madre-fire-california-wildfire/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -515,91 +571,19 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Australia Revokes Kanye West's Visa Following Release of Antisemitic Song</h2>
+          <h2>Australia Revokes Kanye West's Visa Following Release of 'Heil Hitler' Song</h2>
           <div class="timestamp">2025-07-03 14:51:56 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Australia has canceled the visa of Ye, the artist formerly known as Kanye West, effectively barring him from entering the country. The decision was made after Ye released a song titled "Heil Hitler," which contained antisemitic lyrics and praised the Nazi leader. Australia's home affairs minister stated that individuals who argue for antisemitism would not be allowed into the country. This action is the latest consequence for Ye, whose increasingly controversial and antisemitic behavior has led to widespread condemnation and the loss of numerous professional partnerships.</p>
+          <p>The Australian government has canceled the visa of Ye, the artist formerly known as Kanye West, effectively barring him from entering the country. The decision, confirmed by Australia's home affairs minister, came after Ye released a song widely condemned for its antisemitism and praise of the Nazi leader. The minister stated that someone who argues "antisemitism was rational" would not be allowed into the country, marking a significant consequence for the artist's recent controversial behavior.</p>
           <p>30/100</p>
           <a href="https://www.latimes.com/entertainment-arts/music/story/2025-07-03/ye-kanye-west-australian-visa-revoked-heil-hitler-song" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
     </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Analysis: History Suggests Trump's Major Legislative Win Could Lead to Political Backlash</h2>
-          <div class="timestamp">2025-07-03 14:50:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>President Trump's passage of his "one big, beautiful bill" is a significant legislative achievement, but historical trends suggest it may be politically damaging for him and the Republican party. The bill is broadly unpopular in polls, and major legislation passed via the budget reconciliation process often precedes the governing party losing congressional control in the next election. Analysts suggest the public's negative reaction is often driven by the perception of partisan overreach and a focus on process over policy. This pattern indicates that the highly ideological and contentious nature of the bill could energize opposition. (not investment advice)</p>
-          <p>35/100</p>
-          <a href="https://www.vox.com/politics/418668/trump-bill-reconciliation-unpopular-republican-backlash" target="_blank"><span class="news-org">Vox</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>John Leguizamo's 'Does America' Docuseries Returns for Second Season Amid New Political Climate</h2>
-          <div class="timestamp">2025-07-03 14:47:50 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Actor John Leguizamo returns for a second season of his MSNBC docuseries, "Leguizamo Does America," which explores Latino communities and their contributions across the U.S. The new season arrives in a changed political landscape under the Trump administration, with Leguizamo describing the show as an "antidote" to the erasure and mistreatment of Latinos. Visiting cities like Philadelphia and San Antonio, the series aims to highlight the stories of everyday people making a difference. The show continues Leguizamo's long-standing effort to increase Latino visibility and historical representation in media as a form of cultural resistance.</p>
-          <p>75/100</p>
-          <a href="https://www.latimes.com/delos/story/2025-07-03/john-leguizamo-does-america-season-two-ben-de-jesus-msnbc" target="_blank"><span class="news-org">LA Times</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Liverpool and Portugal Soccer Star Diogo Jota Dies in Car Accident with Brother</h2>
-          <div class="timestamp">2025-07-03 14:45:54 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A tragic car accident in Spain has claimed the lives of Liverpool forward Diogo Jota, 28, and his brother, fellow soccer player André Silva, 25. Spanish authorities are investigating the crash, which occurred when their vehicle veered off the road and burst into flames. The soccer world is in mourning, with Liverpool FC and the Portuguese Football Federation expressing their devastation over the loss of the two players. Tributes have poured in from teammates like Cristiano Ronaldo and figures like LeBron James, a minority owner of Liverpool.</p>
-          <p>5/100</p>
-          <a href="https://www.latimes.com/sports/story/2025-07-03/diogo-jota-dead-soccer" target="_blank"><span class="news-org">LA Times</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>German Perspective: U.S. House Approves Trump's Contentious 'Big, Beautiful' Bill</h2>
-          <div class="timestamp">2025-07-03 14:44:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The U.S. House of Representatives has passed President Trump's signature "One Big Beautiful Bill," a massive legislative package that will now be signed into law. From an international perspective, the bill is notable for its sweeping changes, including making tax cuts for the wealthy permanent while slashing healthcare and food assistance for millions of low-income Americans. It also allocates hundreds of billions for defense and immigration enforcement, including mass deportations. The nonpartisan Congressional Budget Office projects the bill will significantly increase the national deficit over the next decade. (not investment advice)</p>
-          <p>30/100</p>
-          <a href="https://www.dw.com/en/us-house-approves-trump-s-big-beautiful-bill/a-73147435?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Financial Experts Identify Signs That Credit Card Debt Requires Professional Help</h2>
-          <div class="timestamp">2025-07-03 14:42:59 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>With average credit card interest rates exceeding 21%, many Americans find their debt growing beyond what a do-it-yourself payoff plan can handle. Financial experts point to several warning signs that indicate a need for professional help. These include consistently failing to pay more than the minimum, having a credit utilization ratio over 50%, and using credit cards for essential living expenses. When these situations arise, options like credit counseling, debt settlement programs, or, in extreme cases, bankruptcy may be necessary to regain financial control. (not investment advice)</p>
-          <p>45/100</p>
-          <a href="https://www.cbsnews.com/news/signs-your-credit-card-debt-is-too-high-for-diy-payoff/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
 
   </div>
-  <!-- <script src="assets/js/hamburger.js"></script>
-  <script src="assets/js/filters.js"></script> -->
-  <script src="assets/js/script.js"></script>
-  <!-- Splash Overlay -->
-  <div class="splash-overlay" id="splash-overlay">
-    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
-  </div>
-  <link rel="stylesheet" href="assets/css/splash.css">
   <script src="assets/js/splash.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
 </html>

@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google Ads -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9001531085872027"
-     crossorigin="anonymous"></script>
-<!-- Google tag (gtag.js) -->
+<!-- Google Ads & Analytics -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9001531085872027" crossorigin="anonymous"></script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-KQYDFWSK8G"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -12,46 +10,70 @@
   gtag('js', new Date());
   gtag('config', 'G-KQYDFWSK8G');
 </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Newsway Good News</title>
-  <!-- Meta tags to prevent caching -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <!-- Favicon links -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="assets/css/style.css?v=20250703162237.N.0cd7c4e8">
-  <link rel="stylesheet" href="assets/css/hamburger.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script>
+  // --- ANTI-FLICKER SCRIPT ---
+  // This must run before the body is rendered to prevent a flash of unstyled content.
+  (function() {
+    try {
+      var a = localStorage.getItem('darkMode');
+      if (a === '1' || (a === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    } catch (e) { }
+  })();
+</script>
+<title>Newsway Good News</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<script>
+  // --- Critical CSS and Deferred Loading Block ---
+  (function() {
+    const isMobile = 'ontouchstart' in window;
+    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    width: 90vw; /* Initial large size */    max-width: 500px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0);     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Default/Mobile animation - to the header logo position */  .splash-logo.splash-animate {    /* Current values seem fine for mobile where final logo is ~60px and header is at top */    transform: translateY(-45vh) scale(0.18);     /* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Mobile bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Mobile draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Mobile draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Mobile pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Mobile spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    /* width: 90vw; Initial large size */    max-width: 1000px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    /* Transition for both mobile and desktop - values will be set by the active class */    transition: transform .6s cubic-bezier(.7,.6,.3,1) 0.1s;     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Desktop animation - targets the .logo-container position */  .splash-logo.splash-animate { /* Override the mobile animation for desktop */    /*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */      /*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */      /*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */    /* Placeholder CSS - JS will override these with calculated values */    transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Desktop bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Desktop draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Desktop draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Desktop pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Desktop spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const styleElement = document.createElement('style');
+    styleElement.id = 'critical-splash-styles';
+    styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
+    document.head.appendChild(styleElement);
+
+    function loadCSS(href) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet'; link.href = href;
+      document.head.appendChild(link);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const cssFiles = isMobile 
+        ? ['common.css', 'mobile.css', 'hamburger.css'] 
+        : ['common.css', 'pc.css', 'hamburger.css'];
+      cssFiles.forEach(file => loadCSS('assets/css/' + file));
+    });
+  })();
+</script>
 </head>
 <body>
+  <div class="splash-overlay" id="splash-overlay">
+    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+  </div>
   <header class="page-header">
     <div class="header-controls-row">
-      <div class="header-hamburger" tabindex="0" aria-label="Open menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+      <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
-        <h1>Optimistically Reported News 😇 </h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">07/03/25 04:22 PM EDT (Next: 04:31 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+        <h1>Optimistically Reported News 😇</h1>
+        <div class="last-updated">Updated: <span id="update-timestamp">07/03/25 04:35 PM EDT (Next: 04:44 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
       </div>
-      <div class="header-logo-container">
-        <img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo">
-      </div>
-      <div class="header-toggle-switch">
-        <label class="switch">
-          <input type="checkbox" id="header-slider-toggle">
-          <span class="slider round"></span>
-        </label>
-      </div>
+      <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
+      <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
-      <h1>Optimistically Reported News 😇 </h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/03/25 04:22 PM EDT (New news: 04:31 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+      <h1>Optimistically Reported News 😇</h1>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/03/25 04:35 PM EDT (New news: 04:44 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -60,24 +82,58 @@
         <a href="index.html">All News</a>
         <a href="goodnews.html">Optimistically Reported<br>News</a>
         <a onclick="showFilters()">Filters</a>
-        <!-- Add more links as needed -->
       </nav>
     </div>
   </div>
-
-  <div class="logo-container">
-    <img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="site-logo">
-  </div>
-
+  <div class="logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="site-logo"></div>
   <div class="container">
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China Focuses on Achieving Dominance in AI and Electric Vehicle Sectors</h2>
+          <h2>New Budget Bill Introduces Charitable Tax Deduction for Non-Itemizers</h2>
+          <div class="timestamp">2025-07-03 16:29:40 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A new budget bill signed into law introduces a significant tax break for charitable contributions, aimed at the majority of taxpayers who do not itemize deductions. The provision allows single filers to deduct up to $1,000 and married couples up to $2,000 for donations to qualified charities, directly reducing their taxable income. This change, part of a larger legislative package, makes charitable giving tax-deductible for an estimated 90% of filers who typically opt for the standard deduction. (not investment advice)</p>
+          <p>65/100</p>
+          <a href="https://www.cnbc.com/2025/07/03/trumps-budget-bill-includes-a-new-tax-break-worth-up-to-2000-dollars.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>First Lady Melania Trump Visits Young Patients at Washington D.C. Hospital</h2>
+          <div class="timestamp">2025-07-03 16:18:00 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>First Lady Melania Trump visited Children's National Hospital in Washington, D.C., as part of her "Be Best" initiative. She participated in patriotic-themed arts and crafts with young patients battling various illnesses and distributed gifts, including teddy bears and books. The visit also included the unveiling of a new rose variety, "Eternal Flame," in the hospital's healing garden, a space she previously dedicated in 2017, to offer a moment of warmth and encouragement.</p>
+          <p>85/100</p>
+          <a href="https://www.foxnews.com/health/first-lady-melania-trump-makes-heartwarming-visit-kids-hospital-be-best-event" target="_blank"><span class="news-org">Fox News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Jack Draper Eliminated from Wimbledon in Second-Round Upset</h2>
+          <div class="timestamp">2025-07-03 16:12:10 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>British tennis player Jack Draper has been knocked out of Wimbledon in the second round, losing to 36-year-old Croatian veteran Marin Cilic. Despite being the fourth seed and a favorite, Draper struggled against Cilic's powerful performance, losing the match 6-4 6-3 1-6 6-4. This marks another early exit for the 23-year-old at the All England Club, continuing his wait for a significant run at his home Grand Slam tournament, in a surprising result for tennis fans.</p>
+          <p>55/100</p>
+          <a href="https://www.bbc.com/sport/tennis/articles/c5y7vprq7lzo" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Report Details China's Strategic Push for Dominance in AI and Electric Vehicles</h2>
           <div class="timestamp">2025-07-03 16:07:04 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>China is intensifying its efforts to become the global leader in the critical technology sectors of artificial intelligence and electric vehicles. The country's strategy in AI leverages vast amounts of data to train new models, which could give it a significant advantage in the industry's expansion and innovation. Simultaneously, China's electric vehicle market is experiencing a fierce price war, a move aimed at solidifying its dominance both domestically and internationally. These parallel pushes highlight a concerted national strategy to control key future technologies and their associated global supply chains.</p>
+          <p>China is making a concerted effort to establish global leadership in the critical technology sectors of artificial intelligence and electric vehicles. The country's strategy involves leveraging vast amounts of data to train advanced AI models, which could accelerate innovation and expansion within its borders. Simultaneously, an intense price war within China's domestic electric vehicle market is driving competition and shaping the future of the global automotive industry, signaling a major shift in technological power.</p>
           <p>60/100</p>
           <a href="https://www.npr.org/2025/07/03/1255164449/china-works-to-dominate-in-ai-and-ev" target="_blank"><span class="news-org">NPR</span></a>
         </div>
@@ -86,12 +142,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>India Takes Control of Second Test After Shubman Gill's Record-Breaking 269 Runs</h2>
+          <h2>Shubman Gill's Double Century Puts India in Dominant Position Against England in Second Test</h2>
           <div class="timestamp">2025-07-03 15:16:43 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Indian captain Shubman Gill scored a monumental 269 runs, the highest score by an Indian batter in England, to put his team in a commanding position against England in the second Test at Edgbaston. India amassed a total of 587 runs, after which their bowlers swiftly dismantled England's top order, leaving them at 77-3 by the close of day two. The performance gives India a significant advantage as they aim to level the series. England now faces an immense challenge to avoid defeat, requiring an extraordinary comeback to overcome the massive first-innings deficit.</p>
-          <p>70/100</p>
+          <p>A monumental score of 269 by captain Shubman Gill has given India a commanding position after day two of the second Test against England at Edgbaston. Gill's performance, the highest ever by an Indian batter in England, propelled his team to a total of 587. In response, England's top order collapsed, leaving them at 77-3 by the close of play, facing a formidable challenge to avoid a series-leveling defeat in the closely watched cricket match.</p>
+          <p>60/100</p>
           <a href="https://www.bbc.com/sport/cricket/articles/cp86z8555r6o" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -99,12 +155,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. Economy Added 147,000 Jobs in June, Exceeding Expectations</h2>
+          <h2>U.S. Labor Market Surpasses Expectations with 147,000 Jobs Added in June</h2>
           <div class="timestamp">2025-07-03 15:08:48 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The United States labor market demonstrated continued resilience in June, adding 147,000 jobs and surpassing economists' expectations. This steady growth lowered the national unemployment rate to 4.1 percent, its lowest point since February. The government and healthcare sectors saw the most significant gains, although federal employment continued to decline due to agency cuts. Despite the positive report, economists remain cautious, anticipating a potential slowdown later in the year due to trade policy uncertainties and the potential impact of tariffs on inflation and economic activity. (not investment advice)</p>
-          <p>85/100</p>
+          <p>The U.S. economy added 147,000 jobs in June, demonstrating continued resilience in the labor market despite forecasts of a slowdown. The unemployment rate fell to 4.1%, its lowest point since February, outperforming economists' predictions. Strong hiring in the government and healthcare sectors drove the growth, suggesting the job market remains on solid ground even amid economic uncertainty and the potential impact of trade tariffs. (not investment advice)</p>
+          <p>75/100</p>
           <a href="https://www.cbsnews.com/news/jobs-report-today-june-2025-economy-tariffs/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -112,11 +168,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Mortgage Rates Decline for Fifth Straight Week, Offering Opportunity for Homebuyers</h2>
+          <h2>Mortgage Rates Decline for Fifth Straight Week, Offering Potential Relief for Homebuyers</h2>
           <div class="timestamp">2025-07-03 15:03:08 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Mortgage rates have fallen for the fifth consecutive week, with the average 30-year rate now at 6.67%, providing a potential window of opportunity for prospective homebuyers. This downward trend comes as markets anticipate the Federal Reserve may cut its benchmark rate later this year, which could further lower borrowing costs. Financial experts advise that current buyers should prepare by checking their credit reports for accuracy, researching qualified real estate agents, and getting pre-approved for a mortgage. Taking these steps now could position buyers avantageously before a potential market flood if rates continue to drop. (not investment advice)</p>
+          <p>Average U.S. mortgage rates have fallen for the fifth consecutive week, reaching 6.67% for a 30-year loan, providing a glimmer of hope for prospective homebuyers. This downward trend comes amid expectations that the Federal Reserve may cut its benchmark interest rate later this year, which could further lower borrowing costs. Financial experts advise that current buyers should prepare by checking their credit and securing mortgage pre-approval to be competitive in the market. (not investment advice)</p>
           <p>80/100</p>
           <a href="https://www.cbsnews.com/news/mortgage-rates-drop-fifth-consecutive-week-buyers-july-2025/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -125,52 +181,19 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Tennis Star Venus Williams Reveals Years of Misdiagnosed Pain from Fibroids</h2>
-          <div class="timestamp">2025-07-03 15:02:47 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Tennis legend Venus Williams, 45, has revealed that she suffered for years from extreme period pain and anemia that doctors dismissed before she was properly treated for uterine fibroids. Williams described her symptoms as debilitating, yet was repeatedly told her discomfort was normal. She finally sought specialized treatment after seeing an ad on social media, leading to a myomectomy surgery that successfully removed the fibroids. Williams is now sharing her story to raise awareness and encourage other women to advocate for their health and not accept dismissive medical advice.</p>
-          <p>65/100</p>
-          <a href="https://www.yahoo.com/entertainment/articles/venus-williams-45-says-doctors-190247718.html" target="_blank"><span class="news-org">Yahoo News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Documentary 'Nobu' Explores the Man Behind the Global Sushi Brand</h2>
+          <h2>Documentary 'Nobu' Focuses More on Global Brand Than Culinary Art, Reviewer Says</h2>
           <div class="timestamp">2025-07-03 15:01:07 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A new documentary titled "Nobu" chronicles the life and career of Nobu Matsuhisa, the world-renowned sushi master behind the iconic restaurant empire. The film traces his journey from humble beginnings in Japan and Peru to establishing a global brand synonymous with high-end dining, aided by co-founder Robert De Niro. While the documentary offers a gentle chronological look at his life, some critics note it focuses more on his personal story and celebrity connections than the specifics of his culinary innovation. The film highlights how precision and exclusivity were key to his success in the power-dining scene of 1980s Los Angeles.</p>
-          <p>70/100</p>
+          <p>A new documentary titled "Nobu" profiles the famed sushi master Nobu Matsuhisa, but a review in the Los Angeles Times finds it focuses more on the creation of his global luxury brand than his culinary genius. The film chronicles his journey and features high-profile partners like Robert De Niro, but the reviewer suggests it often feels like a commercial. While it touches on his meticulous standards, the documentary is said to lack the intimacy and focus on the dining experience.</p>
+          <p>60/100</p>
           <a href="https://www.latimes.com/entertainment-arts/movies/story/2025-07-03/nobu-review-matsuhisa-documentary-matt-tyrnauer" target="_blank"><span class="news-org">LA Times</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>John Leguizamo's 'Does America' Docuseries Returns for Second Season Amid New Political Climate</h2>
-          <div class="timestamp">2025-07-03 14:47:50 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Actor John Leguizamo returns for a second season of his MSNBC docuseries, "Leguizamo Does America," which explores Latino communities and their contributions across the U.S. The new season arrives in a changed political landscape under the Trump administration, with Leguizamo describing the show as an "antidote" to the erasure and mistreatment of Latinos. Visiting cities like Philadelphia and San Antonio, the series aims to highlight the stories of everyday people making a difference. The show continues Leguizamo's long-standing effort to increase Latino visibility and historical representation in media as a form of cultural resistance.</p>
-          <p>75/100</p>
-          <a href="https://www.latimes.com/delos/story/2025-07-03/john-leguizamo-does-america-season-two-ben-de-jesus-msnbc" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
     </div>
 
   </div>
-  <!-- <script src="assets/js/hamburger.js"></script>
-  <script src="assets/js/filters.js"></script> -->
-  <script src="assets/js/script.js"></script>
-  <!-- Splash Overlay -->
-  <div class="splash-overlay" id="splash-overlay">
-    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
-  </div>
-  <link rel="stylesheet" href="assets/css/splash.css">
   <script src="assets/js/splash.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
 </html>

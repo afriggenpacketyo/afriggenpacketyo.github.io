@@ -3,7 +3,7 @@
 (function() {
   const splashOverlay = document.getElementById('splash-overlay');
   const splashLogo = document.getElementById('splash-logo');
-  const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
+  const isMobile = 'ontouchstart' in window;
 
   if (!splashOverlay || !splashLogo) {
     console.warn("Splash elements not found. Aborting splash.");
@@ -11,29 +11,38 @@
   }
 
   /**
-   * This function performs the final steps after the splash animation is complete.
-   * It reveals the page, recenters cards, and applies filters.
+   * REVISED: This function now correctly sequences the final app load steps
+   * to prevent a visual "jump" when filters are auto-applied.
    */
   function finalizeAppLoad() {
-    console.log("Finalizing app load: Hiding splash, recentering cards, applying filters.");
+    console.log("Finalizing app load: Applying filters, recentering cards, then hiding splash.");
 
-    // 1. Hide the splash overlay with a fade-out.
+    // --- THE FIX ---
+    // The order of these operations is critical to prevent a visual race condition.
+
+    // 1. Notify the filter system that it's now safe to run its auto-apply logic.
+    // This will happen invisibly, underneath the splash screen. The card carousel
+    // will snap to its final, filtered position.
+    if (typeof window.filtersCompleteInitialization === 'function') {
+      window.filtersCompleteInitialization();
+    }
+
+    // 2. Force a final, perfect re-centering of the card carousel.
+    // This ensures the view is perfectly positioned on the correct (and now filtered)
+    // active card just before the reveal.
+    if (window.CardSystem && typeof window.CardSystem.forceRecenter === 'function') {
+      window.CardSystem.forceRecenter();
+    }
+
+    // 3. Hide the splash overlay with a fade-out.
+    // Now that the page is in its final state, we can safely reveal it to the user.
     splashOverlay.classList.add('splash-hide');
     setTimeout(() => {
       if (splashOverlay) splashOverlay.style.display = 'none';
       document.body.classList.remove('splash-active'); // Unlock the body
     }, 500); // Match fade-out duration in splash.css
-
-    // 2. Force a final, perfect re-centering of the card carousel.
-    if (window.CardSystem && typeof window.CardSystem.forceRecenter === 'function') {
-      window.CardSystem.forceRecenter();
-    }
-
-    // 3. Notify the filter system that it's now safe to run its auto-apply logic.
-    if (typeof window.filtersCompleteInitialization === 'function') {
-      window.filtersCompleteInitialization();
-    }
   }
+
 
   /**
    * This function contains all the logic to prepare and run the splash animation.

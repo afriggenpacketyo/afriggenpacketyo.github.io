@@ -1,19 +1,15 @@
 // --- FILE: script.js ---
 
-// === DARK MODE PREFERENCE PERSISTENCE ===
+// === DARK MODE SYNC ===
 (function() {
   const toggle = document.getElementById('header-slider-toggle');
   if (!toggle) return;
 
-  const darkPref = localStorage.getItem('darkMode');
-  if (darkPref === '1') {
-    document.documentElement.classList.add('dark-mode');
-    toggle.checked = true;
-  } else {
-    document.documentElement.classList.remove('dark-mode');
-    toggle.checked = false;
-  }
+  // The 'anti-flicker' script has already set the theme.
+  // We just need to sync the toggle's visual state.
+  toggle.checked = document.documentElement.classList.contains('dark-mode');
 
+  // And attach the event listener for future clicks.
   toggle.addEventListener('change', function(event) {
     const isDark = event.target.checked;
     localStorage.setItem('darkMode', isDark ? '1' : '0');
@@ -33,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // --- SCRIPT LOADER ---
-  const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
+  const isMobile = 'ontouchstart' in window;
 
   function loadScript(src) {
       return new Promise((resolve, reject) => {
