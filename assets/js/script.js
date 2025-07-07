@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
           console.log('All scripts loaded successfully in correct order.');
 
+          // Dispatch event to notify platform-specific scripts that all dependencies are ready
+          document.dispatchEvent(new CustomEvent('scriptsLoaded'));
+
       } catch (error) {
           console.error('Script loading failed:', error);
       }

@@ -1,48 +1,29 @@
-// --- START OF FILE splash.js ---
-
 (function() {
   const splashOverlay = document.getElementById('splash-overlay');
   const splashLogo = document.getElementById('splash-logo');
   const isMobile = 'ontouchstart' in window;
 
   if (!splashOverlay || !splashLogo) {
-    console.warn("Splash elements not found. Aborting splash.");
+    console.warn("Splash: Elements not found. Aborting splash.");
     return;
   }
 
   /**
-   * REVISED: This function now correctly sequences the final app load steps
-   * to prevent a visual "jump" when filters are auto-applied.
+   * REVISED: This function now focuses ONLY on the visual splash animation
+   * and delegates all layout/positioning responsibilities to other scripts.
    */
   function finalizeAppLoad() {
-    console.log("Finalizing app load: Applying filters, recentering cards, then hiding splash.");
+    console.log("Splash: Finalizing app load - hiding splash screen.");
 
-    // --- THE FIX ---
-    // The order of these operations is critical to prevent a visual race condition.
-
-    // 1. Notify the filter system that it's now safe to run its auto-apply logic.
-    // This will happen invisibly, underneath the splash screen. The card carousel
-    // will snap to its final, filtered position.
-    if (typeof window.filtersCompleteInitialization === 'function') {
-      window.filtersCompleteInitialization();
-    }
-
-    // 2. Force a final, perfect re-centering of the card carousel.
-    // This ensures the view is perfectly positioned on the correct (and now filtered)
-    // active card just before the reveal.
-    if (window.CardSystem && typeof window.CardSystem.forceRecenter === 'function') {
-      window.CardSystem.forceRecenter();
-    }
-
-    // 3. Hide the splash overlay with a fade-out.
-    // Now that the page is in its final state, we can safely reveal it to the user.
+    // Simply hide the splash overlay with a fade-out.
+    // All layout and filtering logic is handled by other systems.
     splashOverlay.classList.add('splash-hide');
     setTimeout(() => {
       if (splashOverlay) splashOverlay.style.display = 'none';
       document.body.classList.remove('splash-active'); // Unlock the body
+      console.log("Splash: Animation complete and body unlocked.");
     }, 500); // Match fade-out duration in splash.css
   }
-
 
   /**
    * This function contains all the logic to prepare and run the splash animation.
@@ -52,7 +33,7 @@
     const mainLogoContainer = document.querySelector('.logo-container');
     const mainSiteLogo = document.querySelector('.site-logo');
 
-    // (The helper functions for animation remain the same as your original file)
+    // Helper functions for animation (unchanged)
     function setDesktopAnimationTarget() {
         // Only run this for desktop
         if (!isMobile && mainLogoContainer && mainSiteLogo) {
@@ -103,7 +84,7 @@
     let animationOrder = JSON.parse(localStorage.getItem('splashAnimationOrder') || 'null');
     let nextIndex = parseInt(localStorage.getItem('splashAnimationIndex') || '0', 10);
     if (!animationOrder || nextIndex >= animationOrder.length) {
-      animationOrder = ['default', 'pixel', 'spin'];
+      animationOrder = ['default', 'pixel', 'spin', 'draw',];
       for (let i = animationOrder.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [animationOrder[i], animationOrder[j]] = [animationOrder[j], animationOrder[i]];
@@ -118,22 +99,13 @@
     animateLogoAndWait(chosenAnimation).then(finalizeAppLoad);
   }
 
-
   // --- Main Execution Logic ---
   document.body.classList.add('splash-active');
 
-  // On desktop, the layout is ready almost instantly. We don't need to wait.
-  if (!isMobile) {
-    console.log("Desktop detected. Running splash animation immediately.");
-    // We still wait for the page to be fully loaded to get correct logo positions.
-    window.addEventListener('load', runSplashAnimation, { once: true });
-  } else {
-    // On mobile, we MUST wait for the layout to be ready.
-    console.log("Mobile detected. Waiting for 'mobileLayoutReady' event...");
-    document.addEventListener('mobileLayoutReady', () => {
-      console.log("Splash.js received 'mobileLayoutReady'. Starting splash animation.");
-      runSplashAnimation();
-    }, { once: true });
-  }
+  // Listen for layout finalization from CardSystem
+  document.addEventListener('layoutFinalized', () => {
+    console.log("Splash: Received 'layoutFinalized' event. Starting splash animation.");
+    runSplashAnimation();
+  }, { once: true });
 
 })();

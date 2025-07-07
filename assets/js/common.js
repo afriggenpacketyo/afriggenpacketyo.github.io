@@ -1,5 +1,3 @@
-// --- START OF FILE common.js ---
-
 // Global variables and utility functions shared between implementations
 window.CardSystem = {
     // DOM elements
@@ -12,6 +10,10 @@ window.CardSystem = {
     currentlyFlippedCard: null,
     isManuallyFlipping: false,
     isUserClicking: false,
+
+    // Initialization state
+    isLayoutReady: false,
+    isFullyInitialized: false,
 
     // Dot indicator properties
     visibleStartIndex: 0,
@@ -90,7 +92,7 @@ window.CardSystem = {
 
         if (totalVisibleDots === 0 || masterActiveIndex < 0) {
             allDots.forEach(dot => {
-                dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim();
+                dot.className = dot.className.replace(/size-\w+|visible/g, '').trim();
                 dot.style.transition = '';
             });
             this.previousVisibleActiveIndex = -1;
@@ -129,13 +131,13 @@ window.CardSystem = {
                 visibleActiveIndex = visibleDots.indexOf(activeDotMaster);
             } else {
                 // No visible dot can be made active, clear all and return
-                allDots.forEach(dot => { dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim(); dot.style.transition = ''; });
+                allDots.forEach(dot => { dot.className = dot.className.replace(/size-\w+|visible/g, '').trim(); dot.style.transition = ''; });
                 this.previousVisibleActiveIndex = -1;
                 return;
             }
             // If still -1 after adjustment, something is wrong or no visible dots available
             if (visibleActiveIndex === -1) {
-                 allDots.forEach(dot => { dot.className = dot.className.replace(/size-\\w+|visible/g, '').trim(); dot.style.transition = ''; });
+                 allDots.forEach(dot => { dot.className = dot.className.replace(/size-\w+|visible/g, '').trim(); dot.style.transition = ''; });
                 this.previousVisibleActiveIndex = -1;
                 return;
             }
@@ -434,52 +436,6 @@ window.CardSystem = {
         this.updateUI();
 
         console.log("CardSystem initialized");
-
-        // Check for auto-apply filters immediately after initialization
-        this.checkAutoApplyFilters();
-    },
-
-    // Check and apply auto-filters if enabled
-    checkAutoApplyFilters: function() {
-        if (localStorage.getItem('autoApplyFilters') === 'true') {
-            const excludes = localStorage.getItem('Excludes') || '';
-
-            if (excludes.trim()) {
-                console.log('Auto-applying filters during CardSystem initialization...');
-
-                // Apply filters immediately
-                this.isFiltering = true;
-
-                // Apply the filtering logic directly here
-                const excludeTerms = excludes.toLowerCase().split(',').map(term => term.trim()).filter(Boolean);
-                let firstVisibleIndex = -1;
-
-                this.flipCards.forEach((card, index) => {
-                    const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
-                    const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-
-                    const shouldHide = excludeTerms.some(term => summary.includes(term));
-
-                    card.classList.toggle('filtered', shouldHide);
-
-                    if (!shouldHide && firstVisibleIndex === -1) {
-                        firstVisibleIndex = index;
-                    }
-                });
-
-                // Update active card index to first visible card
-                if (firstVisibleIndex !== -1) {
-                    this.activeCardIndex = firstVisibleIndex;
-                    this.updateUI();
-                }
-
-                // Re-enable after filtering
-                setTimeout(() => {
-                    this.isFiltering = false;
-                    console.log("Auto-apply filters complete during initialization.");
-                }, 100);
-            }
-        }
     },
 
     // Add initialization for dots
@@ -544,9 +500,40 @@ window.CardSystem = {
         } else {
             document.body.classList.remove('body-no-scroll');
         }
-    }
+    },
 
-    // Utility functions
+    // *** NEW: Centralized layout finalization ***
+    finalizeLayout: function() {
+        console.log('CardSystem: Finalizing layout...');
+        
+        // Mark as layout ready
+        this.isLayoutReady = true;
+        
+        // Apply any pending filters
+        if (typeof window.filtersCompleteInitialization === 'function') {
+            window.filtersCompleteInitialization();
+        }
+        
+        // Let platform-specific scripts handle their own positioning
+        if (typeof this.moveToCard === 'function') {
+            // Mobile/Desktop moveToCard is available
+            this.moveToCard(this.activeCardIndex, false); // false = instant
+        } else if (typeof this.scrollToCard === 'function') {
+            // Desktop scrollToCard is available
+            this.scrollToCard(this.activeCardIndex, false); // false = instant
+        }
+        
+        // Update UI one final time
+        this.updateUI();
+        
+        // Mark as fully initialized
+        this.isFullyInitialized = true;
+        
+        // Dispatch ready event for splash screen
+        document.dispatchEvent(new CustomEvent('layoutFinalized'));
+        
+        console.log('CardSystem: Layout finalization complete');
+    }
 };
 
 // Initialize common functionality
@@ -556,4 +543,3 @@ window.CardSystem.init();
 document.addEventListener('DOMContentLoaded', function() {
     CardSystem.initializeDots();
 });
-// --- END OF FILE common.js ---

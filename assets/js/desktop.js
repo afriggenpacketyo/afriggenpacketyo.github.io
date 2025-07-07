@@ -1330,4 +1330,46 @@
     // window.addEventListener('resize', updateLogoPosition);
     // window.addEventListener('orientationchange', updateLogoPosition);
     window.CardSystem.scrollToCard = scrollToCard;
+    console.log('Desktop: Layout ready, marking as initialized...');
+    CardSystem.isLayoutReady = true;
+
+    // Event-driven approach: Listen for script loading completion
+    let isLayoutStable = false;
+    let areScriptsLoaded = false;
+
+    // Check layout stability once
+    function checkLayoutStability() {
+        const firstCard = flipCards[0];
+        if (!firstCard || !container) {
+            console.error('Desktop: Essential elements not found');
+            return;
+        }
+
+        if (firstCard.offsetWidth > 0 && container.offsetWidth > 0) {
+            isLayoutStable = true;
+            console.log('Desktop: Layout stable');
+            tryFinalize();
+        } else {
+            // Only use requestAnimationFrame if layout isn't stable yet
+            requestAnimationFrame(checkLayoutStability);
+        }
+    }
+
+    // Listen for the script loading completion event
+    document.addEventListener('scriptsLoaded', function() {
+        console.log('Desktop: Received scriptsLoaded event');
+        areScriptsLoaded = true;
+        tryFinalize();
+    });
+
+    // Finalize only when both conditions are met
+    function tryFinalize() {
+        if (isLayoutStable && areScriptsLoaded) {
+            console.log('Desktop: Both layout and scripts ready, finalizing');
+            CardSystem.finalizeLayout();
+        }
+    }
+
+    // Start checking layout stability
+    checkLayoutStability();
 })();

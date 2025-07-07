@@ -1,5 +1,3 @@
-// --- START OF FILE filters.js ---
-
 // Add initialization flag to prevent conflicts with mobile.js
 let isInitializing = true;
 
@@ -98,11 +96,16 @@ function unfreezeBody() {
 }
 
 // Auto-apply filters on page load if enabled
-// Auto-apply filters on page load if enabled
 function autoApplyFiltersOnLoad() {
   // Don't auto-apply during initialization
   if (isInitializing) {
-    console.log('Skipping auto-apply during initialization');
+    console.log('Filters: Skipping auto-apply during initialization');
+    return;
+  }
+
+  // Also check if CardSystem layout is ready
+  if (!window.CardSystem.isLayoutReady) {
+    console.log('Filters: CardSystem layout not ready, skipping auto-apply');
     return;
   }
 
@@ -110,18 +113,14 @@ function autoApplyFiltersOnLoad() {
   const hasExcludes = localStorage.getItem('Excludes');
 
   if (shouldAutoApply && hasExcludes) {
-    console.log('Auto-applying filters on page load...');
-    // *** THE FIX: No more timeout needed. The layout is guaranteed to be stable. ***
+    console.log('Filters: Auto-applying filters on page load...');
     applyFiltersQuietly();
   }
 }
 
 // Silent version of applyFilters that doesn't block touch events
 function applyFiltersQuietly() {
-  console.log('Applying filters quietly...');
-
-  // Don't block touch events during quiet filtering
-  // window.CardSystem.isFiltering = true; // REMOVED - this was causing the issue
+  console.log('Filters: Applying filters quietly...');
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const hasFilters = !!excludes;
@@ -132,7 +131,7 @@ function applyFiltersQuietly() {
     filterCardsQuietly(excludes);
   }
 
-  console.log("Quiet filtering complete.");
+  console.log("Filters: Quiet filtering complete.");
 }
 
 // Quiet versions that don't trigger full repositioning
@@ -161,18 +160,17 @@ function filterCardsQuietly(excludes) {
       CardSystem.updateUI();
     }
 
-    // Actually center the first visible card
-    const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
-    if (isMobile && typeof CardSystem.moveToCard === 'function') {
+    // Let the platform-specific scripts handle positioning
+    if (typeof CardSystem.moveToCard === 'function') {
       CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
-    } else if (!isMobile && typeof CardSystem.scrollToCard === 'function') {
+    } else if (typeof CardSystem.scrollToCard === 'function') {
       CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
     }
   }
 }
 
 function showAllCardsQuietly() {
-  console.log('No filters active, showing all cards quietly.');
+  console.log('Filters: No filters active, showing all cards quietly.');
 
   // Remove .filtered class from all cards
   CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
@@ -183,11 +181,10 @@ function showAllCardsQuietly() {
     CardSystem.updateUI();
   }
 
-  // Actually center the first card
-  const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
-  if (isMobile && typeof CardSystem.moveToCard === 'function') {
+  // Let the platform-specific scripts handle positioning
+  if (typeof CardSystem.moveToCard === 'function') {
     CardSystem.moveToCard(0, false); // false for instant move
-  } else if (!isMobile && typeof CardSystem.scrollToCard === 'function') {
+  } else if (typeof CardSystem.scrollToCard === 'function') {
     CardSystem.scrollToCard(0, false); // false for instant move
   }
 }
@@ -560,7 +557,7 @@ function goBackToMenu() {
 // ===============================================
 
 function applyFilters() {
-  console.log('Applying filters...');
+  console.log('Filters: Applying filters...');
 
   // --- STEP 1: Disable conflicting event listeners ---
   window.CardSystem.isFiltering = true;
@@ -578,7 +575,7 @@ function applyFilters() {
   // --- FINAL STEP: Re-enable event listeners after everything is done. ---
   setTimeout(() => {
     window.CardSystem.isFiltering = false;
-    console.log("Filtering complete. Event listeners re-enabled.");
+    console.log("Filters: Filtering complete. Event listeners re-enabled.");
   }, 500);
 
   // Only remove body lock when actually closing the hamburger menu
@@ -610,7 +607,7 @@ function filterCards(excludes) {
 }
 
 function showAllCards() {
-  console.log('No filters active, showing all cards.');
+  console.log('Filters: No filters active, showing all cards.');
 
   // Remove .filtered class from all cards
   CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
@@ -622,11 +619,11 @@ function showAllCards() {
 // Function to mark initialization as complete and trigger auto-apply if needed
 function completeInitialization() {
   isInitializing = false;
-  console.log('Filters initialization complete, checking for auto-apply...');
+  console.log('Filters: Initialization complete, checking for auto-apply...');
   autoApplyFiltersOnLoad();
 }
 
-// Expose the function globally so mobile.js can call it
+// Expose the function globally so other scripts can call it
 window.filtersCompleteInitialization = completeInitialization;
 
 /**
@@ -639,7 +636,7 @@ function repositionViewAfterFilter(newActiveIndex) {
 
     // Step 1: Handle the "all cards filtered" edge case.
     if (newActiveIndex === -1) {
-        console.warn("All cards have been filtered out.");
+        console.warn("Filters: All cards have been filtered out.");
         CardSystem.activeCardIndex = -1;
         if (typeof CardSystem.updateUI === 'function') {
             CardSystem.updateUI(); // This will clear the dots.
@@ -675,9 +672,9 @@ function repositionViewAfterFilter(newActiveIndex) {
                     requestAnimationFrame(() => {
                         dotContainer.classList.remove('force-dot-repaint');
                     });
-                    console.debug('Dot container present, forced repaint triggered.');
+                    console.debug('Filters: Dot container present, forced repaint triggered.');
                 } else {
-                    console.warn('Dot container not found after filtering!');
+                    console.warn('Filters: Dot container not found after filtering!');
                 }
             }
             CardSystem.scrollToCard(newActiveIndex, true); // true for INSTANT move
@@ -708,5 +705,3 @@ window.addEventListener('DOMContentLoaded', function() {
   // Small delay to ensure all other initialization is complete
   setTimeout(initializeExcludesOverlayIfVisible, 100);
 });
-
-// --- END OF FILE filters.js ---

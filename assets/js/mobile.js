@@ -1,4 +1,3 @@
-// --- START OF FILE mobile.js ---
 // Mobile-specific implementation
 (function() {
     // --- ENSURE MANUAL SCROLL RESTORATION ON MOBILE BROWSERS ---
@@ -124,7 +123,7 @@
           // Ensure index is valid and refers to a visible card.
           if (index < 0 || index >= flipCards.length || !flipCards[index]) return;
           if (flipCards[index].classList.contains('filtered')) {
-              console.warn(`Attempted to move to a filtered card at index ${index}. Aborting.`);
+              console.warn(`Mobile: Attempted to move to a filtered card at index ${index}. Aborting.`);
               return;
           }
 
@@ -1061,12 +1060,12 @@
 
       // Update the orientation change handler
       window.addEventListener('orientationchange', function() {
-          console.log("Orientation change detected");
+          console.log("Mobile: Orientation change detected");
 
           // Delay recalculation to ensure measurements are accurate after rotation
           setTimeout(() => {
               const isCurrentlyLandscape = isPhoneLandscape();
-              console.log("Is landscape after orientation change:", isCurrentlyLandscape);
+              console.log("Mobile: Is landscape after orientation change:", isCurrentlyLandscape);
 
               // Update header visibility based on orientation
               updateHeaderVisibility();
@@ -1103,7 +1102,7 @@
                       logoContainer.style.opacity = '0';
                       logoContainer.style.visibility = 'hidden';
                       logoContainer.style.display = 'none';
-                      console.log("Resize - hiding logo for landscape");
+                      console.log("Mobile: Resize - hiding logo for landscape");
                   } else if (!isAnyCardFlipped && !isOverlayActive) {
                       // Show logo in portrait mode if no card is flipped
                       logoContainer.style.opacity = '1';
@@ -1120,7 +1119,7 @@
 
       // Simplified initialization function
       async function initialize() {
-          console.log("Initializing mobile card system...");
+          console.log("Mobile: Initializing mobile card system...");
 
           const startInLandscape = isPhoneLandscape();
           updateHeaderVisibility();
@@ -1135,7 +1134,7 @@
                   function checkMeasurements() {
                       attempts++;
                       if (attempts > maxAttempts) {
-                          console.warn('Card measurement timeout - continuing anyway');
+                          console.warn('Mobile: Card measurement timeout - continuing anyway');
                           resolve();
                           return;
                       }
@@ -1144,7 +1143,7 @@
                           setTimeout(checkMeasurements, 30);
                           return;
                       }
-                      console.log(`Cards measured after ${attempts} attempts.`);
+                      console.log(`Mobile: Cards measured after ${attempts} attempts.`);
                       resolve();
                   }
                   checkMeasurements();
@@ -1157,44 +1156,35 @@
                   addEdgeCardPadding();
                   centerFirstCardOnLoad();
                   document.body.classList.add('initialized');
-                  setTimeout(() => {
-                      fixVerticalPositioning();
-                      console.log('Mobile initialization complete. Firing mobileLayoutReady event.');
 
-                      // Announce that the layout is ready for the splash screen
-                      document.dispatchEvent(new CustomEvent('mobileLayoutReady'));
+                  // Professional approach: Ensure vertical positioning is complete
+                  fixVerticalPositioning();
+                  console.log('Mobile: Initialization complete. Announcing layout ready.');
 
-                  }, 100);
+                  // Mark CardSystem as layout ready
+                  CardSystem.isLayoutReady = true;
+
+                  // Finalize layout immediately after vertical positioning
+                  // The waitForCardMeasurements already ensures layout stability
+                  CardSystem.finalizeLayout();
+
               } catch (error) {
-                  console.error('Initialization failed:', error);
+                  console.error('Mobile: Initialization failed:', error);
                   document.body.classList.add('initialized');
+                  // Even on error, try to finalize with what we have
+                  CardSystem.isLayoutReady = true;
+                  CardSystem.finalizeLayout();
               }
           }
 
           initializeSequence();
       }
 
-      // Add a function to be called by the splash screen for the final re-centering
-      window.CardSystem.forceRecenter = () => {
-        if (typeof moveToCard === 'function') {
-            console.log('Splash requested final recenter on card:', CardSystem.activeCardIndex);
-            moveToCard(CardSystem.activeCardIndex, false); // false for instant move
-        }
-      };
-
       // Run initialize when the page loads
       if (document.readyState === 'complete') {
           initialize();
       } else {
           window.addEventListener('load', initialize);
-      }
-
-      // Call filters completion after mobile initialization is done
-      function notifyFiltersInitComplete() {
-          if (typeof window.filtersCompleteInitialization === 'function') {
-              console.log('Mobile init complete, notifying filters...');
-              window.filtersCompleteInitialization();
-          }
       }
 
       // Function to create the overlay
@@ -1391,7 +1381,7 @@
           currentOverlayCard = null;
 
           const currentlyInPortrait = !isPhoneLandscape();
-          console.log(`Closing overlay. Currently in Portrait: ${currentlyInPortrait}`);
+          console.log(`Mobile: Closing overlay. Currently in Portrait: ${currentlyInPortrait}`);
 
           // Update header visibility first
           updateHeaderVisibility();
@@ -1424,7 +1414,7 @@
           // Force a reflow and update layout
           requestAnimationFrame(() => {
               if (currentlyInPortrait) {
-                  console.log("closeOverlay: Showing header, indicators, logo because in portrait.");
+                  console.log("Mobile: closeOverlay: Showing header, indicators, logo because in portrait.");
                   toggleLogoVisibility(true);
                   recalculateEntireLayout(true);
               }
@@ -1487,7 +1477,7 @@
           const debug = true; // Set to false to disable debugging
           if (!debug) return;
 
-          console.group(`Card Activation Debug: ${message}`);
+          console.group(`Mobile: Card Activation Debug: ${message}`);
           console.log(data);
           console.groupEnd();
       }
@@ -1497,11 +1487,11 @@
           // Find the preactivated card
           const targetedCard = document.querySelector('.card-targeted');
 
-          console.log("ACTIVATION DEBUG:");
+          console.log("Mobile: ACTIVATION DEBUG:");
           console.log("- Targeted card found:", !!targetedCard);
 
           if (!targetedCard) {
-              console.log("- No targeted card found");
+              console.log("Mobile: - No targeted card found");
               return;
           }
 
@@ -1589,33 +1579,6 @@
           return targetScrollLeft;
       }
 
-      // Update the orientation change handler
-      window.addEventListener('orientationchange', function() {
-          console.log("Orientation change detected");
-
-          // Delay recalculation to ensure measurements are accurate after rotation
-          setTimeout(() => {
-              const isCurrentlyLandscape = isPhoneLandscape();
-              console.log("Is landscape after orientation change:", isCurrentlyLandscape);
-
-              // Update header visibility based on orientation
-              updateHeaderVisibility();
-
-              // Update logo visibility based on orientation
-              if (isCurrentlyLandscape) {
-                  toggleLogoVisibility(false);
-              } else if (!isAnyCardFlipped && !isOverlayActive) {
-                  toggleLogoVisibility(true);
-              }
-
-              // Force card positioning
-              enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
-
-              // Update wasLandscape state for next orientation change
-              wasLandscape = isCurrentlyLandscape;
-          }, 150);
-      });
-
       // Update the updateScrollIndicator function
       function updateScrollIndicator(overlayContent) {
           const indicator = overlayContent.querySelector('.swipe-indicator');
@@ -1690,67 +1653,6 @@
 
           // Force a reflow to ensure styles are applied
           void header.offsetHeight;
-      }
-
-      // Update the orientation change handler
-      window.addEventListener('orientationchange', function() {
-          console.log("Orientation change detected");
-
-          // Delay recalculation to ensure measurements are accurate after rotation
-          setTimeout(() => {
-              const isCurrentlyLandscape = isPhoneLandscape();
-              console.log("Is landscape after orientation change:", isCurrentlyLandscape);
-
-              // Update header visibility based on orientation
-              updateHeaderVisibility();
-
-              // Update logo visibility based on orientation
-              if (isCurrentlyLandscape) {
-                  toggleLogoVisibility(false);
-              } else if (!isAnyCardFlipped && !isOverlayActive) {
-                  toggleLogoVisibility(true);
-              }
-
-              // Force card positioning
-              enforceCardPosition(CardSystem.activeCardIndex, isCurrentlyLandscape);
-
-              // Update wasLandscape state for next orientation change
-              wasLandscape = isCurrentlyLandscape;
-          }, 150);
-      });
-
-      // Update the updateScrollIndicator function
-      function updateScrollIndicator(overlayContent) {
-          const indicator = overlayContent.querySelector('.swipe-indicator');
-          if (!indicator) return;
-
-          // Create text element if it doesn't exist
-          if (!indicator.querySelector('.scroll-text')) {
-              const textEl = document.createElement('span');
-              textEl.className = 'scroll-text';
-              textEl.textContent = 'scroll for more';
-              indicator.appendChild(textEl);
-          }
-
-          const textEl = indicator.querySelector('.scroll-text');
-          const isOverflowing = overlayContent.scrollHeight > overlayContent.clientHeight;
-          const isAtBottom = Math.abs(overlayContent.scrollHeight - overlayContent.scrollTop - overlayContent.clientHeight) < 1;
-
-          // Update text based on conditions
-          const isSafari = document.body.classList.contains('safari-mobile') ||
-                          document.body.classList.contains('safari-desktop');
-
-          if (!isOverflowing || isAtBottom) {
-              textEl.textContent = 'end';
-          } else {
-              textEl.textContent = 'scroll for more';
-          }
-      }
-
-      // Add this function for consistent aspect ratio detection
-      function isPhoneLandscape() {
-          const mediaQuery = window.matchMedia('(max-height: 500px) and (min-width: 400px) and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse)');
-          return mediaQuery.matches;
       }
 
       // Prevent touchmove events from scrolling outside the overlay when overlay is open
@@ -1849,14 +1751,7 @@
       // --- EXPOSE PUBLIC METHODS ---
       // Make key functions available to other scripts like filters.js
       window.CardSystem.moveToCard = moveToCard;
-    window.CardSystem.resetCardHighlights = resetCardHighlights;
-    // *** ADD THIS: A function for the splash orchestrator to call for final positioning ***
-    window.CardSystem.forceRecenter = () => {
-        if (typeof moveToCard === 'function') {
-            console.log('Splash requested final recenter on card:', CardSystem.activeCardIndex);
-            moveToCard(CardSystem.activeCardIndex, false); // false for instant move
-        }
-    };
+      window.CardSystem.resetCardHighlights = resetCardHighlights;
       // --- END EXPOSE PUBLIC METHODS ---
   })();
 
@@ -1930,7 +1825,7 @@
           document.body.classList.add('chrome-browser');
       }
 
-      console.log('Browser detected:', browserType);
+      console.log('Mobile: Browser detected:', browserType);
     }
 
     // Run on page load
@@ -1973,4 +1868,3 @@
     // window.moveToCard = moveToCard;
     // window.resetCardHighlights = resetCardHighlights;
   })();
-// --- END OF FILE mobile.js ---
