@@ -201,19 +201,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // SMOOTH SCROLLING FOR INTERNAL LINKS
     // =============================================================
 
-    const internalLinks = document.querySelectorAll('a[href^="#"]');
-    internalLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
+ const internalLinks = document.querySelectorAll('a[href^="#"]');
+internalLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            // Use your existing device detection
+            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const headerHeight = window.headerHeightManager.getHeight();
+
+            if (isMobile && window.headerHeightManager) {
+                // Mobile: account for header
+
+                const targetPosition = targetElement.offsetTop - headerHeight - 20;
+                container.scrollTo({ top: targetPosition, behavior: 'smooth' });
+            } else {
+                // Desktop: keep existing working solution
+                const targetPosition = targetElement.offsetTop - headerHeight + 100;
+                container.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
-        });
+        }
     });
+});
 
     // =============================================================
     // EQUALIZE ELEMENT HEIGHTS (Generic Function)
