@@ -1,0 +1,341 @@
+/* assets/css/mobile_about.css */
+
+/* =============================================================
+   ABOUT PAGE - MOBILE STYLES
+   ============================================================= */
+
+/* Mobile landscape mode: Hide entire header */
+@media (orientation: landscape) and (max-height: 50vh) {
+    body.about-page .page-header {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    body.about-page .logo-container {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        display: none !important;
+    }
+}
+
+/* Additional landscape mode hiding for broader compatibility */
+@media (orientation: landscape) {
+    body.about-page .page-header {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        display: none !important;
+        transition: none !important;
+    }
+
+    body.about-page .logo-container {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        display: none !important;
+        transition: none !important;
+    }
+
+    /* Disable snap scrolling in landscape mode for free scrolling */
+    .about-container {
+        scroll-snap-type: none;
+    }
+
+    /* Remove snap align from all sections in landscape */
+    .about-section {
+        scroll-snap-align: none;
+        padding: var(--section-padding-mobile);
+        padding-top: var(--header-height-plus-1rem);
+    }
+
+    /* Make all sections flow naturally in landscape */
+    #section1, #section2, #section3, #section4 {
+        min-height: auto;
+        scroll-snap-align: none;
+    }
+
+    /* Reduce section padding in landscape for better content flow */
+    .about-section {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+}
+
+@media (max-width: 48em) {
+    /* Update CSS custom properties for mobile */
+    :root {
+        --section-padding-mobile: 1rem;
+        --section-padding-desktop: 0; /* Override desktop padding to 0 on mobile */
+    }
+
+    /* Disable snap scrolling on mobile */
+    .about-container {
+        scroll-snap-type: none;
+    }
+
+    /* Remove snap align from all sections on mobile and force padding override */
+    .about-section {
+        scroll-snap-align: none;
+        padding: 0 !important; /* Force all padding to 0 */
+        padding-top: var(--header-height-plus-1rem) !important; /* Only set top padding */
+    }
+
+    /* Keep first section (hero) with minimal top padding */
+    #section1 {
+        /* min-height: 100vh; */
+        min-height: auto; /* Allow section to size to its content */
+        padding-top: calc(var(--header-height-plus-2rem) + 20px) !important; /* Added 20px to top padding */
+        padding-bottom: 40px !important; /* Added 40px to bottom padding */
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-bottom: 2rem; /* Add some space below the hero section */
+    }
+
+    /* More specific override for hero section padding */
+    .about-container #section1.about-section {
+        padding: 0 !important;
+        padding-top: calc(var(--header-height-plus-2rem) + 20px) !important; /* Added 20px to top padding */
+        padding-bottom: 40px !important; /* Added 40px to bottom padding */
+    }
+
+    /* Even more specific override for hero section */
+    body.about-page .about-container #section1.about-section.hero-section {
+        padding: 0 !important;
+        padding-top: calc(var(--header-height-plus-2rem) + 20px) !important; /* Added 20px to top padding */
+        padding-bottom: 40px !important; /* Added 40px to bottom padding */
+        margin-bottom: 2rem !important; /* Restore space below hero section */
+        margin-top: 0 !important;
+    }
+
+    /* Override for hero section content */
+    body.about-page .about-container #section1.about-section.hero-section .about-content {
+        padding: 0 !important;
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    /* Ensure sections 2-4 flow naturally without containers */
+    #section2, #section3, #section4 {
+        min-height: auto;
+        padding-top: var(--section-padding-mobile) !important; /* Use CSS custom property */
+        padding-bottom: var(--section-padding-mobile) !important;
+        scroll-snap-align: none;
+    }
+
+    /* Push header logo down from the very top of viewport */
+    body.about-page .header-logo-container {
+        padding-top: 0.625rem !important;
+    }
+
+    body.about-page .header-logo,
+    body.about-page img.header-logo {
+        margin-top: 0.625rem !important;
+    }
+
+    .about-content h1 {
+        font-size: 2.5rem; /* Smaller font for headings on mobile */
+    }
+
+    .about-content p {
+        font-size: 1rem; /* Smaller font for paragraphs on mobile */
+    }
+
+    /* Make cards flow naturally without constrained containers */
+    .mission-cards, .process-flow {
+        overflow: visible;
+        max-width: 100%;
+    }
+
+    .glass-card, .process-step {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .process-step {
+        margin-bottom: 0.5rem; /* Reduced space between steps */
+        display: flex; /* Use flexbox for equal height */
+        flex-direction: column;
+        justify-content: center; /* Center content vertically */
+    }
+
+    .process-arrow {
+        margin: 0.5rem auto; /* Center the arrow horizontally */
+        text-align: center;
+    }
+
+    /* Mobile-specific avatar fix */
+    .profile-avatar {
+        position: relative;
+        overflow: hidden;
+        background-color: black; /* Ensure background is black */
+        border: 4px solid black; /* Add a slightly smaller border for mobile */
+        box-sizing: border-box;
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .avatar-placeholder-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 15%; /* Nudge down from top */
+        border-radius: 50%;
+    }
+}
+
+/* Mobile-specific smaller screen avatar fix */
+    .profile-avatar {
+        width: 13rem;
+        height: 13rem;
+        font-size: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        border: 4px solid black; /* Consistent border */
+        background-color: black; /* Consistent background */
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .avatar-placeholder-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 15%; /* Nudge down from top */
+        border-radius: 50%;
+    }
+/* add padding at bottom of section 4 */
+#section4 {
+    padding-bottom: 135px !important;
+}
+
+/* =============================================================
+   MOBILE SOURCES OVERLAY FIX
+   ============================================================= */
+
+/* Mobile-specific overlay adjustments */
+@media (max-width: 768px) {
+    .sources-overlay {
+        padding: 0.5rem;
+        box-sizing: border-box;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sources-modal {
+        max-width: 90vw !important;
+        max-height: 90vh !important;
+        height: auto !important;
+        padding: 1rem !important;
+        box-sizing: border-box;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sources-modal h3 {
+        font-size: 1.2rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .sources-grid {
+        min-height: 400px !important;
+        max-width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding-bottom: 2rem !important;
+    }
+
+    .source-logo {
+        width: 45px !important;
+        height: 45px !important;
+    }
+
+    .source-logo img {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .close-sources {
+        top: 10px !important;
+        right: 15px !important;
+        font-size: 1.3rem !important;
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 480px) {
+    .sources-modal {
+        max-width: 95vw !important;
+        max-height: 85vh !important;
+        height: auto !important;
+        padding: 0.8rem !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sources-modal h3 {
+        font-size: 1.2rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .sources-grid {
+        min-height: 350px !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding-bottom: 2rem !important;
+    }
+
+    .source-logo {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .close-sources {
+        top: 8px !important;
+        right: 12px !important;
+        font-size: 1.2rem !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+}
+
+/* Mobile landscape adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    .sources-modal {
+        height: auto !important;
+        padding: 1rem !important;
+    }
+
+    .sources-modal h3 {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.8rem !important;
+    }
+
+    .sources-grid {
+        min-height: 200px !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .source-logo {
+        width: 35px !important;
+        height: 35px !important;
+    }
+}

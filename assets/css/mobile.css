@@ -41,11 +41,11 @@
     input:checked + .slider:before {
       transform: translateX(16px);
     }
-  
+
    .card-link-rectangle {
     display: none !important;
    }
-  
+
   /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
     html.dark-mode .flip-card.active .flip-card-front {
       background: #3a206e;
@@ -61,7 +61,7 @@
       color: #e0e0e0;
       border: none;
     }
-  
+
     .container {
       -webkit-overflow-scrolling: touch;
       scroll-behavior: auto;
@@ -92,14 +92,14 @@
       box-shadow: none;
       border: none;
     }
-  
+
     /* Preserve the 90% scale for inactive cards in dark mode */
     html.dark-mode .container .flip-card:not(.active) {
       opacity: 0.65;
       transform: scale(0.9);
       z-index: 1;
     }
-  
+
     html.dark-mode .container .flip-card-inner {
       background: transparent;
       box-shadow: none;
@@ -113,7 +113,7 @@
       color: #e0e0e0 !important;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-  
+
     html.dark-mode .container .flip-card .flip-card-back {
       background: rgba(35, 39, 46, 0.95);
       color: #5ecbff;
@@ -123,19 +123,19 @@
       margin: 0;
       border-radius: var(--card-radius);
     }
-  
+
     html.dark-mode .flip-card.flipped .flip-card-back {
       background: rgba(35, 39, 46, 0.95);
       position: relative;
       box-sizing: border-box;
     }
-  
+
     /* Remove problematic ::after elements */
     html.dark-mode .container .flip-card .flip-card-back::after,
     html.dark-mode .flip-card.flipped .flip-card-back::after {
       display: none;
     }
-  
+
     /* Blur effect removed */
     html.dark-mode .flip-card.flipped .flip-card-back {
       background: rgba(35, 39, 46, 0.85);
@@ -153,7 +153,7 @@
       margin-right: -25px;
       width: calc(90vw + 50px) !important;
     }
-  
+
     /* Blur effect removed */
     html.dark-mode .flip-card.flipped .flip-card-back::before {
       content: '';
@@ -166,7 +166,7 @@
       z-index: -1;
       border-radius: inherit;
     }
-  
+
     /* Mobile-specific dark mode fixes */
     /* This is a critical fix for mobile dark mode */
     html.dark-mode .container .flip-card .flip-card-back::after {
@@ -181,7 +181,7 @@
       pointer-events: none;
       z-index: 2;
     }
-  
+
     /* The flipped card case where we need to extend the width */
     html.dark-mode .flip-card.flipped .flip-card-back::after {
       /* Extend the width to match the expanded card */
@@ -190,7 +190,7 @@
       /* Keep the same gradient direction and color values for consistency */
       background: none;
     }
-  
+
   /* Active card in mobile dark mode - increase specificity instead of !important */
   /* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
     html.dark-mode .container .flip-card.active .flip-card-front,
@@ -201,7 +201,7 @@
       border: 1.5px solid #7c6fd8;
       outline: none;
     }
-  
+
     /* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
     html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
     html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
@@ -226,14 +226,14 @@
       color: #e0e0e0;
       border: none;
     }
-  
+
     /* Keep inner card transparent to avoid rectangular appearance */
     html.dark-mode .container .flip-card.active .flip-card-inner {
       background: transparent;
       box-shadow: none;
       border: none;
     }
-  
+
     html.dark-mode .container .flip-card.active .flip-card-back {
       background: var(--primary-blue);
       color: #fff;
@@ -288,11 +288,11 @@
       transform: scale(1.2);
       width: 100%;
     }
-  
+
     .site-logo {
       max-width: var(--logo-max-width-mobile, 60px);
     }
-  
+
     html.dark-mode .logo-container img.site-logo,
     html.dark-mode .header-logo-container  {
       box-shadow:
@@ -302,7 +302,7 @@
         0 0 60px 18px #39fffd !important;
       transition: filter 0.3s, box-shadow 0.3s;
     }
-  
+
   /* PERFECTED: Beautiful soft-blurred top edge for swipe indicator */
     .overlay-content .swipe-indicator {
       border: none;
@@ -336,23 +336,23 @@
       margin: 0;
       /* Ultra-smooth mask for perfect edge blur */
       -webkit-mask-image: linear-gradient(
-        to top, 
-        black 0%, 
-        black 40%, 
-        rgba(0,0,0,0.8) 60%, 
-        rgba(0,0,0,0.4) 80%, 
+        to top,
+        black 0%,
+        black 40%,
+        rgba(0,0,0,0.8) 60%,
+        rgba(0,0,0,0.4) 80%,
         transparent 100%
       );
       mask-image: linear-gradient(
-        to top, 
-        black 0%, 
-        black 40%, 
-        rgba(0,0,0,0.8) 60%, 
-        rgba(0,0,0,0.4) 80%, 
+        to top,
+        black 0%,
+        black 40%,
+        rgba(0,0,0,0.8) 60%,
+        rgba(0,0,0,0.4) 80%,
         transparent 100%
       );
     }
-  
+
     /* PERFECTED: Dark mode with identical soft-blur structure */
     html.dark-mode .overlay-content .swipe-indicator {
       background: linear-gradient(
@@ -369,45 +369,45 @@
       -webkit-backdrop-filter: blur(2.5px);
       /* Identical mask for consistent edge blur */
       -webkit-mask-image: linear-gradient(
-        to top, 
-        black 0%, 
-        black 40%, 
-        rgba(0,0,0,0.8) 60%, 
-        rgba(0,0,0,0.4) 80%, 
+        to top,
+        black 0%,
+        black 40%,
+        rgba(0,0,0,0.8) 60%,
+        rgba(0,0,0,0.4) 80%,
         transparent 100%
       );
       mask-image: linear-gradient(
-        to top, 
-        black 0%, 
-        black 40%, 
-        rgba(0,0,0,0.8) 60%, 
-        rgba(0,0,0,0.4) 80%, 
+        to top,
+        black 0%,
+        black 40%,
+        rgba(0,0,0,0.8) 60%,
+        rgba(0,0,0,0.4) 80%,
         transparent 100%
       );
     }
-  
+
     /* Ensure proper background color matching in dark mode */
     html.dark-mode .overlay-content {
       background: #23272e;
     }
-  
+
     html.dark-mode .flip-card.flipped .flip-card-back {
       background: #23272e;
       padding-bottom: calc(25px + 65px); /* Add padding to account for swipe indicator */
     }
-  
+
     /* Remove any potential spacing issues */
     html.dark-mode .overlay-content,
     html.dark-mode .flip-card-back,
     html.dark-mode .flip-card.flipped .flip-card-back {
       margin-bottom: 0;
     }
-  
+
     /* Ensure content doesn't overflow */
     html.dark-mode .flip-card-back-content {
       padding-bottom: 65px;
     }
-  
+
   /* Only use fixed/viewport style for fullscreen overlays on mobile */
     html.dark-mode .swipe-indicator {
       color: rgba(94,203,255,0.8);
@@ -433,10 +433,10 @@
       margin: 0 0.11em;
       font-weight: 400;
     }
-  
+
     /* Ensure overlay-content does not have extra bottom padding */
     .overlay-content { padding-bottom: 0 !important; }
-  
+
     .overlay-content .swipe-indicator {
       position: sticky;
       left: 0;
@@ -447,7 +447,7 @@
       border-radius: 0;
       z-index: 10;
     }
-  
+
   /* Exception: hide logo for mobile landscape via display:none as before */
   @media (orientation: landscape) {
     .logo-container {
@@ -457,7 +457,7 @@
       transition: none;
     }
   }
-  
+
   /* === Browser-Specific Styles === */
     body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
     body.safari-mobile .card-overlay,
@@ -508,7 +508,7 @@
       display: flex;
       flex-direction: column;
     }
-  
+
     html.dark-mode body.safari-mobile .overlay-content,
     html.dark-mode body.chrome-android .overlay-content,
     html.dark-mode body.chrome-ios .overlay-content,
@@ -534,7 +534,7 @@
     body.wkwebview .overlay-content .flip-card-back {
       padding-bottom: 40px !important;
     }
-  
+
     body.safari-mobile .overlay-content .flip-card-back-content,
     body.chrome-android .overlay-content .flip-card-back-content,
     body.chrome-ios .overlay-content .flip-card-back-content,
@@ -551,7 +551,7 @@
     body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
       visibility: hidden;
     }
-  
+
     body.chrome-android .overlay-content .flip-card-back > *:last-child,
     body.chrome-ios .overlay-content .flip-card-back > *:last-child,
     body.webview .overlay-content .flip-card-back > *:last-child,
@@ -588,7 +588,7 @@
       from { transform: translate(-50%, -40%); opacity: 0; }
       to { transform: translate(-50%, -50%); opacity: 1; }
     }
-  
+
   @media (orientation: landscape) {
     .logo-container {
       opacity: 0 !important;
@@ -597,7 +597,7 @@
       transition: none !important;
     }
   }
-  
+
   /* Mobile dark mode logo styles */
     html.dark-mode .logo-container img.site-logo,
     html.dark-mode .site-logo,
@@ -612,7 +612,7 @@
       transition: filter 0.3s, box-shadow 0.3s;
     }
 
-  
+
     .swipe-indicator:before, .swipe-indicator:after {
       display: none; /* This will hide them */
       /* or content: none; */
@@ -623,7 +623,7 @@
     .page-header h1 {
     margin-top: 30px;
     }
-  
+
      .header-desktop-content {
       display: none;
      }

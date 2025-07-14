@@ -1,0 +1,522 @@
+/* assets/css/pc_about.css */
+
+/* =============================================================
+   ABOUT PAGE - PC/DESKTOP STYLES
+   ============================================================= */
+
+
+    /* Update CSS custom properties for desktop */
+    :root {
+        --section-padding-desktop: 2rem;
+        --section-padding-large: 3rem;
+    }
+
+    /* Desktop sections use full padding */
+    .about-section {
+        padding: var(--section-padding-desktop);
+        padding-top: var(--header-height-plus-3rem); /* More padding for desktop */
+    }
+
+    /* Hero section specific adjustments */
+    #section1 {
+        padding-top: var(--header-height-plus-2rem); /* Slightly less for hero */
+    }
+
+    /* Larger text and better spacing for desktop */
+    .about-content h1 {
+        font-size: clamp(3rem, 8vw, 5rem); /* Larger fonts for desktop */
+    }
+
+    .about-content p {
+        font-size: clamp(1.2rem, 2vw, 1.4rem); /* Larger paragraphs for desktop */
+    }
+
+    /* Better grid layout for desktop */
+    .mission-cards {
+        grid-template-columns: repeat(auto-fit, minmax(21.875rem, 1fr));
+        gap: 3rem;
+        overflow: hidden; /* Prevent any temporary overflow during animations */
+    }
+
+    .process-flow {
+        flex-wrap: nowrap; /* Keep process steps in a line on desktop */
+        gap: 3rem;
+        overflow: hidden; /* Prevent any temporary overflow during animations */
+    }
+
+    .process-step {
+        max-width: 21.875rem;
+        min-width: 18.75rem;
+    }
+
+    /* Larger profile card for desktop */
+    .profile-card {
+        max-width: 37.5rem;
+        padding: 4rem;
+    }
+
+    .profile-avatar {
+        width: 16rem;
+        height: 16rem;
+        font-size: 5rem;
+    }
+
+    .avatar-placeholder-image {
+        object-position: center 30%; /* Pushed down further */
+    }
+
+    /* Enhanced hover effects for desktop */
+    .glass-card:hover {
+        transform: translateY(-0.9375rem);
+        box-shadow: 0 1.5625rem 3.125rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Remove hover effects for process steps on desktop */
+    .process-step:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+
+    /* Override dark mode hover styles */
+    html.dark-mode .process-step:hover {
+        background: inherit !important;
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+
+    /* Ensure consistent styling for all process steps on desktop */
+    .process-step[data-animate] {
+        transform: none !important;
+        opacity: 1 !important;
+        transition: none !important;
+    }
+
+    .process-step[data-animate].animate {
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    .profile-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 1.875rem 3.75rem rgba(0, 0, 0, 0.2);
+    }
+
+    /* Better button sizing for desktop */
+/* Better button sizing for desktop */
+.cta-button {
+    padding: 1.375rem 3rem;
+    font-size: 1.4rem;
+}
+
+.cta-button.large {
+    padding: 1.75rem 3.5rem;
+    font-size: 1.6rem;
+}
+    /* Enhanced floating shapes for desktop */
+    .floating-shapes .shape {
+        opacity: 0.15; /* Slightly more visible on desktop */
+    }
+
+    .shape-1 {
+        width: 15.625rem;
+        height: 15.625rem;
+    }
+
+    .shape-2 {
+        width: 12.5rem;
+        height: 12.5rem;
+    }
+
+    .shape-3 {
+        width: 9.375rem;
+        height: 9.375rem;
+    }
+
+    .shape-4 {
+        width: 11.25rem;
+        height: 11.25rem;
+    }
+
+    .shape-5 {
+        width: 7.5rem;
+        height: 7.5rem;
+    }
+
+    .shape-6 {
+        width: 6.25rem;
+        height: 6.25rem;
+    }
+
+    /* Better typography hierarchy for desktop */
+    .section-title {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+        font-size: clamp(3.5rem, 8vw, 6rem);
+        margin-bottom: 2rem;
+    }
+
+    .hero-subtitle, .section-subtitle {
+        font-size: clamp(1.3rem, 3vw, 1.6rem);
+        max-width: 50rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Enhanced section badges */
+    .section-badge, .hero-badge {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.875rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .hero-badge {
+        font-size: 1.3rem;
+        padding: 0.9375rem 2.1875rem;
+    }
+
+    /* Better card spacing */
+    .glass-card {
+        padding: 3rem;
+    }
+
+    .glass-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Enhanced process steps */
+    .step-number {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .step-content h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Better profile stats layout */
+    .profile-stats {
+        margin-top: 3rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+    }
+
+    /* Enhanced final CTA */
+    .final-cta {
+        padding: 3rem;
+        margin-top: 4rem;
+    }
+
+    .final-cta h2 {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+    }
+
+/* Extra large screens */
+@media (min-width: 90em) {
+    :root {
+        --section-padding-desktop: 3rem;
+        --section-padding-large: 4rem;
+    }
+
+    .about-section {
+        padding: var(--section-padding-large);
+        padding-top: var(--header-height-plus-3rem);
+    }
+
+    .about-content {
+        max-width: 87.5rem;
+    }
+
+    .mission-cards {
+        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr));
+        gap: 4rem;
+    }
+
+    .process-flow {
+        gap: 4rem;
+    }
+
+    .process-step {
+        max-width: 25rem;
+        min-width: 21.875rem;
+    }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.about-container::-webkit-scrollbar {
+  width: 0;  /* For vertical scrollbars */
+  height: 0; /* For horizontal scrollbars */
+}
+
+.about-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.about-container::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.about-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+body {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.about-container {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+div.mission-cards::-webkit-scrollbar {
+    width: 0;  /* For vertical scrollbars */
+    height: 0; /* For horizontal scrollbars */
+}
+
+div.process-flow::-webkit-scrollbar {
+    width: 0;  /* For vertical scrollbars */
+    height: 0; /* For horizontal scrollbars */
+}
+
+/* Additional scrollbar hiding for all child elements that might overflow */
+.about-section::-webkit-scrollbar,
+.about-content::-webkit-scrollbar,
+.glass-card::-webkit-scrollbar,
+.process-step::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+.about-section,
+.about-content,
+.glass-card,
+.process-step {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* =============================================================
+   DESKTOP LOGO FADE ANIMATION
+   ============================================================= */
+
+/* Desktop media query to ensure this only applies to desktop */
+@media (min-width: 1024px) {
+    /* Logo elements that will be animated */
+    .logo-container,
+    .header-logo-container {
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, filter;
+        /* Use CSS custom properties for animation values */
+        --logo-scale: 1;
+        --logo-translate-y: 0px;
+        --logo-blur: 0px;
+        --logo-opacity: 1;
+    }
+
+    /* Performance optimizations for logo fade animations */
+    .logo-container,
+    .header-logo-container {
+        /* Enable hardware acceleration for smooth animations */
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        perspective: 1000px;
+    }
+
+    /* Smooth shadow/box-shadow removal during fade */
+    .logo-container img,
+    .header-logo-container img {
+        transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hide shadows during fade animations */
+    .logo-fade-out .logo-container img,
+    .logo-fade-out .header-logo-container img,
+    .logo-animate-fade-out img {
+        box-shadow: none !important;
+    }
+
+    /* Ensure smooth transitions for all logo-related elements */
+    .logo-container *,
+    .header-logo-container * {
+        transition: inherit;
+    }
+
+    /* Prevent text selection during animations */
+    .logo-container.logo-animate-fade-out,
+    .header-logo-container.logo-animate-fade-out,
+    .logo-container.logo-animate-fade-in,
+    .header-logo-container.logo-animate-fade-in {
+        user-select: none;
+        pointer-events: none;
+    }
+
+    /* Restore pointer events when animation completes */
+    .logo-container.logo-fade-in,
+    .header-logo-container.logo-fade-in {
+        pointer-events: auto;
+    }
+
+    /* Classes for controlling logo fade states - using opacity and filter only */
+    .logo-fade-out {
+        opacity: 0 !important;
+        filter: blur(2px) !important;
+        pointer-events: none !important;
+    }
+
+    .logo-fade-in {
+        opacity: 1 !important;
+        filter: blur(0) !important;
+        pointer-events: auto !important;
+    }
+
+    /* Alternative smooth animation using CSS keyframes - opacity and filter only */
+    @keyframes logoFadeOut {
+        0% {
+            opacity: 1;
+            filter: blur(0);
+        }
+        25% {
+            opacity: 0.75;
+            filter: blur(0.5px);
+        }
+        50% {
+            opacity: 0.5;
+            filter: blur(1px);
+        }
+        75% {
+            opacity: 0.25;
+            filter: blur(1.5px);
+        }
+        100% {
+            opacity: 0;
+            filter: blur(2px);
+            pointer-events: none;
+        }
+    }
+
+    @keyframes logoFadeIn {
+        0% {
+            opacity: 0;
+            filter: blur(2px);
+        }
+        25% {
+            opacity: 0.25;
+            filter: blur(1.5px);
+        }
+        50% {
+            opacity: 0.5;
+            filter: blur(1px);
+        }
+        75% {
+            opacity: 0.75;
+            filter: blur(0.5px);
+        }
+        100% {
+            opacity: 1;
+            filter: blur(0);
+            pointer-events: auto;
+        }
+    }
+
+    /* Animation classes for keyframe-based animation */
+    .logo-animate-fade-out {
+        animation: logoFadeOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .logo-animate-fade-in {
+        animation: logoFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* Ensure logos are visible by default in section 1 */
+    .about-section:first-child .logo-container,
+    .about-section:first-child .header-logo-container {
+        opacity: 1;
+        filter: blur(0);
+        pointer-events: auto;
+        /* Don't override transform to preserve original centering */
+    }
+
+    .about-container {
+        scroll-snap-type: none !important;
+    }
+
+    .about-section {
+        scroll-snap-align: none !important;
+    }
+}
+
+/* =============================================================
+   EXISTING STYLES
+   ============================================================= */
+
+.process-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 2rem;
+    color: var(--primary-blue);
+    margin: 0 1rem;
+    /* Ensure arrow is centered vertically and horizontally */
+}
+
+@media (min-width: 1024px) {
+    .process-flow {
+        align-items: center;
+        justify-content: center; /* Center cards horizontally */
+        padding: 0 2rem; /* Add horizontal padding to prevent cut-off */
+        gap: 2rem; /* Slightly reduced gap for closer cards */
+    }
+    .process-arrow {
+        /* On desktop, make arrows horizontally centered between steps */
+        flex-direction: row;
+        margin: 0 2rem;
+        height: auto;
+    }
+}
+.hero-badge {
+        font-size: 1.3rem;
+        padding: 0.875rem 2.25rem;
+        margin-bottom: 2.5rem;
+        /* Scale up on desktop and compensate with extra margin */
+        transform: scale(1.6) !important;
+        /* Add extra margin to compensate for the 1.3x scale */
+        margin-top: 1.5rem; /* Extra top margin for scaled size */
+        margin-bottom: 3.25rem; /* Increased bottom margin for scaled size */
+        /* Ensure proper spacing and prevent overflow */
+        transform-origin: center;
+        /* Add a bit of extra space on sides to prevent horizontal overflow */
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+
+.hero-title {
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    margin-bottom: 2rem;
+}
+
+.hero-subtitle {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    margin-bottom: 3.5rem;
+    max-width: 50rem;
+}
+
+.hero-actions {
+    gap: 1.75rem;
+}

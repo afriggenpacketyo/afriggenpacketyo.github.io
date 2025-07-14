@@ -1,5 +1,11 @@
 // Desktop-specific implementation
 (function() {
+    // PROTECTION: Exit early if we're on the about page
+    if (document.body.classList.contains('about-page')) {
+        console.log('🚫 Desktop.js disabled on about page');
+        return;
+    }
+
     // Get the CardSystem from common.js
     const CardSystem = window.CardSystem;
     const container = CardSystem.container;
@@ -975,7 +981,7 @@
 
     // Modify the scroll event handler to use grace period instead of immediate unflipping
     container.addEventListener('scroll', () => {
-        if (CardSystem.isFiltering) return;
+        if (CardSystem.isFilteringInProgress()) return;
         // Don't interfere with manual flipping
         if (CardSystem.isManuallyFlipping) return;
 
@@ -1031,7 +1037,7 @@
 
     // Simplified wheel event handler
     container.addEventListener('wheel', (e) => {
-        if (CardSystem.isFiltering) return;
+        if (CardSystem.isFilteringInProgress()) return;
         // This is definitely a manual user scroll
         lastCardActivationSource = 'scroll';
 
@@ -1063,7 +1069,7 @@
             card.style.transition = 'transform 0.3s ease-out';
         });
 
-        // Initialize scrolling to first card
+        // Initialize scrolling to first card (needed for proper desktop card centering)
         scrollToCard(0);
         CardSystem.updateUI();
     }
@@ -1312,6 +1318,12 @@
         }
     };
 
+    // Add event listeners for responsive positioning
+    // window.addEventListener('resize', updateLogoPosition);
+    // window.addEventListener('orientationchange', updateLogoPosition);
+    window.CardSystem.scrollToCard = scrollToCard;
+    console.log('Desktop: Layout ready, marking as initialized...');
+
     // Initialize desktop-specific features
     addNavigationArrows();
     initSmoothScrolling();
@@ -1324,21 +1336,11 @@
     console.log("iPod-style cover flow initialized");
 
     // Initial positioning
-    updateLogoPosition();
+    updateLogoPosition();    // Desktop initialization function
+    function initDesktop() {
+        console.log("Desktop: Initializing desktop specific logic...");
 
-    // Add event listeners for responsive positioning
-    // window.addEventListener('resize', updateLogoPosition);
-    // window.addEventListener('orientationchange', updateLogoPosition);
-    window.CardSystem.scrollToCard = scrollToCard;
-    console.log('Desktop: Layout ready, marking as initialized...');
-    CardSystem.isLayoutReady = true;
-
-    // Event-driven approach: Listen for script loading completion
-    let isLayoutStable = false;
-    let areScriptsLoaded = false;
-
-    // Check layout stability once
-    function checkLayoutStability() {
+        // Check layout stability first
         const firstCard = flipCards[0];
         if (!firstCard || !container) {
             console.error('Desktop: Essential elements not found');
@@ -1346,30 +1348,25 @@
         }
 
         if (firstCard.offsetWidth > 0 && container.offsetWidth > 0) {
-            isLayoutStable = true;
-            console.log('Desktop: Layout stable');
-            tryFinalize();
+            console.log("Desktop: Core initialization steps completed.");
+
+            // --- SIGNAL READINESS ---
+            if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
+                window.CardSystem.registerPlatformReady('desktop');
+                console.log("Desktop: Signaled readiness to CardSystem.");
+            } else {
+                console.error("Desktop: window.CardSystem.registerPlatformReady not available!");
+            }
+            // --- END SIGNAL READINESS ---
         } else {
-            // Only use requestAnimationFrame if layout isn't stable yet
-            requestAnimationFrame(checkLayoutStability);
+            // If layout isn't stable yet, try again
+            requestAnimationFrame(initDesktop);
         }
     }
 
-    // Listen for the script loading completion event
-    document.addEventListener('scriptsLoaded', function() {
-        console.log('Desktop: Received scriptsLoaded event');
-        areScriptsLoaded = true;
-        tryFinalize();
+    // Single, reliable initialization trigger
+    document.addEventListener('scriptsLoaded', () => {
+        console.log("Desktop: Received scriptsLoaded event.");
+        initDesktop();
     });
-
-    // Finalize only when both conditions are met
-    function tryFinalize() {
-        if (isLayoutStable && areScriptsLoaded) {
-            console.log('Desktop: Both layout and scripts ready, finalizing');
-            CardSystem.finalizeLayout();
-        }
-    }
-
-    // Start checking layout stability
-    checkLayoutStability();
 })();

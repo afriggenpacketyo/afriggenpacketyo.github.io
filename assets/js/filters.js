@@ -85,8 +85,12 @@ function removeBodyLock() {
       }
     }
 
+    // Restore scroll position synchronously with the next event loop
     document.documentElement.style.removeProperty('--body-scroll-top');
-    setTimeout(() => { window.scrollTo(0, scrollY); }, 0);
+    // Use requestAnimationFrame instead of setTimeout(0) for better timing
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }
 }
 
@@ -160,11 +164,19 @@ function filterCardsQuietly(excludes) {
       CardSystem.updateUI();
     }
 
-    // Let the platform-specific scripts handle positioning
+    // Let the platform-specific scripts handle positioning with error handling
     if (typeof CardSystem.moveToCard === 'function') {
-      CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
+      try {
+        CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
+      } catch (error) {
+        console.warn('Filters: moveToCard failed during quiet filtering:', error);
+      }
     } else if (typeof CardSystem.scrollToCard === 'function') {
-      CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
+      try {
+        CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
+      } catch (error) {
+        console.warn('Filters: scrollToCard failed during quiet filtering:', error);
+      }
     }
   }
 }
@@ -181,11 +193,19 @@ function showAllCardsQuietly() {
     CardSystem.updateUI();
   }
 
-  // Let the platform-specific scripts handle positioning
+  // Let the platform-specific scripts handle positioning with error handling
   if (typeof CardSystem.moveToCard === 'function') {
-    CardSystem.moveToCard(0, false); // false for instant move
+    try {
+      CardSystem.moveToCard(0, false); // false for instant move
+    } catch (error) {
+      console.warn('Filters: moveToCard failed during quiet show all:', error);
+    }
   } else if (typeof CardSystem.scrollToCard === 'function') {
-    CardSystem.scrollToCard(0, false); // false for instant move
+    try {
+      CardSystem.scrollToCard(0, false); // false for instant move
+    } catch (error) {
+      console.warn('Filters: scrollToCard failed during quiet show all:', error);
+    }
   }
 }
 
@@ -384,13 +404,13 @@ function showExcludesContent() {
   // Apply body lock BEFORE focusing the input to prevent Chrome mobile keyboard issues
   const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   if (isMobile) {
-    // Body is already locked from hamburger menu, just focus the input
-    setTimeout(() => {
+    // Body is already locked from hamburger menu, focus the input on next frame
+    requestAnimationFrame(() => {
       const input = document.getElementById('excludes-input');
       if (input) {
         input.focus();
       }
-    }, 50);
+    });
   } else {
     // Desktop - no auto-focus to preserve placeholder text until user clicks
     // User can manually click the textarea when ready to type
@@ -478,7 +498,14 @@ function saveExcludes(event) {
     saveButton.textContent = originalText;
     saveButton.style.background = '#dc3545';
     isSaveButtonActive = false;
-    saveButtonTimeout = null;
+    // Clean up timeout
+    if (saveButtonTimeout) {
+      clearTimeout(saveButtonTimeout);
+      saveButtonTimeout = null;
+    }
+    isSaveButtonActive = false;
+    saveButton.textContent = originalText;
+    saveButton.style.background = '#dc3545';
   }, 1500);
 }
 
@@ -559,28 +586,38 @@ function goBackToMenu() {
 function applyFilters() {
   console.log('Filters: Applying filters...');
 
-  // --- STEP 1: Disable conflicting event listeners ---
-  window.CardSystem.isFiltering = true;
+  // --- STEP 1: Set filtering state synchronously ---
+  CardSystem.setFilteringState(true, 'filtering');
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const hasFilters = !!excludes;
 
-  // Decide whether to filter or show all cards.
-  if (!hasFilters) {
-    showAllCards();
-  } else {
-    filterCards(excludes);
+  // Store original state for proper restoration
+  const originalActiveIndex = CardSystem.activeCardIndex;
+
+  try {
+    // Decide whether to filter or show all cards.
+    if (!hasFilters) {
+      showAllCards();
+    } else {
+      filterCards(excludes);
+    }
+  } catch (error) {
+    console.error('Filters: Error during filtering:', error);
+    // Restore original state on error
+    CardSystem.activeCardIndex = originalActiveIndex;
   }
 
-  // --- FINAL STEP: Re-enable event listeners after everything is done. ---
+  // --- STEP 2: Re-enable event listeners immediately after DOM updates ---
+  // Use setTimeout(0) to ensure DOM changes are processed, but maintain synchronous behavior
   setTimeout(() => {
-    window.CardSystem.isFiltering = false;
+    CardSystem.setFilteringState(false, 'idle');
     console.log("Filters: Filtering complete. Event listeners re-enabled.");
-  }, 500);
+  }, 0);
 
-  // Only remove body lock when actually closing the hamburger menu
+  // Only close hamburger menu after state is properly set
   if (window.hamburgerMenu) {
-    window.hamburgerMenu.close(); // This will handle removing body lock properly
+    window.hamburgerMenu.close();
   }
 }
 
@@ -620,7 +657,16 @@ function showAllCards() {
 function completeInitialization() {
   isInitializing = false;
   console.log('Filters: Initialization complete, checking for auto-apply...');
-  autoApplyFiltersOnLoad();
+
+  // Event-driven approach: only auto-apply when CardSystem is confirmed ready
+  if (window.CardSystem && window.CardSystem.isLayoutReady) {
+    autoApplyFiltersOnLoad();
+  } else {
+    // Listen for the layout ready event instead of using a timer
+    document.addEventListener('layoutFinalized', () => {
+      autoApplyFiltersOnLoad();
+    }, { once: true });
+  }
 }
 
 // Expose the function globally so other scripts can call it
@@ -634,55 +680,67 @@ window.filtersCompleteInitialization = completeInitialization;
 function repositionViewAfterFilter(newActiveIndex) {
     const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
 
+    // Set filtering phase for better state tracking
+    CardSystem.filteringPhase = 'repositioning';
+    CardSystem.pendingStateChange = true;
+
     // Step 1: Handle the "all cards filtered" edge case.
     if (newActiveIndex === -1) {
         console.warn("Filters: All cards have been filtered out.");
         CardSystem.activeCardIndex = -1;
+        CardSystem.pendingStateChange = false;
+        CardSystem.filteringPhase = 'idle';
+
         if (typeof CardSystem.updateUI === 'function') {
             CardSystem.updateUI(); // This will clear the dots.
         }
         return;
     }
 
-    // Step 2: Set the new state. This is just updating variables.
+    // Step 2: Set the new state synchronously
     CardSystem.activeCardIndex = newActiveIndex;
     CardSystem.previousVisibleActiveIndex = -1; // Forces the dot logic to do a full reset.
 
-    // Step 3: Delegate the entire visual update and repositioning to the
-    // platform-specific functions, which are the "source of truth" for UI changes.
-    // This solves the race condition.
+    // Step 3: Perform platform-specific repositioning with proper synchronization
     if (isMobile) {
         if (typeof CardSystem.moveToCard === 'function') {
-            // Let moveToCard handle the updateUI() call and the scroll.
-            // It knows how to do this correctly for mobile.
+            // Mobile: Let moveToCard handle both updateUI and scroll
             CardSystem.moveToCard(newActiveIndex, false); // false for INSTANT move
         }
     } else {
-        if (typeof CardSystem.scrollToCard === 'function') {
-            // For desktop, we do need to update the UI first, then scroll.
-            if (typeof CardSystem.updateUI === 'function') {
-                CardSystem.updateUI();
-                // --- FORCE DOT REPAINT ON DESKTOP AFTER FILTERING ---
-                const dotContainer = document.querySelector('.card-indicator');
-                if (dotContainer) {
-                    // Force reflow
-                    void dotContainer.offsetHeight;
-                    // Toggle a dummy class to trigger repaint
-                    dotContainer.classList.add('force-dot-repaint');
-                    requestAnimationFrame(() => {
-                        dotContainer.classList.remove('force-dot-repaint');
-                    });
-                    console.debug('Filters: Dot container present, forced repaint triggered.');
-                } else {
-                    console.warn('Filters: Dot container not found after filtering!');
-                }
+        // Desktop: Update UI first, then scroll
+        if (typeof CardSystem.updateUI === 'function') {
+            CardSystem.updateUI();
+
+            // Force dot container repaint with proper timing
+            const dotContainer = document.querySelector('.card-indicator');
+            if (dotContainer) {
+                // Use synchronous reflow instead of async requestAnimationFrame
+                void dotContainer.offsetHeight; // Force immediate reflow
+                dotContainer.classList.add('force-dot-repaint');
+                // Remove class synchronously to avoid async timing issues
+                setTimeout(() => {
+                    dotContainer.classList.remove('force-dot-repaint');
+                }, 0);
+                console.debug('Filters: Dot container repaint completed.');
+            } else {
+                console.warn('Filters: Dot container not found after filtering!');
             }
-            CardSystem.scrollToCard(newActiveIndex, true); // true for INSTANT move
+        }
+
+        if (typeof CardSystem.scrollToCard === 'function') {
+            CardSystem.scrollToCard(newActiveIndex, false); // false for INSTANT move
         }
     }
+
+    // Step 4: Reset state flags synchronously
+    CardSystem.pendingStateChange = false;
+    CardSystem.filteringPhase = 'idle';
+
+    console.log('Filters: Repositioning completed, state synchronized.');
 }
 
-// Function to handle cases where the page loads with the menu already open
+// Initialize when DOM and CardSystem are both ready
 function initializeExcludesOverlayIfVisible() {
   const excludesContent = document.querySelector('.excludes-content');
   if (excludesContent && excludesContent.style.display !== 'none') {
@@ -699,9 +757,23 @@ function initializeExcludesOverlayIfVisible() {
   }
 }
 
-// Call this function when the filters module is initialized
-// This should be called after DOM is ready but before user interaction
-window.addEventListener('DOMContentLoaded', function() {
-  // Small delay to ensure all other initialization is complete
-  setTimeout(initializeExcludesOverlayIfVisible, 100);
-});
+// Event-driven initialization instead of timer-based
+function initializeFilters() {
+  // Only initialize if both DOM and CardSystem are ready
+  if (document.readyState === 'loading' || !window.CardSystem) {
+    return; // Not ready yet
+  }
+
+  initializeExcludesOverlayIfVisible();
+  console.log('Filters: Initialized successfully');
+}
+
+// Listen for multiple readiness signals
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFilters);
+} else {
+  initializeFilters();
+}
+
+// Also listen for CardSystem readiness
+document.addEventListener('scriptsLoaded', initializeFilters);

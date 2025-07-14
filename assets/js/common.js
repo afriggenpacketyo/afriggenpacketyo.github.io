@@ -5,6 +5,10 @@ window.CardSystem = {
     container: document.querySelector('.container'),
     isFiltering: false, // Flag to indicate if filtering is active
 
+    // New state tracking for better synchronization
+    filteringPhase: 'idle', // 'idle', 'filtering', 'repositioning'
+    pendingStateChange: false,
+
     // State variables
     activeCardIndex: 0,
     currentlyFlippedCard: null,
@@ -15,12 +19,23 @@ window.CardSystem = {
     isLayoutReady: false,
     isFullyInitialized: false,
 
+    // Platform readiness tracking
+    platformReadiness: {
+        mobile: false,
+        desktop: false
+    },
+
     // Dot indicator properties
     visibleStartIndex: 0,
     visibleRange: 9, // Show a maximum of 9 dots at a time
     previousDirection: 0, // 0 = initial, 1 = right, -1 = left
     previousActiveIndex: 0,
     previousVisibleActiveIndex: -1, // Added for filter-aware logic
+
+    // Constants to replace magic numbers
+    CARD_VISIBILITY_THRESHOLD: 0.4,
+    SWIPE_DISTANCE_THRESHOLD: 30,
+    POSITION_THRESHOLD: 0.4,
 
     // Utility functions
     updateUI: function() {
@@ -494,6 +509,25 @@ window.CardSystem = {
         return this.activeCardIndex;
     },
 
+    // New: Proper state transition management
+    setFilteringState: function(isFiltering, phase = 'idle') {
+        this.isFiltering = isFiltering;
+        this.filteringPhase = phase;
+        this.pendingStateChange = isFiltering;
+
+        console.log(`CardSystem: State changed - isFiltering: ${isFiltering}, phase: ${phase}`);
+
+        // Dispatch event for any listeners
+        document.dispatchEvent(new CustomEvent('cardSystemStateChange', {
+            detail: { isFiltering, phase }
+        }));
+    },
+
+    // New: Check if any filtering operation is in progress
+    isFilteringInProgress: function() {
+        return this.isFiltering || this.pendingStateChange || this.filteringPhase !== 'idle';
+    },
+
     toggleBodyScrollLock: function(isLocked) {
         if (isLocked) {
             document.body.classList.add('body-no-scroll');
@@ -502,19 +536,59 @@ window.CardSystem = {
         }
     },
 
+    // Method to register readiness from a specific platform script
+    registerPlatformReady: function(platform) {
+        console.log(`CardSystem: Received readiness signal from "${platform}"`);
+        if (platform === 'mobile' || platform === 'desktop') {
+            this.platformReadiness[platform] = true;
+            this.checkOverallLayoutReadiness();
+        } else {
+            console.warn(`CardSystem: Unknown platform "${platform}" signaled readiness.`);
+        }
+    },
+
+    // Determines if the *currently active* platform has signaled readiness
+    checkOverallLayoutReadiness: function() {
+        // Determine which platform is currently active based on environment
+        const isCurrentPlatformMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        const currentPlatform = isCurrentPlatformMobile ? 'mobile' : 'desktop';
+
+        console.log(`CardSystem: Checking readiness for active platform "${currentPlatform}"`);
+
+        // Check if the *active* platform has signaled readiness.
+        if (this.platformReadiness[currentPlatform]) {
+            console.log(`CardSystem: All required readiness signals met for "${currentPlatform}". Finalizing layout.`);
+            this.isLayoutReady = true;
+            this.finalizeLayout();
+        }
+    },
+
+    // Helper for mobile check
+    isMobileDeviceCheck: function() {
+        return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+    },
+
     // *** NEW: Centralized layout finalization ***
     finalizeLayout: function() {
-        console.log('CardSystem: Finalizing layout...');
-        
+        console.log('CardSystem: finalizeLayout called. Ensuring layout is ready and complete.');
+
+        if (!this.isLayoutReady) {
+            console.warn('CardSystem.finalizeLayout called but isLayoutReady is false. This might indicate an issue.');
+            // Potentially add a fallback or retry mechanism here if needed,
+            // but ideally, it's only called after isLayoutReady is true.
+        }
+
         // Mark as layout ready
         this.isLayoutReady = true;
-        
-        // Apply any pending filters
+
+        // *** CRITICAL FIX: Apply filters BEFORE initial display ***
+        // This prevents the flash of unfiltered content
         if (typeof window.filtersCompleteInitialization === 'function') {
+            console.log('CardSystem: Applying filters before initial display...');
             window.filtersCompleteInitialization();
         }
-        
-        // Let platform-specific scripts handle their own positioning
+
+        // Now that filters are applied, position to the correct card
         if (typeof this.moveToCard === 'function') {
             // Mobile/Desktop moveToCard is available
             this.moveToCard(this.activeCardIndex, false); // false = instant
@@ -522,17 +596,17 @@ window.CardSystem = {
             // Desktop scrollToCard is available
             this.scrollToCard(this.activeCardIndex, false); // false = instant
         }
-        
+
         // Update UI one final time
         this.updateUI();
-        
+
         // Mark as fully initialized
         this.isFullyInitialized = true;
-        
-        // Dispatch ready event for splash screen
+
+        // Dispatch ready event for splash screen AFTER everything is positioned
         document.dispatchEvent(new CustomEvent('layoutFinalized'));
-        
-        console.log('CardSystem: Layout finalization complete');
+
+        console.log('CardSystem: Layout finalization complete. App is fully initialized.');
     }
 };
 

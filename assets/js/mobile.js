@@ -8,6 +8,12 @@
     }
   })();
   (function() {
+      // PROTECTION: Exit early if we're on the about page
+      if (document.body.classList.contains('about-page')) {
+          console.log('🚫 Mobile.js disabled on about page');
+          return;
+      }
+
       // Immediate logo blocking for landscape mode
       const styleBlocker = document.createElement('style');
       styleBlocker.id = 'initial-logo-block';
@@ -51,11 +57,11 @@
       let lastSwipeDirection = 0; // -1 for left, 1 for right, 0 for none
       let pendingCardIndex = -1; // Track which card we're transitioning to
 
-      // Constants - UPDATED FOR BETTER TOUCH RESPONSE
-      const SWIPE_THRESHOLD = 30; // Minimum distance for a swipe
+      // Constants - Use values from CardSystem to avoid magic numbers
+      const SWIPE_THRESHOLD = CardSystem.SWIPE_DISTANCE_THRESHOLD; // Minimum distance for a swipe
       const SWIPE_TIMEOUT = 300;  // Maximum time in ms for a swipe
       const DRAG_RESISTANCE = 1.0; // No resistance for more direct control
-      const POSITION_THRESHOLD = 0.4; // When to snap to next/previous card
+      const POSITION_THRESHOLD = CardSystem.POSITION_THRESHOLD; // When to snap to next/previous card
       const TRANSITION_DURATION = 270; // Increased for smoother recentering
       const RECENTERING_EASING = 'cubic-bezier(0.25, 0.1, 0.25, 1)'; // More elegant easing
 
@@ -71,7 +77,7 @@
       let isOverlayActive = false;
       let preactivatedCard = null;
       let previouslyActiveCard = null;
-      let visibilityThreshold = 0.4; // Adjust this value as needed (40% visibility)
+      let visibilityThreshold = CardSystem.CARD_VISIBILITY_THRESHOLD; // Use constant instead of magic number
 
       // Add these variables at the top
       let resizeDebounceTimer = null;
@@ -264,7 +270,7 @@
       };
 
       container._touchmoveHandler = function(e) {
-        if (CardSystem.isFiltering) return;
+        if (CardSystem.isFilteringInProgress()) return;
           if (!isTouchActive || CardSystem.currentlyFlippedCard) return;
 
           if (this._touchMoveRAF) {
@@ -315,7 +321,7 @@
       };
 
       container._touchendHandler = function(e) {
-        if (CardSystem.isFiltering) return;
+        if (CardSystem.isFilteringInProgress()) return;
           // Clean up RAF to prevent memory leaks
           if (this._touchMoveRAF) {
               cancelAnimationFrame(this._touchMoveRAF);
@@ -1115,9 +1121,7 @@
               // Ensure cards are centered
               moveToCard(CardSystem.activeCardIndex, false);
           }, 150);
-      });
-
-      // Simplified initialization function
+      });      // Simplified initialization function
       async function initialize() {
           console.log("Mobile: Initializing mobile card system...");
 
@@ -1159,33 +1163,37 @@
 
                   // Professional approach: Ensure vertical positioning is complete
                   fixVerticalPositioning();
-                  console.log('Mobile: Initialization complete. Announcing layout ready.');
+                  console.log('Mobile: Initialization complete. Signaling readiness to CardSystem.');
 
-                  // Mark CardSystem as layout ready
-                  CardSystem.isLayoutReady = true;
-
-                  // Finalize layout immediately after vertical positioning
-                  // The waitForCardMeasurements already ensures layout stability
-                  CardSystem.finalizeLayout();
+                  // --- SIGNAL READINESS ---
+                  // Signal mobile readiness to the central CardSystem
+                  if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
+                      window.CardSystem.registerPlatformReady('mobile');
+                      console.log("Mobile: Signaled readiness to CardSystem.");
+                  } else {
+                      console.error("Mobile: window.CardSystem.registerPlatformReady not available!");
+                  }
+                  // --- END SIGNAL READINESS ---
 
               } catch (error) {
                   console.error('Mobile: Initialization failed:', error);
                   document.body.classList.add('initialized');
-                  // Even on error, try to finalize with what we have
-                  CardSystem.isLayoutReady = true;
-                  CardSystem.finalizeLayout();
+                  // Even on error, signal readiness to prevent app lock
+                  if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
+                      window.CardSystem.registerPlatformReady('mobile');
+                      console.log("Mobile: Signaled readiness to CardSystem despite error.");
+                  }
               }
           }
 
           initializeSequence();
       }
 
-      // Run initialize when the page loads
-      if (document.readyState === 'complete') {
+      // Single, reliable initialization trigger
+      document.addEventListener('scriptsLoaded', () => {
+          console.log("Mobile: Received scriptsLoaded event.");
           initialize();
-      } else {
-          window.addEventListener('load', initialize);
-      }
+      });
 
       // Function to create the overlay
       function createOverlay() {
