@@ -598,7 +598,7 @@ window.hamburgerMenu = {
 
       const menuLinks = originalMenu.querySelectorAll('a');
       menuLinks.forEach(link => {
-        link.style.display = 'block';
+        link.style.display = 'flex';
         link.style.opacity = '0';
         link.style.transition = 'opacity 0.33s cubic-bezier(0.42,0,0.58,1)';
         link.style.filter = 'none';
