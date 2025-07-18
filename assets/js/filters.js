@@ -586,6 +586,15 @@ function goBackToMenu() {
 function applyFilters() {
   console.log('Filters: Applying filters...');
 
+  // Safely exit if CardSystem is not defined (e.g., on 'about' page)
+  if (typeof CardSystem === 'undefined' || !CardSystem) {
+    console.warn('Filters: CardSystem not found. Aborting filter application.');
+    if (window.hamburgerMenu && typeof window.hamburgerMenu.close === 'function') {
+      window.hamburgerMenu.close(); // Close the entire overlay
+    }
+    return;
+  }
+
   // --- STEP 1: Set filtering state synchronously ---
   CardSystem.setFilteringState(true, 'filtering');
 

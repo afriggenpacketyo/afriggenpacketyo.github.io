@@ -102,9 +102,11 @@
   // --- Main Execution Logic ---
   document.body.classList.add('splash-active');
 
-  // Listen for layout finalization from CardSystem
-  document.addEventListener('layoutFinalized', () => {
-    console.log("Splash: Received 'layoutFinalized' event. Starting splash animation.");
+  // Listen for a universal 'pageReady' event. This event should be fired by
+  // the page-specific logic (e.g., about.js, or common.js for card layouts)
+  // once all critical rendering and setup are complete.
+  document.addEventListener('pageReady', () => {
+    console.log("Splash: Received 'pageReady' event. Starting splash animation.");
     runSplashAnimation();
   }, { once: true });
 

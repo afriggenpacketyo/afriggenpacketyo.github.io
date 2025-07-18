@@ -1,4 +1,8 @@
 // Global variables and utility functions shared between implementations
+
+// Only initialize the CardSystem on pages that use it (i.e., not about.html)
+if (!window.location.pathname.includes('about.html')) {
+
 window.CardSystem = {
     // DOM elements
     flipCards: document.querySelectorAll('.flip-card'),
@@ -435,6 +439,11 @@ window.CardSystem = {
 
     // Initialize common elements
     init: function() {
+        // If the main container doesn't exist on this page, stop initialization.
+        if (!this.container) {
+            return;
+        }
+
         // Add coverflow class
         this.container.classList.add('with-coverflow');
 
@@ -599,12 +608,45 @@ window.CardSystem = {
 
         // Update UI one final time
         this.updateUI();
+    },
+
+    // Helper for mobile check
+    isMobileDeviceCheck: function() {
+        return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+    },
+
+    // *** NEW: Centralized layout finalization ***
+    finalizeLayout: function() {
+        console.log('CardSystem: finalizeLayout called. Ensuring layout is ready and complete.');
+
+        if (!this.isLayoutReady) {
+            console.warn('CardSystem.finalizeLayout called but isLayoutReady is false. This might indicate an issue.');
+        }
+
+        // Mark as layout ready
+        this.isLayoutReady = true;
+
+        // *** CRITICAL FIX: Apply filters BEFORE initial display ***
+        if (typeof window.filtersCompleteInitialization === 'function') {
+            console.log('CardSystem: Applying filters before initial display...');
+            window.filtersCompleteInitialization();
+        }
+
+        // Now that filters are applied, position to the correct card
+        if (typeof this.moveToCard === 'function') {
+            this.moveToCard(this.activeCardIndex, false); // false = instant
+        } else if (typeof this.scrollToCard === 'function') {
+            this.scrollToCard(this.activeCardIndex, false); // false = instant
+        }
+
+        // Update UI one final time
+        this.updateUI();
 
         // Mark as fully initialized
         this.isFullyInitialized = true;
 
         // Dispatch ready event for splash screen AFTER everything is positioned
-        document.dispatchEvent(new CustomEvent('layoutFinalized'));
+        document.dispatchEvent(new CustomEvent('pageReady'));
 
         console.log('CardSystem: Layout finalization complete. App is fully initialized.');
     }
@@ -617,3 +659,5 @@ window.CardSystem.init();
 document.addEventListener('DOMContentLoaded', function() {
     CardSystem.initializeDots();
 });
+
+} // End of the conditional block for CardSystem initialization

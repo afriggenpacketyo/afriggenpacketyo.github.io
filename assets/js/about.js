@@ -457,13 +457,6 @@ internalLinks.forEach(link => {
     // Initialize modern landing page
     console.log('🚀 Modern landing page initialized with enhanced animations and preserved snap scrolling');
 
-    // Dispatch layoutFinalized event to trigger splash animation
-    // This mimics the behavior of the working index.html and goodnews.html pages
-    setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('layoutFinalized'));
-        console.log('About page: layoutFinalized event dispatched');
-    }, 100); // Small delay to ensure everything is ready
-
     // =============================================================
     // WAIT FOR SPLASH SCREEN TO COMPLETE
     // =============================================================
@@ -1017,6 +1010,10 @@ internalLinks.forEach(link => {
     });
 
     // =============================================================
-    // FINAL INITIALIZATION
+    // FINAL INITIALIZATION & SPLASH SIGNAL
     // =============================================================
+
+    // All about.js initializations are complete. Signal to splash.js that it can proceed.
+    console.log("About.js: All initializations complete. Firing 'pageReady' event.");
+    document.dispatchEvent(new CustomEvent('pageReady'));
 });
