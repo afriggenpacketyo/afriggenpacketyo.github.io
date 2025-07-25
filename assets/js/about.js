@@ -1014,6 +1014,25 @@ internalLinks.forEach(link => {
     // =============================================================
 
     // All about.js initializations are complete. Signal to splash.js that it can proceed.
-    console.log("About.js: All initializations complete. Firing 'pageReady' event.");
-    document.dispatchEvent(new CustomEvent('pageReady'));
+    console.log("About.js: All initializations complete. Checking CSS before firing 'pageReady' event.");
+    
+    // Check if CSS is loaded by testing if styles are applied
+    const checkCSSLoaded = () => {
+        const testElement = document.documentElement;
+        const bgColor = getComputedStyle(testElement).getPropertyValue('--background-main');
+        return bgColor && bgColor.trim() !== '';
+    };
+
+    const dispatchWhenReady = () => {
+        if (checkCSSLoaded()) {
+            console.log("About.js: CSS loaded, firing 'pageReady' event.");
+            document.dispatchEvent(new CustomEvent('pageReady'));
+        } else {
+            console.log('About.js: CSS not yet loaded, waiting...');
+            // Check again in next frame
+            requestAnimationFrame(dispatchWhenReady);
+        }
+    };
+
+    dispatchWhenReady();
 });

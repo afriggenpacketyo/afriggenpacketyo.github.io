@@ -417,9 +417,6 @@
                 // IMPROVEMENT: If card is not centered, wait for momentum to settle then center it
                 if (!isCardCentered && isScrollMomentumActive) {
                     // Set a flag that we want to center this card after momentum ends
-                    let momentumSettleTimeout;
-
-                    // Function to check if scroll momentum has settled
                     const checkForMomentumEnd = () => {
                         // If we're no longer in momentum state or if it's been a while, center the card
                         if (!isScrollMomentumActive || Date.now() - lastWheelEventTime > 300) {
@@ -433,15 +430,15 @@
                     const momentumCheckInterval = setInterval(checkForMomentumEnd, 100);
 
                     // Set a backup timeout to ensure we don't wait forever (max 1 second)
-                    momentumSettleTimeout = setTimeout(() => {
+                    setTimeout(() => {
                         clearInterval(momentumCheckInterval);
                         centerCardForPC(index);
                     }, 1000);
                 } else if (!isCardCentered) {
-                    // No active momentum, so center after a slight delay
-                    setTimeout(() => {
+                    // No active momentum, use requestAnimationFrame for precise timing
+                    requestAnimationFrame(() => {
                         centerCardForPC(index);
-                    }, 200);
+                    });
                 }
             } else {
                 // Unflipping - use a different approach to prevent scrollbar
@@ -542,11 +539,28 @@
         // Scroll to the card
         container.scrollLeft = targetCard.offsetLeft - containerCenter + cardCenter;
 
-        // Reset scroll behavior after a short delay
+        // Reset scroll behavior using proper event detection instead of timeout
         if (!instantly) {
-            setTimeout(() => {
+            const resetScrollBehavior = () => {
                 document.documentElement.style.removeProperty('--scroll-duration');
-            }, 350); // slightly longer than the animation
+                container.removeEventListener('scrollend', resetScrollBehavior);
+            };
+            
+            // Use scrollend event if available (modern browsers)
+            if ('onscrollend' in container) {
+                container.addEventListener('scrollend', resetScrollBehavior, { once: true });
+            } else {
+                // Fallback: detect when scrolling stops
+                let scrollTimeout;
+                const handleScroll = () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        resetScrollBehavior();
+                        container.removeEventListener('scroll', handleScroll);
+                    }, 50); // Small delay to detect scroll end
+                };
+                container.addEventListener('scroll', handleScroll);
+            }
         }
     }
 
@@ -1349,6 +1363,10 @@
 
         if (firstCard.offsetWidth > 0 && container.offsetWidth > 0) {
             console.log("Desktop: Core initialization steps completed.");
+
+            // --- EXPOSE DESKTOP METHODS TO CARDSYSTEM ---
+            CardSystem.scrollToCard = scrollToCard;
+            console.log("Desktop: Exposed scrollToCard method to CardSystem.");
 
             // --- SIGNAL READINESS ---
             if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {

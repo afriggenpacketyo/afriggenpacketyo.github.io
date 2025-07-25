@@ -67,7 +67,7 @@
                 resolve();
             }
             animationEndHandler = function(e) {
-                if ((animationType === 'default' && e.propertyName === 'transform') || (animationType !== 'default' && e.animationName.startsWith('splash-'))) {
+                if ((animationType === 'default' && e.propertyName === 'transform') || (animationType !== 'default' && e.animationName && e.animationName.startsWith('splash-'))) {
                     cleanup();
                 }
             };
@@ -99,15 +99,56 @@
     animateLogoAndWait(chosenAnimation).then(finalizeAppLoad);
   }
 
-  // --- Main Execution Logic ---
-  document.body.classList.add('splash-active');
+  /**
+   * Preload the splash logo image and only show it once fully loaded
+   */
+  function preloadSplashLogo() {
+    return new Promise((resolve, reject) => {
+      // Hide the logo initially to prevent progressive loading visibility
+      splashLogo.style.opacity = '0';
+      
+      // Create a new image object to preload
+      const preloadImg = new Image();
+      
+      preloadImg.onload = () => {
+        console.log("Splash: Logo image fully preloaded");
+        // Now show the logo since it's fully loaded
+        splashLogo.style.opacity = '1';
+        resolve();
+      };
+      
+      preloadImg.onerror = () => {
+        console.warn("Splash: Failed to preload logo image, showing anyway");
+        splashLogo.style.opacity = '1';
+        resolve(); // Still resolve to continue with animation
+      };
+      
+      // Start preloading by setting the src
+      preloadImg.src = splashLogo.src;
+      
+      // Safety timeout in case image loading hangs
+      setTimeout(() => {
+        if (splashLogo.style.opacity === '0') {
+          console.warn("Splash: Logo preload timeout, showing anyway");
+          splashLogo.style.opacity = '1';
+          resolve();
+        }
+      }, 3000); // 3 second timeout
+    });
+  }
 
-  // Listen for a universal 'pageReady' event. This event should be fired by
-  // the page-specific logic (e.g., about.js, or common.js for card layouts)
-  // once all critical rendering and setup are complete.
-  document.addEventListener('pageReady', () => {
-    console.log("Splash: Received 'pageReady' event. Starting splash animation.");
-    runSplashAnimation();
-  }, { once: true });
+  // --- Main Execution Logic ---
+  // Body already has splash-active class from HTML to prevent initial scrollbar
+
+  // First preload the logo image, then listen for pageReady
+  preloadSplashLogo().then(() => {
+    // Listen for a universal 'pageReady' event. This event should be fired by
+    // the page-specific logic (e.g., about.js, or common.js for card layouts)
+    // once all critical rendering and setup are complete.
+    document.addEventListener('pageReady', () => {
+      console.log("Splash: Received 'pageReady' event. Starting splash animation.");
+      runSplashAnimation();
+    }, { once: true });
+  });
 
 })();
