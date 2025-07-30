@@ -36,8 +36,8 @@
   // --- Critical CSS and Deferred Loading Block ---
   (function() {
     const isMobile = 'ontouchstart' in window;
-    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    width: 90vw; /* Initial large size */    max-width: 500px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0);     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Default/Mobile animation - to the header logo position */  .splash-logo.splash-animate {    /* Current values seem fine for mobile where final logo is ~60px and header is at top */    transform: translateY(-45vh) scale(0.18);     /* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Mobile bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Mobile draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Mobile draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Mobile pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Mobile spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
-    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    /* width: 90vw; Initial large size */    max-width: 1000px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    /* Transition for both mobile and desktop - values will be set by the active class */    transition: transform .6s cubic-bezier(.7,.6,.3,1) 0.1s;     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Desktop animation - targets the .logo-container position */  .splash-logo.splash-animate { /* Override the mobile animation for desktop */    /*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */      /*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */      /*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */    /* Placeholder CSS - JS will override these with calculated values */    transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Desktop bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Desktop draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Desktop draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Desktop pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Desktop spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
+    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
     const styleElement = document.createElement('style');
     styleElement.id = 'critical-splash-styles';
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
@@ -59,21 +59,23 @@
 </head>
 <body class="splash-active">
   <div class="splash-overlay" id="splash-overlay">
-    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+    <div class="splash-logo-wrapper">
+      <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+    </div>
   </div>
   <header class="page-header">
     <div class="header-controls-row">
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Newsway Summary</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">07/30/25 03:49 PM EDT (Next: 03:58 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">07/30/25 03:56 PM EDT (Next: 04:05 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Newsway Summary</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/30/25 03:49 PM EDT (New news: 03:58 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/30/25 03:56 PM EDT (New news: 04:05 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -91,12 +93,90 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Humanitarian Groups Warn of Worsening Famine in Gaza Strip</h2>
+          <h2>US Administration Ends Tariff Exemption for Low-Value Imports</h2>
+          <div class="timestamp">2025-07-30 15:51:49 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The White House has suspended the 'de minimis' exemption, which allowed imported packages valued at $800 or less to enter the U.S. without tariffs. This policy change, effective August 29, aims to close a loophole allegedly exploited by shippers to evade duties and smuggle illicit goods like synthetic opioids. The move follows a similar restriction placed on imports from China and Hong Kong, which significantly impacted ultra-low-cost online retailers such as Shein and Temu. The number of these low-value shipments has surged dramatically, from 134 million in 2015 to nearly 1.4 billion projected for 2025. (not investment advice)</p>
+          <p>40/100</p>
+          <a href="https://www.cbsnews.com/news/trump-ends-de-minimis-loophole-on-imports/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>NYC Mayoral Nominee Zohran Mamdani Addresses Past Anti-Police Stances</h2>
+          <div class="timestamp">2025-07-30 15:47:22 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Following a deadly mass shooting in Manhattan, Democratic mayoral nominee Zohran Mamdani held a press conference where he faced questions about his past anti-police rhetoric. He addressed his 2020 calls to defund the police, attributing them to the widespread frustration following the murder of George Floyd, and reiterated his current focus on a comprehensive public safety approach. Mamdani, who has since walked back his defund stance, criticized political rivals like former Governor Andrew Cuomo for focusing on his past statements rather than on solutions to ensure New Yorkers' safety, while pledging to address police staffing shortages if elected.</p>
+          <p>35/100</p>
+          <a href="https://www.foxnews.com/politics/mamdani-denies-responsibility-threats-nypd-first-presser-since-deadly-manhattan-shooting" target="_blank"><span class="news-org">Fox News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Current Interest Rates for Home Equity Loans and HELOCs Examined</h2>
+          <div class="timestamp">2025-07-30 15:46:56 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Amid a high-interest climate for personal loans and credit cards, borrowing against home equity has become a more affordable option for homeowners. The article details the current national average interest rates for 5, 10, and 15-year home equity loans and for Home Equity Lines of Credit (HELOCs), which are all significantly lower than other common forms of debt. It also explains the fundamental differences between the two products, such as fixed versus variable rates and lump-sum payouts versus revolving credit lines, while noting the importance of shopping for the best terms. (not investment advice)</p>
+          <p>60/100</p>
+          <a href="https://www.cbsnews.com/news/todays-heloc-and-home-equity-loan-interest-rates/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>High Noon Recalls Vodka Seltzer 12-Packs Due to Packaging Error</h2>
+          <div class="timestamp">2025-07-30 15:44:52 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>High Noon has initiated a nationwide recall for its Beach Variety 12-packs of vodka seltzer after discovering that some packages contain Celsius energy drink cans incorrectly filled with the alcoholic beverage. The error, traced to a packaging supplier, poses a health risk as consumers could unknowingly ingest alcohol. The recall affects products shipped in late July to several states, including Florida, New York, and Ohio. While no illnesses have been reported, the company is urging customers to dispose of any affected Celsius-branded cans and is offering refunds.</p>
+          <p>45/100</p>
+          <a href="https://www.cnbc.com/2025/07/30/high-noon-recalls-vodka-seltzers-in-celsius-cans.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Faulty Altimeter Implicated in Deadly Washington D.C. Air Collision</h2>
+          <div class="timestamp">2025-07-30 15:44:30 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>An NTSB hearing revealed that the Army helicopter in the fatal mid-air collision over Washington D.C. had faulty altimeters, causing it to fly 80 to 130 feet higher than intended. The crash, which occurred on January 29, resulted in the deaths of all 64 people on an American Airlines flight and three crew members on the helicopter. While the investigation's final cause is pending, this finding points to a critical equipment failure. The hearing also highlighted concerns about the insufficient vertical separation standards between helicopter and airplane routes near Reagan National Airport.</p>
+          <p>10/100</p>
+          <a href="https://www.bbc.com/news/articles/cvg34jd8p2go?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Woman Pleads Guilty in $30 Million Scheme Selling Political Access and Fake Residency</h2>
+          <div class="timestamp">2025-07-30 15:43:51 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A New York woman, Sherry Xue Li, has pleaded guilty to orchestrating a $30 million investment fraud that deceived foreign nationals, many from China, for nearly a decade. The scheme involved soliciting investments for a fictitious education center with false promises of securing U.S. permanent residency. As part of the scam, Li and her co-conspirator also charged foreign nationals $93,000 each for access to a 2017 fundraiser, where they took photos with then-President Trump. These photos were then used to further solicit investments, while the funds were illegally funneled to a political committee.</p>
+          <p>40/100</p>
+          <a href="https://www.cnbc.com/2025/07/30/guilty-trump-fundraiser-investment-fraud-new-york.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Explainer Details How Gaza's Humanitarian Crisis Escalated to 'Worst-Case Scenario'</h2>
           <div class="timestamp">2025-07-30 15:40:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>International aid organizations report that the Gaza Strip is experiencing a severe hunger crisis, with predictions that the entire population will soon face acute food insecurity. The situation has rapidly worsened, with a significant rise in malnutrition-related deaths, particularly among children, despite Israeli claims to the contrary. While some aid is entering through limited humanitarian pauses and a new US-Israeli-backed foundation, critics argue these measures are dangerously insufficient and inefficient. Experts stress that only an end to the war and the unimpeded flow of aid through established UN channels can avert a full-scale famine.</p>
-          <p>5/100</p>
+          <p>A detailed analysis explains the severe intensification of Gaza's hunger crisis, which humanitarian groups now describe as a famine scenario affecting the entire population. The situation worsened dramatically after a ceasefire ended in March, leading Israel to cut off all aid for two months. Although some aid has resumed, distribution is chaotic and insufficient, hampered by competing UN and a new US/Israeli-backed system, creating dangerous conditions for desperate civilians. The article notes that while Israel denies a policy of starvation, international pressure is mounting as evidence of malnutrition and hunger-related deaths becomes undeniable.</p>
+          <p>10/100</p>
           <a href="https://www.vox.com/world-politics/421741/gaza-hunger-crisis-aid-israel-starvation" target="_blank"><span class="news-org">Vox</span></a>
         </div>
       </div>
@@ -108,7 +188,7 @@
           <div class="timestamp">2025-07-30 15:38:37 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Former Vice President Kamala Harris has officially announced she will not be a candidate for governor of California in the upcoming election. In a statement, she mentioned a period of deep reflection led to her decision, stating her public service will continue outside of elected office for now. This move clears a potential frontrunner from the race to succeed Governor Gavin Newsom and keeps open the possibility of another presidential campaign in 2028. Harris also hinted at a need for new methods and thinking within the Democratic party following her 2024 election loss.</p>
+          <p>Former Vice President Kamala Harris has announced she will not be a candidate for governor of California in the 2026 election. In a statement, the Democrat said that after careful reflection, she has decided her public service will not be in elected office for now, leaving the door open for a potential 2028 presidential run. Her decision removes a potential frontrunner from the race to succeed Governor Gavin Newsom in a state dominated by Democratic politics. Harris also commented on the need for new methods and fresh thinking within her party to address current challenges.</p>
           <p>60/100</p>
           <a href="https://www.bbc.com/news/articles/czd05mzp874o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -117,12 +197,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Justice Department Reveals Epstein Grand Jury Transcripts Contain Testimony from Only Two Law Enforcement Witnesses</h2>
+          <h2>Justice Department Reveals Only Two Witnesses Testified to Epstein Grand Juries</h2>
           <div class="timestamp">2025-07-30 15:38:28 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The Department of Justice has disclosed in a court filing that the grand jury transcripts from the Jeffrey Epstein and Ghislaine Maxwell investigations contain testimony from only two witnesses: an FBI agent and an NYPD detective. This revelation comes as the DOJ, under direction from the Trump administration, seeks to unseal the records to address public interest and speculation. Notably, no alleged victims testified directly before the grand juries that issued the indictments. The department argues that releasing the transcripts would inform the public about the investigation's scope while being sensitive to victims' rights.</p>
-          <p>30/100</p>
+          <p>In a recent court filing, the Department of Justice disclosed that the grand jury transcripts from the Jeffrey Epstein and Ghislaine Maxwell investigations contain testimony from only two witnesses: an FBI agent and an NYPD detective. This revelation comes as the DOJ, directed by the Trump administration, seeks to unseal the records to address public interest and quell political speculation about a supposed "client list." The filing argues that releasing the testimony would not harm victims, most of whom have been notified of the unsealing attempt, and would provide transparency into the government's investigation.</p>
+          <p>45/100</p>
           <a href="https://www.cbsnews.com/news/jeffrey-epstein-grand-jury-transcripts-two-witnesses-justice-department/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -130,11 +210,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Financial Experts Suggest Debt Relief Strategies as Federal Reserve Maintains Interest Rates</h2>
+          <h2>Strategies for Debt Relief Amidst Federal Reserve's Interest Rate Pause</h2>
           <div class="timestamp">2025-07-30 15:37:10 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>With the Federal Reserve deciding to keep its benchmark interest rate paused, borrowers facing high-interest debt, particularly on credit cards, are unlikely to see relief soon. Financial advisors suggest this is a critical time for individuals to explore debt relief options to regain financial stability. Recommended actions include conducting a thorough budget review to identify savings, understanding the risks and benefits associated with options like debt management programs, and addressing the root causes of debt accumulation. These proactive steps can help borrowers manage their financial health while waiting for potential future rate cuts. (not investment advice)</p>
+          <p>With the Federal Reserve holding interest rates steady, borrowers with high-rate debt, especially on credit cards, face continued financial pressure. This article outlines several proactive steps for managing debt without relying on imminent rate cuts. Recommendations include conducting a thorough budget review to identify savings, understanding the risks associated with various debt relief options like credit counseling or forgiveness, and addressing the root behaviors that led to debt accumulation. The piece emphasizes that while a rate pause is disappointing, it can serve as a catalyst for taking control of one's financial health. (not investment advice)</p>
           <p>65/100</p>
           <a href="https://www.cbsnews.com/news/debt-relief-moves-to-explore-with-interest-rates-on-pause/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -143,12 +223,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Treasury Yields Climb as Federal Reserve Holds Rates and Cites Inflation Concerns Over Tariffs</h2>
+          <h2>Treasury Yields Climb as Fed Chair Signals Inflation Concerns Over Tariffs</h2>
           <div class="timestamp">2025-07-30 15:35:07 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>U.S. Treasury yields increased following the Federal Reserve's decision to maintain its current interest rates and a report showing stronger-than-expected economic growth in the second quarter. The Fed's rate-setting committee, the FOMC, voted 9-2 to hold the rate, with the two dissenting members favoring a cut. Fed Chair Jerome Powell stated that policymakers will monitor the inflationary impact of tariffs before making future decisions, emphasizing no commitments have been made for the next meeting in September. The economic data and the Fed's cautious stance contributed to the upward movement in bond yields. (not investment advice)</p>
-          <p>55/100</p>
+          <p>U.S. Treasury yields rose following the Federal Reserve's decision to maintain its current interest rate, a move that came alongside a stronger-than-expected GDP growth report for the second quarter. The 10-year Treasury yield increased by 4 basis points after Fed Chair Jerome Powell indicated that policymakers are monitoring the potential for new tariffs to cause "serious inflation." Powell stated that no decisions have been made for the next meeting in September, as the committee will first review two more months of inflation and labor data before considering any rate adjustments. (not investment advice)</p>
+          <p>45/100</p>
           <a href="https://www.cnbc.com/2025/07/30/us-treasury-yields-investors-await-fed-rate-decision-.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -156,12 +236,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Major 8.8 Magnitude Earthquake Off Russian Coast Triggers Widespread Tsunami Alerts Across Pacific</h2>
+          <h2>Massive Russian Earthquake Triggers Widespread but Manageable Tsunami Alerts</h2>
           <div class="timestamp">2025-07-30 15:33:16 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>An extremely powerful 8.8 magnitude earthquake struck off the coast of Russia's Kamchatka Peninsula, generating tsunami waves and prompting evacuation orders across the Pacific, including Hawaii, the U.S. West Coast, and Japan. The quake, one of the strongest ever recorded, caused flooding in Kamchatka with 16-foot waves, though no major damage or severe injuries have been reported so far. Authorities in Hawaii and along the U.S. coast issued warnings and advisories, urging residents to move to higher ground as a precaution. Experts warned that the effects, including strong currents and a series of waves, could persist for some time.</p>
-          <p>20/100</p>
+          <p>An 8.8 magnitude earthquake off Russia's Kamchatka Peninsula triggered tsunami alerts across the Pacific, prompting evacuations in Japan, Hawaii, and along the U.S. West Coast. In Russia, 16-foot waves caused flooding, while Hawaii experienced minor flooding from waves reaching nearly five feet. Most initial tsunami warnings were later downgraded to advisories as the most severe impacts did not materialize. The event caused significant disruption, including jammed roads in Honolulu and beach closures in South America, but resulted in no major damage or grave injuries, with officials expressing relief that the situation was not more catastrophic.</p>
+          <p>55/100</p>
           <a href="https://www.cbsnews.com/news/tsunami-wave-hawaii-8-8-earthquake-russia/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -169,38 +249,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. Imposes Sanctions on Brazilian Supreme Court Justice Overseeing Bolsonaro Investigation</h2>
-          <div class="timestamp">2025-07-30 15:32:26 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The U.S. Treasury Department has sanctioned Brazilian Supreme Court Justice Alexandre de Moraes, who is presiding over the case against former President Jair Bolsonaro. The Trump administration accuses de Moraes of human rights violations, censorship, and conducting a politically motivated "witch hunt" against political opponents. In a related action, President Trump imposed 50% tariffs on Brazilian imports, citing the judge's actions as a threat to U.S. interests and democratic values. This move escalates tensions between the U.S. and Brazil's current government, with the administration defending its ally Bolsonaro.</p>
-          <p>25/100</p>
-          <a href="https://www.cbsnews.com/news/us-sanctions-brazilian-alexandre-de-moraes-judge-jair-bolsonaro/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Bipartisan Push Advances Bill to Ban Stock Trading for Members of Congress and Top Executive Officials</h2>
-          <div class="timestamp">2025-07-30 15:31:37 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A bill aimed at banning members of Congress, their spouses, the president, and the vice president from trading individual stocks has successfully passed through a Senate committee. The legislation, championed by Republican Senator Josh Hawley, received bipartisan support from Democrats on the panel, moving it to the Senate floor for a full vote. The Honest Act, as it is now called, would require officials to divest from individual stocks, allowing investments only in diversified funds or Treasury bonds. President Trump expressed conceptual support for a congressional ban but did not endorse this specific bill, which would not apply to the executive branch until after his term.</p>
-          <p>70/100</p>
-          <a href="https://www.foxnews.com/politics/congressional-stock-trading-ban-passes-committee-hawley-rejects-reports-white-house-push-back" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Virginia City Councilman Hospitalized After Being Intentionally Set on Fire</h2>
+          <h2>Virginia City Councilman Hospitalized After Being Set on Fire</h2>
           <div class="timestamp">2025-07-30 15:30:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Lee Vogler, a city council member in Danville, Virginia, was seriously injured after a man attacked him by dousing him with a flammable liquid and setting him on fire. The assault occurred at the office of a local magazine where Vogler works. Police have arrested a suspect and stated that the attack is believed to stem from a personal dispute and is not related to Vogler's political position. Vogler was transported to a burn center for treatment but was reported to be awake and talking following the incident.</p>
-          <p>10/100</p>
+          <p>Lee Vogler, a city council member in Danville, Virginia, was intentionally set on fire in a targeted attack that police believe stemmed from a personal matter, not his political work. The suspect allegedly entered the office of a local magazine where Vogler works, doused him with a flammable liquid, and then ignited him outside the building. Vogler was reported to be awake and talking while being transported to a burn center. The 29-year-old suspect is in police custody, and charges are pending in connection with the violent assault.</p>
+          <p>15/100</p>
           <a href="https://www.cbsnews.com/news/lee-vogler-danville-virginia-city-councilman-set-on-fire/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -208,12 +262,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Freed British-Israeli Hostage Criticizes UK Prime Minister's Plan for Palestinian Statehood</h2>
+          <h2>Freed British-Israeli Hostage Criticizes UK Plan to Recognize Palestinian State</h2>
           <div class="timestamp">2025-07-30 15:22:56 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Emily Damari, a British-Israeli woman who was held hostage by Hamas, has publicly criticized UK Prime Minister Keir Starmer's plan to recognize a Palestinian state. Damari argued that such a move risks rewarding terrorism and sends a dangerous message that violence can lead to political legitimacy. Her statement echoes concerns from lawyers representing other hostage families, who fear the UK's policy could disincentivize Hamas from releasing the remaining hostages. The UK government's proposal is a response to the "intolerable situation" in Gaza, but critics argue it undermines efforts to secure the hostages' freedom.</p>
-          <p>20/100</p>
+          <p>A former hostage, Emily Damari, who was held by Hamas for over 15 months, has publicly criticized UK Prime Minister Keir Starmer's plan to recognize a Palestinian state. Damari argued the move "risks rewarding terror" and sends a dangerous message that violence earns legitimacy, potentially prolonging the conflict. Her statement echoes concerns from lawyers representing other British hostage families, who fear the policy could disincentivize Hamas from agreeing to a ceasefire and releasing the remaining hostages. The UK government's proposal is conditional, tied to a ceasefire agreement and Hamas disarming.</p>
+          <p>25/100</p>
           <a href="https://www.bbc.com/news/articles/c336e2ren2no?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -221,11 +275,24 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Trump Administration Imposes 50% Universal Tariff on Copper Imports, Causing Prices to Plunge</h2>
+          <h2>US Sanctions Brazilian Supreme Court Judge Investigating Jair Bolsonaro</h2>
+          <div class="timestamp">2025-07-30 15:21:44 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The United States has imposed sanctions on Brazilian Supreme Court Justice Alexandre de Moraes, who is overseeing a case against former President Jair Bolsonaro. U.S. officials accused the judge of human rights abuses, arbitrary detentions, and suppressing free expression in a politically motivated campaign against Bolsonaro and his allies. Shortly after the announcement, President Trump enacted a 50% tariff on Brazilian goods, escalating tensions between the two nations. The sanctions and tariffs follow Trump's public defense of Bolsonaro, whom he considers the subject of a "witch hunt."</p>
+          <p>25/100</p>
+          <a href="https://www.bbc.com/news/articles/crlzn72eg25o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>US Imposes Universal 50% Tariff on Copper, Triggering Market Plunge</h2>
           <div class="timestamp">2025-07-30 15:19:14 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump has signed an executive order placing a universal 50% tariff on all copper imports, effective immediately. The White House stated the move is intended to bolster domestic industries and correct trade imbalances, following similar tariffs on steel and aluminum. The announcement triggered a sharp sell-off in the market, with U.S. copper prices falling as much as 18% in after-hours trading, marking the metal's largest potential single-day drop since 1989. This new tariff is expected to increase costs for a wide range of products, from construction materials to electronics, that rely on the metal. (not investment advice)</p>
+          <p>The Trump administration has announced a new universal 50% tariff on all copper imports, set to take effect immediately. The move, aimed at protecting domestic industries, caused U.S. copper prices to plummet by as much as 18% in after-hours trading, marking the metal's most significant single-day drop since 1989. This action follows similar steep tariffs on steel and aluminum and is part of a broader strategy targeting various imports. Experts warn that the tariff on copper, a crucial metal in construction and electronics, could lead to increased consumer prices. (not investment advice)</p>
           <p>30/100</p>
           <a href="https://www.cnbc.com/2025/07/30/trump-copper-tariff-trade.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
@@ -234,12 +301,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Analysts Weigh In on Danaher's Stock Rally Following Positive Earnings Report</h2>
+          <h2>Analysts Question Sustainability of Danaher Stock Rally After Earnings Beat</h2>
           <div class="timestamp">2025-07-30 15:17:56 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Life sciences company Danaher has seen its stock price rise following a better-than-expected second-quarter earnings report, prompting questions about the rally's sustainability. The company has faced headwinds from a slow recovery in China, post-pandemic order adjustments, and U.S. tariff policies. While Danaher raised its full-year earnings guidance and showed improvement in its bioprocessing segment, challenges remain, particularly with declining sales in China due to procurement policy changes. Analysts suggest that while the quarter was a positive step, a sustained rally for the sector may still be a couple of quarters away. (not investment advice)</p>
-          <p>60/100</p>
+          <p>Life sciences company Danaher has seen its stock rise 10% following a better-than-expected second-quarter earnings report and an increased full-year forecast. However, analysts remain cautious about whether this rally is sustainable, pointing to persistent headwinds like the slow economic recovery in China and the impact of U.S. tariffs. While the company's bioprocessing segment showed improvement, sales in China, a key market, declined. An RBC analyst suggests a sustained rally for the sector is unlikely until it returns to mid-single-digit revenue growth, which may still be a couple of quarters away. (not investment advice)</p>
+          <p>55/100</p>
           <a href="https://www.cnbc.com/2025/07/30/is-the-post-earnings-rally-in-this-struggling-life-sciences-stock-for-real-this-time.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -247,12 +314,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Former NBA Star Gilbert Arenas Indicted in Connection with Illegal High-Stakes Poker Operation</h2>
+          <h2>Divided Federal Reserve Holds Interest Rates Steady Despite Political Pressure</h2>
+          <div class="timestamp">2025-07-30 15:16:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The Federal Reserve's Open Market Committee voted 9-2 to keep its benchmark interest rate unchanged, maintaining the target range between 4.25% and 4.5%. The decision defied persistent public pressure from President Trump for rate cuts and was marked by a rare dissent from two Fed governors, who favored an immediate reduction. In his press conference, Fed Chair Jerome Powell emphasized that the committee has not decided on a potential September cut, stating they will first assess upcoming data and the inflationary impact of tariffs. The post-meeting statement noted that economic growth had moderated.</p>
+          <p>50/100</p>
+          <a href="https://www.cnbc.com/2025/07/30/fed-leaves-interest-rates-unchanged-as-expected.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Former NBA Star Gilbert Arenas Charged in Connection with Illegal Poker Ring</h2>
           <div class="timestamp">2025-07-30 15:16:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Former NBA All-Star Gilbert Arenas has been federally indicted for his alleged role in an illegal high-stakes poker ring operated from a Los Angeles mansion he owned. Prosecutors accuse Arenas and five other defendants, including a suspected member of an Israeli organized crime group, of running the illicit gambling business between 2021 and 2022. The operation allegedly featured armed guards, chefs, and women who provided companionship for tips. Arenas faces charges of conspiracy, operating an illegal gambling business, and making false statements to federal investigators, with each count carrying a potential five-year prison sentence.</p>
-          <p>35/100</p>
+          <p>Former NBA All-Star Gilbert Arenas has been indicted on federal charges for his alleged role in a high-stakes, illegal gambling operation run from a Los Angeles mansion he owned. Prosecutors claim the poker games featured armed guards, chefs, and women who provided companionship, with Arenas instructing an associate to manage the events. Arenas and five other defendants, including a suspected member of an Israeli organized crime group, face charges of operating an illegal gambling business. Arenas is also charged with making false statements to federal investigators during the probe.</p>
+          <p>40/100</p>
           <a href="https://www.theguardian.com/sport/2025/jul/30/gilbert-arenas-indicted-illegal-poker-ring-los-angeles" target="_blank"><span class="news-org">The Guardian</span></a>
         </div>
       </div>
@@ -260,25 +340,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>White House Ends 'De Minimis' Exemption Globally, Imposing Duties on Low-Value Imports</h2>
-          <div class="timestamp">2025-07-30 15:13:30 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Trump administration has signed an executive order to eliminate the "de minimis" trade exemption for all countries, which previously allowed shipments valued at $800 or less to enter the U.S. duty-free. This move, effective August 29, expands a similar ban already placed on goods from China and Hong Kong. The White House argues the loophole was exploited by online retailers like Temu and Shein to evade tariffs and facilitated the entry of illicit substances. The change means all low-value parcels will now be subject to tariffs, a decision expected to significantly impact e-commerce and international shipping.</p>
-          <p>40/100</p>
-          <a href="https://www.cnbc.com/2025/07/30/trump-de-minimis-shipping.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Annual Tarantula Mating Season to Increase Spider Sightings in Several U.S. States</h2>
+          <h2>Tarantula Mating Season to Increase Sightings Across Several US States</h2>
           <div class="timestamp">2025-07-30 15:08:15 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Residents in states including California, Colorado, Texas, New Mexico, and Kansas should prepare for an increase in tarantula sightings as the spiders' annual mating season begins. From late evening to early dawn during September and October, thousands of male tarantulas, which can reach the size of a baseball, will emerge to search for mates. These spiders are generally secretive and timid, rarely biting humans unless provoked. Experts advise that if a tarantula is spotted, it's best to observe it from a distance, as they play a role in the ecosystem by controlling insect populations.</p>
-          <p>75/100</p>
+          <p>Wildlife experts anticipate a surge in tarantula sightings across states like California, Colorado, Texas, New Mexico, and Kansas as the spiders' mating season begins. During September and October, tens of thousands of male tarantulas, which can live for a decade before maturing, embark on a search for females. These large, hairy arachnids are generally secretive and timid, rarely biting unless provoked. The National Park Service advises that if a tarantula is spotted, it's an opportunity to observe the typically gentle creature's behavior from a safe distance.</p>
+          <p>70/100</p>
           <a href="https://www.cbsnews.com/news/tarantula-mating-season-states-prevalent/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -290,7 +357,7 @@
           <div class="timestamp">2025-07-30 15:06:23 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Donald Trump has stated that trade talks with China are "moving along well" and expressed confidence that the two nations will achieve a "very fair deal." He offered no specific details on the progress or a timeline for a potential agreement to pause or roll back tariffs. This optimistic comment comes amid ongoing economic friction, with recent data showing a 24% year-on-year decline in Chinese exports to the U.S. in the second quarter of 2025. Negotiators from both countries have described recent discussions as "constructive," but they have publicly diverged on the timing of any potential tariff pause.</p>
+          <p>President Donald Trump stated that trade talks with China regarding tariffs are "moving along well" and expressed confidence that a "very fair deal" will be reached between the two nations. Speaking at the White House, he provided no specific details about the long-negotiated agreement but maintained a positive outlook on the discussions. This update comes as recent data showed a significant 24% year-on-year decline in China's exports to the U.S. for the second quarter of 2025. Negotiators from both countries recently described their talks as "constructive" but offered different timelines for a potential pause in tariffs.</p>
           <p>65/100</p>
           <a href="https://www.scmp.com/news/china/diplomacy/article/3320196/trump-says-tariffs-talks-china-moving-along-well?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
@@ -299,11 +366,24 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China and Russia to Conduct Joint Naval Exercises in the Pacific in August</h2>
+          <h2>Bipartisan Senate Committee Vote Advances Congressional Stock Trading Ban</h2>
+          <div class="timestamp">2025-07-30 15:06:20 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A Senate committee has advanced legislation to ban members of Congress and their spouses from owning or trading individual stocks. Republican Senator Josh Hawley joined all Democrats on the Homeland Security and Governmental Affairs Committee in an 8-7 vote to move the bill forward, while all other Republican members voted against it. The proposed PELOSI Act is more restrictive than the existing STOCK Act and would require lawmakers to sell their stocks within 180 days. The vote sparked a heated exchange, with some Republicans defending the wealth of members and others insisting blind trusts are sufficient.</p>
+          <p>55/100</p>
+          <a href="https://www.cbsnews.com/news/hawley-democrats-vote-stock-trading-ban-committee/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>China and Russia to Conduct Joint Naval Exercise in the Pacific</h2>
           <div class="timestamp">2025-07-30 15:03:59 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>China's National Defence Ministry has announced that it will hold joint naval exercises, named "Joint Sea 2025," with Russia in August. The drills will take place in the sea and airspace near Vladivostok, Russia, on the Sea of Japan. Following the exercise, some naval forces will participate in a joint maritime patrol in the Pacific Ocean. A ministry spokesperson stated the exercises are part of an annual cooperation plan and are not targeted at any third party or related to current regional situations, despite coinciding with a large-scale U.S.-led military exercise in the same region.</p>
+          <p>China's National Defence Ministry has announced that it will hold a joint naval exercise with Russia, named "Joint Sea 2025," in the sea and airspace near Vladivostok, Russia this August. Following the drill, some participating forces will conduct the sixth joint maritime patrol in designated areas of the Pacific Ocean. A ministry spokesperson stated the exercise is part of a planned annual cooperation, is not targeted at any third party, and is unrelated to current global events. The announcement coincides with a large-scale U.S.-led combat exercise, "Resolute Force Pacific 2025," also taking place in the region.</p>
           <p>40/100</p>
           <a href="https://www.scmp.com/news/china/military/article/3320195/china-announces-joint-naval-exercise-russia-pacific-august?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
@@ -312,12 +392,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Palo Alto Networks to Acquire CyberArk in $25 Billion Deal to Enter Identity Security Market</h2>
+          <h2>Palo Alto Networks to Acquire CyberArk in $25 Billion Identity Security Deal</h2>
           <div class="timestamp">2025-07-30 15:03:28 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Cybersecurity giant Palo Alto Networks has announced its intention to acquire identity security provider CyberArk for approximately $25 billion. The deal, which involves a mix of cash and stock, will mark Palo Alto's significant entry into the identity security market, a critical area for protecting businesses against advanced cyber threats. Palo Alto's CEO, Nikesh Arora, stated the acquisition is timed for an inflection point in the market, driven by the rise of AI. The move is one of the largest in the cybersecurity sector this year and is expected to accelerate the reach of CyberArk's platform through Palo Alto's scale. (not investment advice)</p>
-          <p>70/100</p>
+          <p>Cybersecurity giant Palo Alto Networks has announced it will acquire identity security provider CyberArk for approximately $25 billion in a cash-and-stock deal. The acquisition marks Palo Alto's official entry into the identity security market, a sector that has become increasingly critical with the rise of AI-driven cyber threats. CEO Nikesh Arora stated the company is entering the market at a key inflection point and that Palo Alto's scale will accelerate CyberArk's platform reach. The news follows a trend of major consolidation in the cybersecurity industry this year. (not investment advice)</p>
+          <p>65/100</p>
           <a href="https://www.cnbc.com/2025/07/30/palo-alto-networks-cyberark-deal.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -325,12 +405,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. and India Successfully Launch Joint Earth-Mapping Satellite</h2>
+          <h2>US and India Successfully Launch Joint Earth-Observing Satellite</h2>
           <div class="timestamp">2025-07-30 15:02:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>NASA and the Indian Space Research Organisation (ISRO) have jointly launched the NISAR satellite, a sophisticated Earth-observing mission designed to track minute changes in the planet's surface. The $1.3 billion mission aims to provide unprecedented data on natural and manmade disasters like earthquakes, floods, and melting glaciers. Orbiting from pole to pole, NISAR will use two different radar frequencies to create detailed maps of the Earth's surface every 12 days, regardless of weather conditions. This launch represents the largest space collaboration between the U.S. and India, with its data intended to benefit the entire global scientific community.</p>
-          <p>95/100</p>
+          <p>NASA and the Indian Space Research Organisation (ISRO) have successfully launched the NASA-ISRO Synthetic Aperture Radar (NISAR) satellite, a joint mission to map the Earth's surface in unprecedented detail. The $1.3 billion satellite will orbit the planet twice every 12 days for three years, using two different radar frequencies to track minute changes in land, ice, and vegetation. This data will help scientists better understand the causes of natural disasters like earthquakes, volcanoes, and floods. The mission represents the largest space collaboration to date between the United States and India.</p>
+          <p>85/100</p>
           <a href="https://www.dw.com/en/us-india-launch-first-of-its-kind-satellite-to-track-earth-s-surface/a-73473854?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -338,25 +418,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Tsunami Alerts Downgraded Across Pacific Following Powerful Russian Earthquake</h2>
-          <div class="timestamp">2025-07-30 15:00:01 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Tsunami alerts that were issued across the Pacific have been largely scaled back after an 8.8 magnitude earthquake struck off Russia's Kamchatka Peninsula. The powerful quake initially prompted evacuation orders for over two million people in Japan, Russia, and Hawaii, but the resulting waves were less destructive than feared. Hawaii experienced waves up to 1.7 meters, and some minor flooding was reported, but the warning was later downgraded to an advisory. While some coastal areas in California and Russia saw notable surges, no severe damage or injuries were reported, and most residents were cleared to return home.</p>
-          <p>70/100</p>
-          <a href="https://www.bbc.com/news/articles/c987dwrdl0zo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Advanced DNA Testing Fails to Identify Suspect in 1991 Austin Yogurt Shop Murders</h2>
+          <h2>New DNA Evidence Offers Hope in Unsolved 1991 Yogurt Shop Murders</h2>
           <div class="timestamp">2025-07-30 14:58:59 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A promising lead in the unsolved 1991 Austin yogurt shop murders has ended in disappointment after advanced DNA testing. Investigators had hoped that a male DNA profile found on one of the four teenage victims would finally identify a suspect. An initial search of a public database yielded a potential match, but more detailed testing later revealed it was not a match after all. The case, which saw two men wrongfully convicted and later released, remains cold. Officials, including Congressman Michael McCaul, say they will hold onto the limited remaining DNA evidence, hoping future scientific advancements will finally solve the decades-old crime.</p>
-          <p>20/100</p>
+          <p>There is renewed hope for solving the infamous 1991 murders of four teenage girls in an Austin, Texas, yogurt shop, thanks to advances in DNA technology. The case, which saw two men convicted and later released after their confessions were questioned, has been cold for years. A key piece of evidence is an unidentified male DNA profile found on one of the victims. Although a potential database match in 2017 proved to be a false lead after further testing, investigators believe that as DNA science improves, the small remaining sample could finally identify the person responsible for the brutal crime.</p>
+          <p>50/100</p>
           <a href="https://www.cbsnews.com/news/yogurt-shop-murder-case-dna-sample-austin-texas/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -364,12 +431,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Trump Advocates for Eliminating Senate 'Blue Slip' Tradition to Appoint Loyalists as Federal Prosecutors</h2>
+          <h2>Trump's Plan to End 'Blue Slip' Tradition for Federal Prosecutor Appointments Explained</h2>
           <div class="timestamp">2025-07-30 14:55:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump is calling for an end to the Senate's "blue slip" tradition, which allows home-state senators to effectively veto presidential nominees for federal judges and U.S. attorneys in their states. The push follows the expiration of the temporary appointment of his former lawyer, Alina Habba, as a U.S. Attorney in New Jersey, a nomination blocked by the state's Democratic senators. Eliminating this practice would enable the president to install loyalist prosecutors and judges in states with opposing senators. Critics warn this could lead to politically motivated investigations and trials, undermining judicial independence.</p>
-          <p>20/100</p>
+          <p>President Trump is calling for an end to the Senate's 'blue slip' tradition, which allows home-state senators to effectively veto presidential nominees for federal district judge and U.S. attorney positions within their state. The move is prompted by Democratic senators from New Jersey blocking the permanent appointment of his former lawyer, Alina Habba, as U.S. Attorney. During her temporary appointment, Habba pursued controversial investigations into prominent Democrats. Eliminating the blue slip could allow Trump to install loyalist prosecutors and judges in blue states, raising concerns about politically motivated prosecutions.</p>
+          <p>30/100</p>
           <a href="https://www.vox.com/donald-trump/421712/trump-alina-habba-blue-slip-us-attorney-judges" target="_blank"><span class="news-org">Vox</span></a>
         </div>
       </div>
@@ -377,12 +444,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Humanitarian Organizations Condemn Gaza Airdrops as Ineffective and 'Cynical'</h2>
+          <h2>Aid Groups Criticize Gaza Airdrops as Ineffective and 'Futile'</h2>
           <div class="timestamp">2025-07-30 14:54:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>International aid organizations, including Doctors Without Borders and the UN World Food Programme, are criticizing recent airdrops of humanitarian aid into Gaza as a "futile" and "cynical" gesture. With experts warning that a famine is actively unfolding, these groups argue that airdrops are notoriously inefficient, expensive, and dangerous, often failing to reach the most vulnerable people. They stress that the only effective solution is for Israel to open land crossings for unhindered access, allowing hundreds of aid trucks to enter daily. Critics point out that the airdrops provide a fraction of the needed supplies and serve as a symbolic distraction.</p>
-          <p>10/100</p>
+          <p>As UN-backed experts warn that a famine is unfolding in Gaza, international aid organizations are strongly criticizing the use of airdrops to deliver assistance. Groups like Doctors Without Borders and the Center for Humanitarian Action have labeled the airdrops by Jordan, the UAE, and others as "futile," "cynical," and "notoriously ineffective." They argue that airdrops are expensive, dangerous, and fail to reach the most vulnerable populations. Instead, they are calling on Israel to open land crossings for unhindered access, stating that hundreds of aid trucks are needed daily to address the catastrophic humanitarian crisis.</p>
+          <p>15/100</p>
           <a href="https://www.dw.com/en/airdrops-for-gaza-smack-of-cynicism-and-are-futile-say-ngos/a-73472977?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -390,12 +457,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Central African Republic's President Nominated for Third Term Amid Opposition Concerns</h2>
+          <h2>Central African Republic President Nominated for Third Term Amid Controversy</h2>
           <div class="timestamp">2025-07-30 14:51:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The ruling party in the Central African Republic (CAR) has nominated President Faustin-Archange Touadera for a third term, raising concerns among opposition and civil society groups. This follows a controversial 2023 referendum that abolished the two-term limit and extended the presidential mandate from five to seven years. The opposition, which boycotted the referendum, alleges fraud and fears the move could allow Touadera to remain in power for life. Amid persistent civil conflict and questions about the integrity of the upcoming 2025 elections, opposition leaders are demanding a national dialogue before proceeding with the electoral process.</p>
-          <p>20/100</p>
+          <p>President Faustin-Archange Touadera of the Central African Republic has been nominated by his party to run for a third term, a move made possible by a controversial 2023 constitutional referendum. The referendum, which the opposition boycotted and alleges was fraudulent, abolished the two-term limit and extended the presidential mandate from five to seven years. Opposition parties and civil society groups fear the changes could allow Touadera to remain in power for life and are demanding a national dialogue before the 2025 elections, citing concerns about the integrity of the electoral process.</p>
+          <p>30/100</p>
           <a href="https://www.dw.com/en/central-african-republic-s-president-eyes-third-term/a-73448644?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -403,38 +470,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Investigation into Deadly Midtown Manhattan Office Shooting Reveals Gunman's Note</h2>
-          <div class="timestamp">2025-07-30 14:46:03 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A gunman killed four people, including an NYPD officer, before taking his own life in a shooting at a Midtown Manhattan office building. The suspect, identified as Shane D. Tamura, left a note suggesting he believed he had CTE and appeared to blame the National Football League, which has offices in the building. Investigators believe he intended to target the NFL but went to the wrong floor. The victims included the officer, a security guard, and employees from two different firms in the building. The investigation is ongoing, examining the shooter's mental health history and how he acquired the high-powered rifle used in the attack.</p>
-          <p>5/100</p>
-          <a href="https://www.cbsnews.com/news/nyc-shooting-gunman-note-victims-investigation/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>High Noon Recalls Vodka Seltzer Packs After Some Cans Were Mislabeled as Non-Alcoholic Celsius Energy Drinks</h2>
-          <div class="timestamp">2025-07-30 14:26:01 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>High Noon is recalling two lots of its Beach Variety 12-packs of vodka seltzer due to a packaging error that resulted in some cans being mislabeled as Celsius energy drinks. The recall was initiated after a supplier mistakenly shipped empty Celsius cans to a High Noon facility, leading to the potential for unintended alcohol consumption. The affected products were distributed to several states, including Florida, New York, and Wisconsin. The FDA announcement advises consumers to dispose of any affected cans, which can be identified by lot codes and a silver lid instead of the usual black one.</p>
-          <p>50/100</p>
-          <a href="https://www.cbsnews.com/news/high-noon-recalls-vodka-seltzer-mislabeled-celsius-energy-drinks/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>German Town Council Orders Demolition of Nearly Completed Mosque</h2>
+          <h2>German Town Orders Demolition of Nearly Completed Mosque</h2>
           <div class="timestamp">2025-07-30 14:23:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The city council of Leinfelden-Echterdingen, a town near Stuttgart, Germany, has ordered the demolition of a mosque that is nearly finished. The decision stems from a contractual dispute with the Cologne-based Islamic association (VIKZ) that built it. The association was granted a building permit in 2014 but failed to complete construction within the contractually obligated four-year period. After a lengthy legal battle that went to Germany's highest court, the town revoked the permit and has now ordered the building to be torn down, a demand the Islamic association says it will not follow.</p>
-          <p>25/100</p>
+          <p>The city council of Leinfelden-Echterdingen, a town near Stuttgart, Germany, has ordered the demolition of a nearly finished mosque. The decision was based on a contract violation by the Cologne-based Islamic association (VIKZ) that built it. The original 2014 building permit stipulated that construction had to be completed within four years, a deadline the association failed to meet. After a legal battle that went to Germany's highest court, the town revoked the permit. While the council has offered to help find an alternative site, VIKZ has stated it will not comply with the demolition order.</p>
+          <p>35/100</p>
           <a href="https://www.dw.com/en/german-council-orders-demolition-of-mosque-near-stuttgart/a-73474949?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -442,11 +483,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Hamas-Run Ministry Reports Seven More Malnutrition Deaths in Gaza as US Envoy Plans Visit</h2>
+          <h2>Malnutrition Deaths Rise in Gaza as Humanitarian Crisis Worsens</h2>
           <div class="timestamp">2025-07-30 14:21:52 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The health ministry in Gaza has reported that seven more people, including children, have died from malnutrition, bringing the total of such deaths to 154 since the conflict began. This comes as UN-backed experts confirm that a worst-case famine scenario is currently unfolding in the Palestinian territory. In response to the escalating crisis, a U.S. special envoy is scheduled to travel to Israel to hold discussions. Meanwhile, deadly incidents continue to occur near aid distribution sites, with sources reporting Israeli forces fired on crowds, a claim the Israeli military disputes.</p>
+          <p>Gaza's Hamas-run health ministry has reported that seven more people, including children, have died from malnutrition, bringing the total of such deaths to 154 since the conflict began. This comes as UN-backed experts warn that a famine is actively unfolding in the territory, where a dire shortage of food, medicine, and fuel persists. Despite Israel's claims that it does not restrict aid, the UN and other agencies report that deliveries are woefully insufficient, with most aid trucks being looted by desperate crowds before reaching their destinations. At least 600 trucks are needed daily to mitigate the crisis.</p>
           <p>5/100</p>
           <a href="https://www.bbc.com/news/articles/cx2x813jm0zo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -455,12 +496,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Automakers Are Absorbing Billions in Tariff Costs, but Price Hikes for Consumers May Be Coming</h2>
+          <h2>Automakers Absorbing Tariff Costs for Now, but Price Hikes Loom</h2>
           <div class="timestamp">2025-07-30 14:21:21 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Despite facing billions of dollars in costs from tariffs on imported steel, aluminum, and foreign-made vehicles, major automakers have so far avoided passing these expenses on to consumers. Data shows that new car price increases have remained below average, as companies absorb the financial hit to maintain market share and avoid deterring already-stretched buyers. However, companies like GM, Volkswagen, and Stellantis have reported massive tariff-related losses to investors. Analysts predict this situation is temporary and that consumers will likely see higher prices or reduced incentives when 2026 models arrive later this year. (not investment advice)</p>
-          <p>45/100</p>
+          <p>Despite significant costs from tariffs on imported steel, aluminum, and foreign-made vehicles, major automakers have largely avoided passing these expenses on to consumers. Data shows new-vehicle prices have risen less than the historical average, as carmakers absorbed billions in tariff-related costs to maintain sales and market share. However, this strategy is not sustainable under investor pressure. Industry analysts predict that prices will eventually rise, likely with the arrival of 2026 models, through higher sticker prices or less favorable financing deals and cash-back offers. (not investment advice)</p>
+          <p>40/100</p>
           <a href="https://www.npr.org/2025/07/30/nx-s1-5482857/automakers-eating-tariff-costs" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -468,11 +509,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Economic Impact of Immigration Raids Already Being Felt in California, Researchers Say</h2>
+          <h2>Immigration Raids Show Early Negative Impact on California's Economy</h2>
           <div class="timestamp">2025-07-30 14:19:04 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Recent immigration enforcement raids under the Trump administration are already having a measurable negative impact on California's economy. Researchers analyzing census data found a significant drop in the number of people reporting to work when the raids began, a downturn comparable only to the COVID-19 lockdown period. Economists warn that the disruption to the immigrant workforce, which is crucial to sectors like agriculture and construction, could hobble businesses and have ripple effects on the state's GDP. Business leaders and local officials report deserted commercial areas and severe labor shortages, raising concerns about long-term economic damage.</p>
+          <p>Recent immigration enforcement raids in California are already having a measurable negative impact on the state's economy, according to researchers. An analysis of census data showed a significant 3.1% drop in people reporting to work in the private sector when the raids began, a decline comparable to the COVID-19 lockdown period. Economists warn that the disruption to the undocumented workforce, which constitutes 8% of the state's labor and generates nearly 5% of its GDP, could hobble key industries like agriculture and construction, leading to project delays and potential food price increases nationwide.</p>
           <p>20/100</p>
           <a href="https://www.latimes.com/business/story/2025-07-30/people-reporting-to-work-in-private-sector-in-california-down-after-raids-report-says" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
@@ -481,78 +522,13 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>SpaceX to Launch Crew-11 Mission, Including Astronauts Bumped from Previous Flights</h2>
+          <h2>SpaceX to Launch New Crew to Space Station, Including Reassigned Astronaut</h2>
           <div class="timestamp">2025-07-30 14:11:45 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>NASA and SpaceX are preparing to launch the Crew-11 mission to the International Space Station, carrying a crew that includes astronauts reassigned after issues with Boeing's Starliner capsule. Commander Zena Cardman and Japanese astronaut Kimiya Yui were among those moved to this flight. The mission will use a Crew Dragon capsule making its record sixth flight, with liftoff scheduled from Kennedy Space Center. The crew also includes NASA veteran Michael Fincke and Russian cosmonaut Oleg Platonov, continuing a U.S.-Russian seat-swap agreement to ensure continuous representation from both nations aboard the station.</p>
-          <p>90/100</p>
+          <p>NASA and SpaceX are preparing to launch the Crew-11 mission to the International Space Station, with a crew that includes astronauts reassigned after issues with Boeing's Starliner capsule. Commander Zena Cardman was originally slated for a previous mission but was bumped to accommodate the return of Starliner's first crew. She will be joined by NASA veteran Michael Fincke, Japanese astronaut Kimiya Yui, and Russian cosmonaut Oleg Platonov. The mission will utilize the Crew Dragon Endeavour, which is making a record sixth flight, as SpaceX and NASA work to certify the capsules for up to 15 missions.</p>
+          <p>80/100</p>
           <a href="https://www.cbsnews.com/news/spacex-crew-dragon-commander-bumped-from-flight-launching-to-space/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Radioactive Wasp Nest Discovered at Former South Carolina Nuclear Bomb Production Site</h2>
-          <div class="timestamp">2025-07-30 14:11:11 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Workers at the Savannah River Site in South Carolina, a former nuclear weapons production facility, have discovered and removed a radioactive wasp nest. Routine monitoring detected the nest on a post near liquid nuclear waste storage tanks with radiation levels 10 times higher than federal regulations permit. Officials stated there is no leak from the tanks and believe the wasps built the nest using materials with legacy radioactive contamination from the site's operational days. A watchdog group has criticized the official report as incomplete, demanding more information on the source of the contamination.</p>
-          <p>35/100</p>
-          <a href="https://www.cbsnews.com/news/radioactive-wasp-nest-savannah-river-south-carolina-nuclear-bombs-site/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Article Outlines Qualifications for Credit Card Debt Forgiveness Programs</h2>
-          <div class="timestamp">2025-07-30 14:05:50 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>As Americans struggle with record-high credit card balances, credit card debt forgiveness programs can offer a path to relief by reducing the total amount owed. However, not everyone is eligible for these programs. The article explains that the strongest candidates are typically those facing genuine financial hardship, such as job loss or major medical expenses, which they can document. Borrowers with significant amounts of unsecured debt (often over $10,000) and those who have already fallen behind on payments are also more likely to successfully negotiate a settlement with creditors.</p>
-          <p>65/100</p>
-          <a href="https://www.cbsnews.com/news/who-qualifies-for-credit-card-debt-forgiveness-in-august-2025/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Manned Submersible Voyage Discovers Thriving Ecosystems in Deepest Pacific Ocean Trenches</h2>
-          <div class="timestamp">2025-07-30 14:02:29 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A recent underwater expedition has revealed extensive communities of tubeworms and mollusks flourishing more than 31,000 feet deep in the Pacific Ocean's Kuril–Kamchatka and Aleutian trenches. These findings challenge previous assumptions about the limits of life in such extreme, high-pressure environments. Scientists believe these creatures survive not on nutrients trickling down from above, but on chemicals produced by microbes that process carbon accumulated in the trenches over time. The discovery suggests that such complex ecosystems in the deepest parts of the ocean may be more widespread than previously thought.</p>
-          <p>95/100</p>
-          <a href="https://www.cbsnews.com/news/underwater-discovery-deep-sea-trenches/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Federal Reserve's Decision to Hold Interest Rates Keeps Consumer Loan Costs High</h2>
-          <div class="timestamp">2025-07-30 14:01:35 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Federal Reserve's choice to maintain its benchmark interest rate means that borrowing costs for consumers will remain elevated for the foreseeable future. Interest rates for variable-rate credit cards, which are near all-time highs, are directly affected and unlikely to decrease soon. While fixed-rate mortgages are not directly tied to the Fed's rate, uncertainty has kept them in a high range, impacting housing affordability. Similarly, auto loan rates are near record levels, and the high rates on savings accounts, a positive for savers, are also expected to persist as a result of the Fed's decision. (not investment advice)</p>
-          <p>50/100</p>
-          <a href="https://www.cnbc.com/2025/07/30/fed-holds-interest-rates-steady-what-that-means-for-your-money.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>NOAA Confirms Continued Access to Critical Military Weather Satellite Data After Reversal</h2>
-          <div class="timestamp">2025-07-30 13:54:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The National Oceanic and Atmospheric Administration (NOAA) has confirmed it will continue to receive crucial weather data from the military's Defense Meteorological Satellite Program, following a sudden reversal of a previous decision. The Defense Department had raised cybersecurity concerns and planned to cut off access, a move that worried meteorologists, especially with an active hurricane season approaching. The last-minute decision by the Navy's oceanography center ensures that this vital data stream, used for over 50 years in storm tracking and forecasting, will remain available to protect public safety.</p>
-          <p>85/100</p>
-          <a href="https://www.cbsnews.com/news/noaa-weather-satellite-military-data-news/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>

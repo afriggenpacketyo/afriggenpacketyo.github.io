@@ -52,6 +52,45 @@
     /* Card and transition variables remain the same */
   }
 
+  /* =========================
+     1.5. SHIMMER ANIMATION
+     ========================= */
+  .splash-logo-wrapper {
+      display: inline-block; /* Or 'block', depending on layout */
+      position: relative; /* Needed for the ::after pseudo-element positioning */
+  }
+
+  .splash-logo-wrapper.is-loading {
+      overflow: hidden; /* Clips the shimmer, but only when this class is active */
+  }
+
+  .splash-logo-wrapper.is-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 80%);
+    animation: shimmer 1.5s infinite;
+    will-change: transform;
+    pointer-events: none; /* Make sure it doesn't interfere with clicks */
+    z-index: 1;
+  }
+
+  html.dark-mode .splash-logo-wrapper.is-loading::after {
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 80%);
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   /* Now all color, background, and text styles use these variables. */
 
     * {

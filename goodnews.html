@@ -36,8 +36,8 @@
   // --- Critical CSS and Deferred Loading Block ---
   (function() {
     const isMobile = 'ontouchstart' in window;
-    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    width: 90vw; /* Initial large size */    max-width: 500px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0);     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Default/Mobile animation - to the header logo position */  .splash-logo.splash-animate {    /* Current values seem fine for mobile where final logo is ~60px and header is at top */    transform: translateY(-45vh) scale(0.18);     /* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Mobile bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Mobile draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Mobile draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Mobile pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Mobile spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
-    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    /* width: 90vw; Initial large size */    max-width: 1000px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    /* Transition for both mobile and desktop - values will be set by the active class */    transition: transform .6s cubic-bezier(.7,.6,.3,1) 0.1s;     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Desktop animation - targets the .logo-container position */  .splash-logo.splash-animate { /* Override the mobile animation for desktop */    /*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */      /*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */      /*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */    /* Placeholder CSS - JS will override these with calculated values */    transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Desktop bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Desktop draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Desktop draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Desktop pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Desktop spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
+    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
     const styleElement = document.createElement('style');
     styleElement.id = 'critical-splash-styles';
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
@@ -59,21 +59,23 @@
 </head>
 <body class="splash-active">
   <div class="splash-overlay" id="splash-overlay">
-    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+    <div class="splash-logo-wrapper">
+      <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+    </div>
   </div>
   <header class="page-header">
     <div class="header-controls-row">
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Optimistically Reported News 😇</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">07/30/25 03:49 PM EDT (Next: 03:58 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">07/30/25 03:56 PM EDT (Next: 04:05 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Optimistically Reported News 😇</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/30/25 03:49 PM EDT (New news: 03:58 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/30/25 03:56 PM EDT (New news: 04:05 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -91,11 +93,24 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
+          <h2>Current Interest Rates for Home Equity Loans and HELOCs Examined</h2>
+          <div class="timestamp">2025-07-30 15:46:56 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Amid a high-interest climate for personal loans and credit cards, borrowing against home equity has become a more affordable option for homeowners. The article details the current national average interest rates for 5, 10, and 15-year home equity loans and for Home Equity Lines of Credit (HELOCs), which are all significantly lower than other common forms of debt. It also explains the fundamental differences between the two products, such as fixed versus variable rates and lump-sum payouts versus revolving credit lines, while noting the importance of shopping for the best terms. (not investment advice)</p>
+          <p>60/100</p>
+          <a href="https://www.cbsnews.com/news/todays-heloc-and-home-equity-loan-interest-rates/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
           <h2>Kamala Harris Declines to Enter 2026 California Gubernatorial Race</h2>
           <div class="timestamp">2025-07-30 15:38:37 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Former Vice President Kamala Harris has officially announced she will not be a candidate for governor of California in the upcoming election. In a statement, she mentioned a period of deep reflection led to her decision, stating her public service will continue outside of elected office for now. This move clears a potential frontrunner from the race to succeed Governor Gavin Newsom and keeps open the possibility of another presidential campaign in 2028. Harris also hinted at a need for new methods and thinking within the Democratic party following her 2024 election loss.</p>
+          <p>Former Vice President Kamala Harris has announced she will not be a candidate for governor of California in the 2026 election. In a statement, the Democrat said that after careful reflection, she has decided her public service will not be in elected office for now, leaving the door open for a potential 2028 presidential run. Her decision removes a potential frontrunner from the race to succeed Governor Gavin Newsom in a state dominated by Democratic politics. Harris also commented on the need for new methods and fresh thinking within her party to address current challenges.</p>
           <p>60/100</p>
           <a href="https://www.bbc.com/news/articles/czd05mzp874o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -104,11 +119,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Financial Experts Suggest Debt Relief Strategies as Federal Reserve Maintains Interest Rates</h2>
+          <h2>Strategies for Debt Relief Amidst Federal Reserve's Interest Rate Pause</h2>
           <div class="timestamp">2025-07-30 15:37:10 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>With the Federal Reserve deciding to keep its benchmark interest rate paused, borrowers facing high-interest debt, particularly on credit cards, are unlikely to see relief soon. Financial advisors suggest this is a critical time for individuals to explore debt relief options to regain financial stability. Recommended actions include conducting a thorough budget review to identify savings, understanding the risks and benefits associated with options like debt management programs, and addressing the root causes of debt accumulation. These proactive steps can help borrowers manage their financial health while waiting for potential future rate cuts. (not investment advice)</p>
+          <p>With the Federal Reserve holding interest rates steady, borrowers with high-rate debt, especially on credit cards, face continued financial pressure. This article outlines several proactive steps for managing debt without relying on imminent rate cuts. Recommendations include conducting a thorough budget review to identify savings, understanding the risks associated with various debt relief options like credit counseling or forgiveness, and addressing the root behaviors that led to debt accumulation. The piece emphasizes that while a rate pause is disappointing, it can serve as a catalyst for taking control of one's financial health. (not investment advice)</p>
           <p>65/100</p>
           <a href="https://www.cbsnews.com/news/debt-relief-moves-to-explore-with-interest-rates-on-pause/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -117,38 +132,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Treasury Yields Climb as Federal Reserve Holds Rates and Cites Inflation Concerns Over Tariffs</h2>
-          <div class="timestamp">2025-07-30 15:35:07 EDT</div>
+          <h2>Massive Russian Earthquake Triggers Widespread but Manageable Tsunami Alerts</h2>
+          <div class="timestamp">2025-07-30 15:33:16 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>U.S. Treasury yields increased following the Federal Reserve's decision to maintain its current interest rates and a report showing stronger-than-expected economic growth in the second quarter. The Fed's rate-setting committee, the FOMC, voted 9-2 to hold the rate, with the two dissenting members favoring a cut. Fed Chair Jerome Powell stated that policymakers will monitor the inflationary impact of tariffs before making future decisions, emphasizing no commitments have been made for the next meeting in September. The economic data and the Fed's cautious stance contributed to the upward movement in bond yields. (not investment advice)</p>
+          <p>An 8.8 magnitude earthquake off Russia's Kamchatka Peninsula triggered tsunami alerts across the Pacific, prompting evacuations in Japan, Hawaii, and along the U.S. West Coast. In Russia, 16-foot waves caused flooding, while Hawaii experienced minor flooding from waves reaching nearly five feet. Most initial tsunami warnings were later downgraded to advisories as the most severe impacts did not materialize. The event caused significant disruption, including jammed roads in Honolulu and beach closures in South America, but resulted in no major damage or grave injuries, with officials expressing relief that the situation was not more catastrophic.</p>
           <p>55/100</p>
-          <a href="https://www.cnbc.com/2025/07/30/us-treasury-yields-investors-await-fed-rate-decision-.html" target="_blank"><span class="news-org">CNBC</span></a>
+          <a href="https://www.cbsnews.com/news/tsunami-wave-hawaii-8-8-earthquake-russia/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Bipartisan Push Advances Bill to Ban Stock Trading for Members of Congress and Top Executive Officials</h2>
-          <div class="timestamp">2025-07-30 15:31:37 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A bill aimed at banning members of Congress, their spouses, the president, and the vice president from trading individual stocks has successfully passed through a Senate committee. The legislation, championed by Republican Senator Josh Hawley, received bipartisan support from Democrats on the panel, moving it to the Senate floor for a full vote. The Honest Act, as it is now called, would require officials to divest from individual stocks, allowing investments only in diversified funds or Treasury bonds. President Trump expressed conceptual support for a congressional ban but did not endorse this specific bill, which would not apply to the executive branch until after his term.</p>
-          <p>70/100</p>
-          <a href="https://www.foxnews.com/politics/congressional-stock-trading-ban-passes-committee-hawley-rejects-reports-white-house-push-back" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Analysts Weigh In on Danaher's Stock Rally Following Positive Earnings Report</h2>
+          <h2>Analysts Question Sustainability of Danaher Stock Rally After Earnings Beat</h2>
           <div class="timestamp">2025-07-30 15:17:56 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Life sciences company Danaher has seen its stock price rise following a better-than-expected second-quarter earnings report, prompting questions about the rally's sustainability. The company has faced headwinds from a slow recovery in China, post-pandemic order adjustments, and U.S. tariff policies. While Danaher raised its full-year earnings guidance and showed improvement in its bioprocessing segment, challenges remain, particularly with declining sales in China due to procurement policy changes. Analysts suggest that while the quarter was a positive step, a sustained rally for the sector may still be a couple of quarters away. (not investment advice)</p>
-          <p>60/100</p>
+          <p>Life sciences company Danaher has seen its stock rise 10% following a better-than-expected second-quarter earnings report and an increased full-year forecast. However, analysts remain cautious about whether this rally is sustainable, pointing to persistent headwinds like the slow economic recovery in China and the impact of U.S. tariffs. While the company's bioprocessing segment showed improvement, sales in China, a key market, declined. An RBC analyst suggests a sustained rally for the sector is unlikely until it returns to mid-single-digit revenue growth, which may still be a couple of quarters away. (not investment advice)</p>
+          <p>55/100</p>
           <a href="https://www.cnbc.com/2025/07/30/is-the-post-earnings-rally-in-this-struggling-life-sciences-stock-for-real-this-time.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -156,12 +158,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Annual Tarantula Mating Season to Increase Spider Sightings in Several U.S. States</h2>
+          <h2>Tarantula Mating Season to Increase Sightings Across Several US States</h2>
           <div class="timestamp">2025-07-30 15:08:15 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Residents in states including California, Colorado, Texas, New Mexico, and Kansas should prepare for an increase in tarantula sightings as the spiders' annual mating season begins. From late evening to early dawn during September and October, thousands of male tarantulas, which can reach the size of a baseball, will emerge to search for mates. These spiders are generally secretive and timid, rarely biting humans unless provoked. Experts advise that if a tarantula is spotted, it's best to observe it from a distance, as they play a role in the ecosystem by controlling insect populations.</p>
-          <p>75/100</p>
+          <p>Wildlife experts anticipate a surge in tarantula sightings across states like California, Colorado, Texas, New Mexico, and Kansas as the spiders' mating season begins. During September and October, tens of thousands of male tarantulas, which can live for a decade before maturing, embark on a search for females. These large, hairy arachnids are generally secretive and timid, rarely biting unless provoked. The National Park Service advises that if a tarantula is spotted, it's an opportunity to observe the typically gentle creature's behavior from a safe distance.</p>
+          <p>70/100</p>
           <a href="https://www.cbsnews.com/news/tarantula-mating-season-states-prevalent/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -173,7 +175,7 @@
           <div class="timestamp">2025-07-30 15:06:23 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>President Donald Trump has stated that trade talks with China are "moving along well" and expressed confidence that the two nations will achieve a "very fair deal." He offered no specific details on the progress or a timeline for a potential agreement to pause or roll back tariffs. This optimistic comment comes amid ongoing economic friction, with recent data showing a 24% year-on-year decline in Chinese exports to the U.S. in the second quarter of 2025. Negotiators from both countries have described recent discussions as "constructive," but they have publicly diverged on the timing of any potential tariff pause.</p>
+          <p>President Donald Trump stated that trade talks with China regarding tariffs are "moving along well" and expressed confidence that a "very fair deal" will be reached between the two nations. Speaking at the White House, he provided no specific details about the long-negotiated agreement but maintained a positive outlook on the discussions. This update comes as recent data showed a significant 24% year-on-year decline in China's exports to the U.S. for the second quarter of 2025. Negotiators from both countries recently described their talks as "constructive" but offered different timelines for a potential pause in tariffs.</p>
           <p>65/100</p>
           <a href="https://www.scmp.com/news/china/diplomacy/article/3320196/trump-says-tariffs-talks-china-moving-along-well?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
@@ -182,12 +184,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Palo Alto Networks to Acquire CyberArk in $25 Billion Deal to Enter Identity Security Market</h2>
+          <h2>Bipartisan Senate Committee Vote Advances Congressional Stock Trading Ban</h2>
+          <div class="timestamp">2025-07-30 15:06:20 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A Senate committee has advanced legislation to ban members of Congress and their spouses from owning or trading individual stocks. Republican Senator Josh Hawley joined all Democrats on the Homeland Security and Governmental Affairs Committee in an 8-7 vote to move the bill forward, while all other Republican members voted against it. The proposed PELOSI Act is more restrictive than the existing STOCK Act and would require lawmakers to sell their stocks within 180 days. The vote sparked a heated exchange, with some Republicans defending the wealth of members and others insisting blind trusts are sufficient.</p>
+          <p>55/100</p>
+          <a href="https://www.cbsnews.com/news/hawley-democrats-vote-stock-trading-ban-committee/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Palo Alto Networks to Acquire CyberArk in $25 Billion Identity Security Deal</h2>
           <div class="timestamp">2025-07-30 15:03:28 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Cybersecurity giant Palo Alto Networks has announced its intention to acquire identity security provider CyberArk for approximately $25 billion. The deal, which involves a mix of cash and stock, will mark Palo Alto's significant entry into the identity security market, a critical area for protecting businesses against advanced cyber threats. Palo Alto's CEO, Nikesh Arora, stated the acquisition is timed for an inflection point in the market, driven by the rise of AI. The move is one of the largest in the cybersecurity sector this year and is expected to accelerate the reach of CyberArk's platform through Palo Alto's scale. (not investment advice)</p>
-          <p>70/100</p>
+          <p>Cybersecurity giant Palo Alto Networks has announced it will acquire identity security provider CyberArk for approximately $25 billion in a cash-and-stock deal. The acquisition marks Palo Alto's official entry into the identity security market, a sector that has become increasingly critical with the rise of AI-driven cyber threats. CEO Nikesh Arora stated the company is entering the market at a key inflection point and that Palo Alto's scale will accelerate CyberArk's platform reach. The news follows a trend of major consolidation in the cybersecurity industry this year. (not investment advice)</p>
+          <p>65/100</p>
           <a href="https://www.cnbc.com/2025/07/30/palo-alto-networks-cyberark-deal.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -195,12 +210,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>U.S. and India Successfully Launch Joint Earth-Mapping Satellite</h2>
+          <h2>US and India Successfully Launch Joint Earth-Observing Satellite</h2>
           <div class="timestamp">2025-07-30 15:02:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>NASA and the Indian Space Research Organisation (ISRO) have jointly launched the NISAR satellite, a sophisticated Earth-observing mission designed to track minute changes in the planet's surface. The $1.3 billion mission aims to provide unprecedented data on natural and manmade disasters like earthquakes, floods, and melting glaciers. Orbiting from pole to pole, NISAR will use two different radar frequencies to create detailed maps of the Earth's surface every 12 days, regardless of weather conditions. This launch represents the largest space collaboration between the U.S. and India, with its data intended to benefit the entire global scientific community.</p>
-          <p>95/100</p>
+          <p>NASA and the Indian Space Research Organisation (ISRO) have successfully launched the NASA-ISRO Synthetic Aperture Radar (NISAR) satellite, a joint mission to map the Earth's surface in unprecedented detail. The $1.3 billion satellite will orbit the planet twice every 12 days for three years, using two different radar frequencies to track minute changes in land, ice, and vegetation. This data will help scientists better understand the causes of natural disasters like earthquakes, volcanoes, and floods. The mission represents the largest space collaboration to date between the United States and India.</p>
+          <p>85/100</p>
           <a href="https://www.dw.com/en/us-india-launch-first-of-its-kind-satellite-to-track-earth-s-surface/a-73473854?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -208,65 +223,13 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Tsunami Alerts Downgraded Across Pacific Following Powerful Russian Earthquake</h2>
-          <div class="timestamp">2025-07-30 15:00:01 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Tsunami alerts that were issued across the Pacific have been largely scaled back after an 8.8 magnitude earthquake struck off Russia's Kamchatka Peninsula. The powerful quake initially prompted evacuation orders for over two million people in Japan, Russia, and Hawaii, but the resulting waves were less destructive than feared. Hawaii experienced waves up to 1.7 meters, and some minor flooding was reported, but the warning was later downgraded to an advisory. While some coastal areas in California and Russia saw notable surges, no severe damage or injuries were reported, and most residents were cleared to return home.</p>
-          <p>70/100</p>
-          <a href="https://www.bbc.com/news/articles/c987dwrdl0zo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>SpaceX to Launch Crew-11 Mission, Including Astronauts Bumped from Previous Flights</h2>
+          <h2>SpaceX to Launch New Crew to Space Station, Including Reassigned Astronaut</h2>
           <div class="timestamp">2025-07-30 14:11:45 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>NASA and SpaceX are preparing to launch the Crew-11 mission to the International Space Station, carrying a crew that includes astronauts reassigned after issues with Boeing's Starliner capsule. Commander Zena Cardman and Japanese astronaut Kimiya Yui were among those moved to this flight. The mission will use a Crew Dragon capsule making its record sixth flight, with liftoff scheduled from Kennedy Space Center. The crew also includes NASA veteran Michael Fincke and Russian cosmonaut Oleg Platonov, continuing a U.S.-Russian seat-swap agreement to ensure continuous representation from both nations aboard the station.</p>
-          <p>90/100</p>
+          <p>NASA and SpaceX are preparing to launch the Crew-11 mission to the International Space Station, with a crew that includes astronauts reassigned after issues with Boeing's Starliner capsule. Commander Zena Cardman was originally slated for a previous mission but was bumped to accommodate the return of Starliner's first crew. She will be joined by NASA veteran Michael Fincke, Japanese astronaut Kimiya Yui, and Russian cosmonaut Oleg Platonov. The mission will utilize the Crew Dragon Endeavour, which is making a record sixth flight, as SpaceX and NASA work to certify the capsules for up to 15 missions.</p>
+          <p>80/100</p>
           <a href="https://www.cbsnews.com/news/spacex-crew-dragon-commander-bumped-from-flight-launching-to-space/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Article Outlines Qualifications for Credit Card Debt Forgiveness Programs</h2>
-          <div class="timestamp">2025-07-30 14:05:50 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>As Americans struggle with record-high credit card balances, credit card debt forgiveness programs can offer a path to relief by reducing the total amount owed. However, not everyone is eligible for these programs. The article explains that the strongest candidates are typically those facing genuine financial hardship, such as job loss or major medical expenses, which they can document. Borrowers with significant amounts of unsecured debt (often over $10,000) and those who have already fallen behind on payments are also more likely to successfully negotiate a settlement with creditors.</p>
-          <p>65/100</p>
-          <a href="https://www.cbsnews.com/news/who-qualifies-for-credit-card-debt-forgiveness-in-august-2025/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Manned Submersible Voyage Discovers Thriving Ecosystems in Deepest Pacific Ocean Trenches</h2>
-          <div class="timestamp">2025-07-30 14:02:29 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A recent underwater expedition has revealed extensive communities of tubeworms and mollusks flourishing more than 31,000 feet deep in the Pacific Ocean's Kuril–Kamchatka and Aleutian trenches. These findings challenge previous assumptions about the limits of life in such extreme, high-pressure environments. Scientists believe these creatures survive not on nutrients trickling down from above, but on chemicals produced by microbes that process carbon accumulated in the trenches over time. The discovery suggests that such complex ecosystems in the deepest parts of the ocean may be more widespread than previously thought.</p>
-          <p>95/100</p>
-          <a href="https://www.cbsnews.com/news/underwater-discovery-deep-sea-trenches/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>NOAA Confirms Continued Access to Critical Military Weather Satellite Data After Reversal</h2>
-          <div class="timestamp">2025-07-30 13:54:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The National Oceanic and Atmospheric Administration (NOAA) has confirmed it will continue to receive crucial weather data from the military's Defense Meteorological Satellite Program, following a sudden reversal of a previous decision. The Defense Department had raised cybersecurity concerns and planned to cut off access, a move that worried meteorologists, especially with an active hurricane season approaching. The last-minute decision by the Navy's oceanography center ensures that this vital data stream, used for over 50 years in storm tracking and forecasting, will remain available to protect public safety.</p>
-          <p>85/100</p>
-          <a href="https://www.cbsnews.com/news/noaa-weather-satellite-military-data-news/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 (function() {
   const splashOverlay = document.getElementById('splash-overlay');
   const splashLogo = document.getElementById('splash-logo');
+  const splashLogoWrapper = splashLogo ? splashLogo.parentElement : null;
   const isMobile = 'ontouchstart' in window;
 
   if (!splashOverlay || !splashLogo) {
@@ -103,34 +104,37 @@
    * Preload the splash logo image and only show it once fully loaded
    */
   function preloadSplashLogo() {
-    return new Promise((resolve, reject) => {
-      // Hide the logo initially to prevent progressive loading visibility
-      splashLogo.style.opacity = '0';
-      
-      // Create a new image object to preload
+    return new Promise((resolve) => {
+      // The logo is hidden by default with CSS (opacity: 0)
+
       const preloadImg = new Image();
-      
+
+      const showLogo = () => {
+        if (!splashLogo.classList.contains('is-visible')) {
+          splashLogo.classList.add('is-visible');
+        }
+      };
+
       preloadImg.onload = () => {
         console.log("Splash: Logo image fully preloaded");
-        // Now show the logo since it's fully loaded
-        splashLogo.style.opacity = '1';
+        showLogo();
         resolve();
       };
-      
+
       preloadImg.onerror = () => {
         console.warn("Splash: Failed to preload logo image, showing anyway");
-        splashLogo.style.opacity = '1';
+        showLogo();
         resolve(); // Still resolve to continue with animation
       };
-      
+
       // Start preloading by setting the src
       preloadImg.src = splashLogo.src;
-      
+
       // Safety timeout in case image loading hangs
       setTimeout(() => {
-        if (splashLogo.style.opacity === '0') {
+        if (!splashLogo.classList.contains('is-visible')) {
           console.warn("Splash: Logo preload timeout, showing anyway");
-          splashLogo.style.opacity = '1';
+          showLogo();
           resolve();
         }
       }, 3000); // 3 second timeout
@@ -142,13 +146,23 @@
 
   // First preload the logo image, then listen for pageReady
   preloadSplashLogo().then(() => {
-    // Listen for a universal 'pageReady' event. This event should be fired by
-    // the page-specific logic (e.g., about.js, or common.js for card layouts)
-    // once all critical rendering and setup are complete.
-    document.addEventListener('pageReady', () => {
-      console.log("Splash: Received 'pageReady' event. Starting splash animation.");
+    // Logo is preloaded, start the shimmer animation.
+    if (splashLogoWrapper) splashLogoWrapper.classList.add('is-loading');
+    console.log("Splash: Logo preloaded. Shimmering started.");
+
+    // Create two promises: one for a minimum hold time, one for the page ready event.
+    const minHoldPromise = new Promise(resolve => setTimeout(resolve, 1500));
+    const pageReadyPromise = new Promise(resolve => {
+      document.addEventListener('pageReady', resolve, { once: true });
+    });
+
+    // Wait for both the minimum time to pass AND the page to be ready.
+    Promise.all([minHoldPromise, pageReadyPromise]).then(() => {
+      console.log("Splash: Minimum hold time elapsed and page is ready. Starting animation.");
+      // Stop the shimmer and run the main animation.
+      if (splashLogoWrapper) splashLogoWrapper.classList.remove('is-loading');
       runSplashAnimation();
-    }, { once: true });
+    });
   });
 
 })();
