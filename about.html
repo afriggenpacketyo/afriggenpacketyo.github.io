@@ -289,16 +289,6 @@
     <script src="assets/js/script.js"></script> <!-- Handles dark mode, etc. -->
     <script src="assets/js/about.js"></script> <!-- Page-specific animations -->
 
-    <script>
-        // Defer device-specific scripts
-        (function () {
-            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const script = document.createElement('script');
-            script.src = isMobile ? 'assets/js/mobile.js' : 'assets/js/desktop.js';
-            script.defer = true;
-            document.body.appendChild(script);
-        })();
-    </script>
 
 </body>
 
