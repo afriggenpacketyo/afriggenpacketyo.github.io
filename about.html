@@ -99,7 +99,9 @@
 <body class="about-page splash-active">
 
     <div class="splash-overlay" id="splash-overlay">
-        <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+        <div class="splash-logo-wrapper">
+            <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
+        </div>
     </div>
 
     <div class="logo-container">
@@ -284,19 +286,8 @@
     <!-- Core Scripts -->
     <script src="assets/js/splash.js"></script>
     <script src="assets/js/header-height-manager.js"></script>
-    <script src="assets/js/script.js"></script> <!-- Handles dark mode, etc. -->
-    <script src="assets/js/about.js"></script> <!-- Page-specific animations -->
+    <script src="assets/js/about.js"></script>
 
-    <script>
-        // Defer device-specific scripts
-        (function () {
-            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const script = document.createElement('script');
-            script.src = isMobile ? 'assets/js/mobile.js' : 'assets/js/desktop.js';
-            script.defer = true;
-            document.body.appendChild(script);
-        })();
-    </script>
 
 </body>
 

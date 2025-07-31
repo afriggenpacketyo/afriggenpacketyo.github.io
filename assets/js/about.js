@@ -1,6 +1,10 @@
-document.addEventListener('DOMContentLoaded', function() {
+// Dispatch pageReady immediately for splash screen
+console.log("About.js: Dispatching 'pageReady' event for splash screen.");
+document.dispatchEvent(new CustomEvent('pageReady'));
+
+document.addEventListener('DOMContentLoaded', function () {
     // Add mobile landscape mode logo hiding functionality (copied from mobile.js)
-    (function() {
+    (function () {
         // Immediate logo blocking for landscape mode
         const styleBlocker = document.createElement('style');
         styleBlocker.id = 'about-initial-logo-block';
@@ -76,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Listen for orientation changes
-        window.addEventListener('orientationchange', function() {
-            setTimeout(function() {
+        window.addEventListener('orientationchange', function () {
+            setTimeout(function () {
                 toggleLogoVisibility(true);
             }, 100);
         });
@@ -148,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 element.classList.add('animate');
 
                 // Apply specific animation based on type
-                switch(animationType) {
+                switch (animationType) {
                     case 'slide-up':
                         element.style.transform = 'translateY(0)';
                         element.style.opacity = '1';
@@ -201,30 +205,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // SMOOTH SCROLLING FOR INTERNAL LINKS
     // =============================================================
 
- const internalLinks = document.querySelectorAll('a[href^="#"]');
-internalLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-            // Use your existing device detection
-            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const headerHeight = window.headerHeightManager.getHeight();
+    const internalLinks = document.querySelectorAll('a[href^="#"]');
+    internalLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                // Use your existing device detection
+                const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                const headerHeight = window.headerHeightManager.getHeight();
 
-            if (isMobile && window.headerHeightManager) {
-                // Mobile: account for header
+                if (isMobile && window.headerHeightManager) {
+                    // Mobile: account for header
 
-                const targetPosition = targetElement.offsetTop - headerHeight - 20;
-                container.scrollTo({ top: targetPosition, behavior: 'smooth' });
-            } else {
-                // Desktop: keep existing working solution
-                const targetPosition = targetElement.offsetTop - headerHeight + 100;
-                container.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    const targetPosition = targetElement.offsetTop - headerHeight - 20;
+                    container.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                } else {
+                    // Desktop: keep existing working solution
+                    const targetPosition = targetElement.offsetTop - headerHeight + 100;
+                    container.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                }
             }
-        }
+        });
     });
-});
 
     // =============================================================
     // EQUALIZE ELEMENT HEIGHTS (Generic Function)
@@ -286,7 +290,7 @@ internalLinks.forEach(link => {
     const floatingShapes = document.querySelectorAll('.shape');
 
     if (container && floatingShapes.length > 0) {
-        container.addEventListener('scroll', function() {
+        container.addEventListener('scroll', function () {
             const scrolled = container.scrollTop;
 
             floatingShapes.forEach((shape, index) => {
@@ -304,19 +308,19 @@ internalLinks.forEach(link => {
     const ctaButtons = document.querySelectorAll('.cta-button');
 
     ctaButtons.forEach(button => {
-        button.addEventListener('mouseenter', function() {
+        button.addEventListener('mouseenter', function () {
             this.style.transform = 'translateY(-3px)';
         });
 
-        button.addEventListener('mouseleave', function() {
+        button.addEventListener('mouseleave', function () {
             this.style.transform = 'translateY(0)';
         });
 
-        button.addEventListener('mousedown', function() {
+        button.addEventListener('mousedown', function () {
             this.style.transform = 'translateY(-1px) scale(0.98)';
         });
 
-        button.addEventListener('mouseup', function() {
+        button.addEventListener('mouseup', function () {
             this.style.transform = 'translateY(-3px)';
         });
     });
@@ -328,12 +332,12 @@ internalLinks.forEach(link => {
     const floatingCards = document.querySelectorAll('.floating-card');
 
     floatingCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
+        card.addEventListener('mouseenter', function () {
             this.style.transform = 'translateY(-10px) scale(1.05)';
             this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.2)';
         });
 
-        card.addEventListener('mouseleave', function() {
+        card.addEventListener('mouseleave', function () {
             this.style.transform = '';
             this.style.boxShadow = '';
         });
@@ -418,9 +422,20 @@ internalLinks.forEach(link => {
         const header = document.querySelector('.page-header');
         if (header) {
             const headerHeight = header.offsetHeight;
-            document.documentElement.style.setProperty('--header-height', headerHeight + 'px');
-            document.documentElement.style.setProperty('--header-height-plus-2rem', `calc(${headerHeight}px + 2rem)`);
-            updateSectionPadding(headerHeight);
+            // Safety check: if header height is unreasonable, use a default
+            const safeHeaderHeight = (headerHeight > 500 || headerHeight < 50) ? 120 : headerHeight;
+            console.log(`About.js: Header height calculated as ${headerHeight}px, using ${safeHeaderHeight}px`);
+
+            document.documentElement.style.setProperty('--header-height', safeHeaderHeight + 'px');
+            document.documentElement.style.setProperty('--header-height-plus-2rem', `calc(${safeHeaderHeight}px + 2rem)`);
+            updateSectionPadding(safeHeaderHeight);
+        } else {
+            // If no header found, use a reasonable default
+            console.log('About.js: No header found, using default height of 120px');
+            const defaultHeight = 120;
+            document.documentElement.style.setProperty('--header-height', defaultHeight + 'px');
+            document.documentElement.style.setProperty('--header-height-plus-2rem', `calc(${defaultHeight}px + 2rem)`);
+            updateSectionPadding(defaultHeight);
         }
     }
 
@@ -444,7 +459,7 @@ internalLinks.forEach(link => {
     }
 
     // Handle orientation change with proper timing
-    window.addEventListener('orientationchange', function() {
+    window.addEventListener('orientationchange', function () {
         setTimeout(handleViewportChange, 100);
         setTimeout(handleViewportChange, 500); // Double-check after layout settles
     });
@@ -471,7 +486,7 @@ internalLinks.forEach(link => {
     }
 
     // Listen for splash completion events
-    document.addEventListener('splashComplete', function() {
+    document.addEventListener('splashComplete', function () {
         splashCompleted = true;
         // Logo fade is already initialized, no need to reinitialize
     });
@@ -698,7 +713,7 @@ internalLinks.forEach(link => {
     // =============================================================
 
     // Debug function to test logo fade manually (for development)
-    window.testDesktopLogoFade = function(fadeOut = true) {
+    window.testDesktopLogoFade = function (fadeOut = true) {
         if (!isDesktop()) {
             console.log('⚠️ testDesktopLogoFade: Not on desktop');
             return;
@@ -725,7 +740,7 @@ internalLinks.forEach(link => {
     };
 
     // Add to window for easy testing
-    window.isDesktopLogoFadeActive = function() {
+    window.isDesktopLogoFadeActive = function () {
         return isDesktop() && splashCompleted;
     };
 
@@ -780,7 +795,7 @@ internalLinks.forEach(link => {
     ];
 
     if (sourcesLink) {
-        sourcesLink.addEventListener('click', function(e) {
+        sourcesLink.addEventListener('click', function (e) {
             e.preventDefault();
             showSourcesOverlay();
         });
@@ -826,7 +841,7 @@ internalLinks.forEach(link => {
             const img = document.createElement('img');
             img.src = `assets/images/news_logos/${logoFile}`;
             img.alt = logoFile.replace('.png', '').replace('.svg', '').replace(/_/g, ' ');
-            img.onerror = function() {
+            img.onerror = function () {
                 // Fallback if image doesn't exist
                 logoContainer.style.display = 'none';
             };
@@ -846,7 +861,7 @@ internalLinks.forEach(link => {
         }, 100);
 
         // Close on overlay click
-        overlay.addEventListener('click', function(e) {
+        overlay.addEventListener('click', function (e) {
             if (e.target === overlay) {
                 hideSourcesOverlay();
             }
@@ -995,14 +1010,14 @@ internalLinks.forEach(link => {
     }
 
     // Close on Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             hideSourcesOverlay();
         }
     });
 
     // Reposition on window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         const overlay = document.getElementById('sources-overlay');
         if (overlay && overlay.classList.contains('active')) {
             setTimeout(applyCircularPacking, 100);
@@ -1015,24 +1030,18 @@ internalLinks.forEach(link => {
 
     // All about.js initializations are complete. Signal to splash.js that it can proceed.
     console.log("About.js: All initializations complete. Checking CSS before firing 'pageReady' event.");
-    
-    // Check if CSS is loaded by testing if styles are applied
-    const checkCSSLoaded = () => {
-        const testElement = document.documentElement;
-        const bgColor = getComputedStyle(testElement).getPropertyValue('--background-main');
-        return bgColor && bgColor.trim() !== '';
-    };
 
-    const dispatchWhenReady = () => {
-        if (checkCSSLoaded()) {
-            console.log("About.js: CSS loaded, firing 'pageReady' event.");
-            document.dispatchEvent(new CustomEvent('pageReady'));
-        } else {
-            console.log('About.js: CSS not yet loaded, waiting...');
-            // Check again in next frame
-            requestAnimationFrame(dispatchWhenReady);
-        }
-    };
+    // Additional pageReady dispatch after DOM is loaded (backup)
+    console.log("About.js: DOM loaded, dispatching additional pageReady event.");
+    document.dispatchEvent(new CustomEvent('pageReady'));
 
-    dispatchWhenReady();
+    // Debug: Check if content is visible after splash
+    setTimeout(() => {
+        const aboutContainer = document.querySelector('.about-container');
+        const body = document.body;
+        console.log('About.js: Debug - Body classes:', body.className);
+        console.log('About.js: Debug - About container display:', aboutContainer ? getComputedStyle(aboutContainer).display : 'not found');
+        console.log('About.js: Debug - About container visibility:', aboutContainer ? getComputedStyle(aboutContainer).visibility : 'not found');
+        console.log('About.js: Debug - Header height CSS var:', getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
+    }, 2000);
 });
