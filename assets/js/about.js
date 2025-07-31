@@ -1015,29 +1015,24 @@ internalLinks.forEach(link => {
 
     // All about.js initializations are complete. Signal to splash.js that it can proceed.
     console.log("About.js: All initializations complete. Checking CSS before firing 'pageReady' event.");
-
-    // This function checks if the page's specific CSS is loaded by testing
-    // if a style defined in about.css has been applied.
+    
+    // Check if CSS is loaded by testing if styles are applied
     const checkCSSLoaded = () => {
-        const testElement = document.querySelector('.about-container');
-        if (!testElement) return false;
-        // '.about-container' has 'scroll-snap-type' defined in about.css
-        const snapType = getComputedStyle(testElement).getPropertyValue('scroll-snap-type');
-        return snapType && snapType.trim() !== 'none';
+        const testElement = document.documentElement;
+        const bgColor = getComputedStyle(testElement).getPropertyValue('--background-main');
+        return bgColor && bgColor.trim() !== '';
     };
 
     const dispatchWhenReady = () => {
-        // Wait until the CSS is loaded to prevent a flash of unstyled content
         if (checkCSSLoaded()) {
             console.log("About.js: CSS loaded, firing 'pageReady' event.");
             document.dispatchEvent(new CustomEvent('pageReady'));
         } else {
-            // If CSS isn't ready, wait for the next animation frame and check again.
             console.log('About.js: CSS not yet loaded, waiting...');
+            // Check again in next frame
             requestAnimationFrame(dispatchWhenReady);
         }
     };
 
-    // Start the readiness check.
     dispatchWhenReady();
 });

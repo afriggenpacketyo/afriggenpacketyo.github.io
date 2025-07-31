@@ -36,8 +36,8 @@
   // --- Critical CSS and Deferred Loading Block ---
   (function() {
     const isMobile = 'ontouchstart' in window;
-    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
-    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
+    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    width: 90vw; /* Initial large size */    max-width: 500px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0);     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Default/Mobile animation - to the header logo position */  .splash-logo.splash-animate {    /* Current values seem fine for mobile where final logo is ~60px and header is at top */    transform: translateY(-45vh) scale(0.18);     /* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Mobile bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Mobile draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Mobile draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Mobile pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18);    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Mobile spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Mobile: end at header logo position */      transform: translateY(-45vh) scale(0.18) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
+    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {    position: fixed;    top: 0; left: 0; right: 0; bottom: 0;    width: 100vw;    height: 100vh;    background: var(--background-main, #f5f5f7);    z-index: 99999;    display: flex;    align-items: center;    justify-content: center;    pointer-events: all;    transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);  }    /* Ensure splash respects dark mode */  html.dark-mode .splash-overlay {    background: var(--background-main, #181c20);  }    .splash-logo {    /* width: 90vw; Initial large size */    max-width: 1000px; /* Add a max-width for very large screens */    height: auto;    transform: scale(1);    /* Transition for both mobile and desktop - values will be set by the active class */    transition: transform .6s cubic-bezier(.7,.6,.3,1) 0.1s;     opacity: 1;    z-index: 100000;    will-change: transform, opacity;    display: block;    transform-origin: center center;    object-fit: contain;  }    /* Desktop animation - targets the .logo-container position */  .splash-logo.splash-animate { /* Override the mobile animation for desktop */    /*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */      /*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */      /*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */    /* Placeholder CSS - JS will override these with calculated values */    transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));  }    .splash-overlay.splash-hide {    opacity: 0;    pointer-events: none;  }    /* Prevent scroll while splash is active */  body.splash-active {    overflow: hidden !important;    height: 100vh !important;  }    /* --- Additional Splash Animations --- */    /* 1. Bounce In & Pulse */  .splash-logo.splash-bounce {    animation: splash-bounce-in 1.5s cubic-bezier(.33,1.2,.5,1) forwards;  }    /* Desktop bounce animation */  @keyframes splash-bounce-in {    0% {      opacity: 0;      transform: scale(0.85) translateY(-50vh);    }    40% {      opacity: 1;      transform: scale(1.03) translateY(-10vh);    }    60% {      transform: scale(0.97) translateY(-3vh);    }    80% {      transform: scale(1.01) translateY(-1vh);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 2. Draw-on (SVG Path Animation) */  .splash-logo.splash-draw {    /* For SVG logo: animate stroke */    animation: splash-draw-on 1.2s linear forwards;  }    /* Desktop draw animation */  @keyframes splash-draw-on {    0% {      opacity: 0.2;      filter: grayscale(1);      stroke-dasharray: 1000;      stroke-dashoffset: 1000;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      stroke-dashoffset: 0;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      stroke-dashoffset: 0;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* If not SVG, fallback to fade-in and outline glow */  .splash-logo.splash-draw:not(svg) {    box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;    animation: splash-draw-fallback 1.2s linear forwards;  }    /* Desktop draw fallback animation */  @keyframes splash-draw-fallback {    0% {      opacity: 0.2;      filter: grayscale(1);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      transform: scale(1.3) translateY(-30vh);    }    60% {      opacity: 1;      filter: grayscale(0.4);      box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;      transform: scale(1.08) translateY(-10vh);    }    100% {      opacity: 1;      filter: grayscale(0);      box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 3. Pixelation/Depixelation */  .splash-logo.splash-pixel {    animation: splash-pixelate 1.1s cubic-bezier(.55,1.5,.3,1) forwards;    image-rendering: pixelated;    will-change: filter, transform;  }    /* Remove pixelation after animation ends */  .splash-logo.pixel-cleanup {    image-rendering: auto !important;  }     /* Desktop pixel animation */  @keyframes splash-pixelate {    0% {      filter: blur(8px) brightness(1.2);      opacity: 0.1;      transform: scale(3) translateY(-30vh);    }    40% {      filter: blur(4px) brightness(1.08);      opacity: 0.7;      transform: scale(1.7) translateY(-10vh);    }    80% {      filter: blur(1.2px) brightness(1);      opacity: 1;      transform: scale(1.1);    }    100% {      filter: none;      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));    }  }    /* 4. Spin & Color Cycle */  .splash-logo.splash-spin {    animation: splash-spin-in 1.1s cubic-bezier(.55,1.5,.3,1) forwards, splash-spin-color 1.1s linear;  }    /* Desktop spin animation */  @keyframes splash-spin-in {    0% {      opacity: 0;      transform: scale(0.5) rotate(-360deg);      filter: hue-rotate(0deg) brightness(1.5);    }    60% {      opacity: 1;      transform: scale(1.12) rotate(15deg);      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      opacity: 1;      /* Desktop: use calculated values */      transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);      filter: hue-rotate(0deg) brightness(1);    }  }    @keyframes splash-spin-color {    0% {      filter: hue-rotate(0deg) brightness(1.5);    }    50% {      filter: hue-rotate(180deg) brightness(1.1);    }    100% {      filter: hue-rotate(0deg) brightness(1);    }  }`;
     const styleElement = document.createElement('style');
     styleElement.id = 'critical-splash-styles';
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
@@ -59,23 +59,21 @@
 </head>
 <body class="splash-active">
   <div class="splash-overlay" id="splash-overlay">
-    <div class="splash-logo-wrapper">
-      <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
-    </div>
+    <img src="assets/images/newsway_logo.jpg" alt="Splash Logo" class="splash-logo" id="splash-logo" />
   </div>
   <header class="page-header">
     <div class="header-controls-row">
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Optimistically Reported News 😇</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">07/31/25 11:16 AM EDT (Next: 11:25 AM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">07/24/25 10:38 PM EDT (Next: 10:47 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Optimistically Reported News 😇</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/31/25 11:16 AM EDT (New news: 11:25 AM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">07/24/25 10:38 PM EDT (New news: 10:47 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -93,208 +91,117 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>US Treasury Secretary Expresses Confidence in Approaching Trade Deal with China</h2>
-          <div class="timestamp">2025-07-31 11:09:32 EDT</div>
+          <h2>Chinese Researchers Make First Direct Observation of Quantum Friction in Graphene</h2>
+          <div class="timestamp">2025-07-24 22:00:15 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Treasury Secretary Scott Bessent expressed confidence that the United States and China are nearing a trade pact, despite acknowledging that a few technical details still require resolution on the Chinese side. He noted that negotiations in Stockholm were "tough," and any final deal would need President Donald Trump's personal sign-off before the August 12 tariff deadline. This potential agreement follows a period of aggressive tariff exchanges, where U.S. duties reached 145% and China's countered at 125%, later reduced to 30% and 10% respectively. The U.S. also remains concerned about China's purchase of Iranian oil and technology supplies to Russia.</p>
-          <p>70/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/treasury-secretary-bessent-says-we-have-the-makings-of-a-deal-with-china.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Katy Perry and Justin Trudeau Spark Romance Speculation After Montreal Sightings</h2>
-          <div class="timestamp">2025-07-31 11:07:41 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Pop superstar Katy Perry and former Canadian Prime Minister Justin Trudeau have ignited romance rumors following several public sightings in Montreal. Trudeau, accompanied by his 16-year-old daughter, Ella-Grace, was seen enthusiastically attending Perry's sold-out concert, singing along to her hits. This concert appearance came days after the pair were reportedly spotted enjoying an intimate dinner together at a Montreal restaurant. The speculation about a new relationship emerges after Perry's recent public split from actor Orlando Bloom, and Trudeau's separation from his wife in 2023.</p>
-          <p>80/100</p>
-          <a href="https://www.foxnews.com/entertainment/katy-perry-justin-trudeau-fuel-romance-buzz-montreal-tour-stop-appearance" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>New Research Suggests Potatoes Evolved from a Hybrid of Tomatoes and Another Plant</h2>
-          <div class="timestamp">2025-07-31 11:00:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>New research suggests a remarkable evolutionary origin for the potato: it may have arisen from a chance hybridization event between an ancient tomato and a flowering plant from the Etuberosum group, 8 to 9 million years ago. Scientists previously struggled to reconcile the potato's mixed genetic lineage, which showed resemblances to both tomatoes and Etuberosum. The study found that neither parent plant could form tubers, the underground nutrient-storage organs. However, the unique genetic combination in their hybrid offspring enabled the development of tubers, allowing the proto-potato to colonize colder, drier environments and diversify into over 100 species, including the modern cultivated potato.</p>
-          <p>85/100</p>
-          <a href="https://www.theatlantic.com/science/archive/2025/07/potato-tomato-evolution-hybrid/683721/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>JPMorgan Chase Celebrates Opening of 1,000th New Branch in Seven Years</h2>
-          <div class="timestamp">2025-07-31 10:57:02 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>JPMorgan Chase has reached a significant milestone, opening its 1,000th new branch since embarking on an ambitious expansion plan in 2018, primarily in new U.S. markets. The bank now operates approximately 5,000 locations, making it the largest branch network among American banks. This aggressive growth strategy, which includes plans for another 500 new locations by 2027, aims to capture more deposits and cater to a growing population, particularly in fast-growing areas like Charlotte, North Carolina. JPMorgan's expansion efforts have outpaced those of its major competitors, with new branches expected to contribute over $160 billion in incremental deposits. (not investment advice)</p>
-          <p>75/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/jpmorgan-1000th-branch-opening-expansion-plans.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Animal Organs Discovered in Suspicious Bag at New Jersey Car Wash</h2>
-          <div class="timestamp">2025-07-31 10:56:06 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Authorities in East Hanover, Morris County, confirmed that a suspicious garbage bag found inside a trash can at The Finish Line Car Wash contained animal organs, not human remains. Police were called to the scene after employees made the discovery. The Morris County Medical Examiner’s Office examined the contents, verifying they were animal tissue and that no human remains were present. An investigation is currently underway to determine the circumstances of how the animal organs ended up at the car wash, though the specific animal type has not yet been disclosed.</p>
-          <p>60/100</p>
-          <a href="https://www.yahoo.com/news/articles/bag-animal-organs-found-morris-145606128.html" target="_blank"><span class="news-org">Yahoo News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>CVS Health Reports Strong Q2 Earnings, Boosting Outlook on Retail Pharmacy and Insurance Gains</h2>
-          <div class="timestamp">2025-07-31 10:48:22 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>CVS Health announced better-than-expected second-quarter earnings and revenue, leading to a more than 6% surge in its shares. The company also raised its adjusted profit outlook for fiscal 2025, attributing the positive performance to improvements in its retail pharmacy business and a recovery within its Aetna insurance unit. CEO David Joyner highlighted the success of new technology, enhanced pharmacy operations, and a new prescription drug pricing model as key drivers. Despite a decline in its health services segment, CVS is actively pursuing $2 billion in cost cuts and strategically expanding its store footprint in underserved geographies. (not investment advice)</p>
-          <p>75/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/cvs-health-cvs-earnings-report-q2-2025.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Singapore Hosts 2025 World Aquatics Championships with Global Participation</h2>
-          <div class="timestamp">2025-07-31 10:42:50 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Singapore recently hosted the 2025 World Aquatics Championships, bringing together over 2,500 athletes from more than 200 nations. Competitors engaged in 77 events across six distinct aquatic sports, showcasing a wide array of athletic disciplines and global talent. The championships served as a significant international platform for sportsmanship and competition, highlighting the dedication and skill of athletes from around the world. This event underscored the importance of international gatherings in fostering camaraderie and celebrating human achievement in aquatic sports.</p>
+          <p>A team of scientists from China's Lanzhou Institute of Chemical Physics has become the first to experimentally observe quantum friction between solid surfaces. While studying folded graphene, they discovered a counterintuitive effect where friction did not increase with the material's thickness, and in some cases, thicker folds slid more easily. This phenomenon was traced to how bending the material altered its electronic properties, restricting the conversion of motion into heat. The breakthrough, published in Nature Communications, could pave the way for developing ultra-efficient nanodevices with minimal wear.</p>
           <p>90/100</p>
-          <a href="https://www.theatlantic.com/photography/archive/2025/07/scenes-2025-world-aquatics-championships/683719/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
+          <a href="https://www.scmp.com/news/china/science/article/3319438/first-chinese-team-captures-rare-quantum-friction-effect-folded-graphene?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>High Noon Recalls Vodka Seltzers Mislabeled as Celsius Energy Drinks Due to Packaging Error</h2>
-          <div class="timestamp">2025-07-31 10:36:34 EDT</div>
+          <h2>Fastest-Growing U.S. City, Princeton, Texas, Grapples with Rapid Expansion</h2>
+          <div class="timestamp">2025-07-24 21:43:24 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>High Noon is initiating a recall of certain 12-packs of its vodka seltzers after discovering that some cans within these packs were mistakenly filled with vodka seltzer but mislabeled as Celsius energy drinks. This significant supply-chain error means consumers could inadvertently consume alcohol instead of a caffeinated beverage. The U.S. Food and Drug Administration (FDA) announced the recall for products distributed in Florida, New York, Ohio, South Carolina, Virginia, and Wisconsin. High Noon and Celsius, which share a third-party packaging supplier, have launched a joint investigation into the mix-up, though no illnesses or adverse reactions have been reported.</p>
-          <p>55/100</p>
-          <a href="https://www.npr.org/2025/07/31/nx-s1-5486730/high-noon-celsius-recall" target="_blank"><span class="news-org">NPR</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Figma CEO Confident AI Superintelligence Poses No Immediate Threat to Company's Future</h2>
-          <div class="timestamp">2025-07-31 10:30:57 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Dylan Field, co-founder and CEO of Figma, expressed strong confidence that artificial intelligence, particularly the concept of superintelligence, does not represent a serious immediate threat to the future of his design software company. As Figma prepares for its public market debut, Field emphasized that the complexity of Figma's graphics engine and other proprietary technologies makes them difficult for AI to replicate rapidly. This perspective contrasts with the aggressive AI investments and focus on superintelligence by other tech leaders, such as Meta CEO Mark Zuckerberg. Figma's successful pricing of its initial public offering above its estimated range, valuing it at $19.3 billion, underscores market confidence in its position. (not investment advice)</p>
-          <p>70/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/figma-ceo-field-ai-superintelligence.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Former Vice President Kamala Harris Declines to Run for California Governor</h2>
-          <div class="timestamp">2025-07-31 10:14:42 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Former Vice President Kamala Harris announced her decision not to seek the governorship of California in the upcoming election, a highly anticipated political move. Harris, a native of Oakland who previously served as California's Attorney General and U.S. Senator, had been openly exploring a run for the state's top job since leaving the White House in January. Sources close to her indicate that she concluded her leadership and public service could have a greater impact on the national stage. This decision also keeps open the possibility of a potential third bid for the White House in 2028.</p>
+          <p>Princeton, Texas, located north of Dallas, has been named the fastest-growing city in the U.S., with its population surging from 17,000 to 37,000 in just three years. The boom is fueled by affordable housing, attracting first-time homebuyers who are priced out of more expensive markets. However, this explosive growth has created significant growing pains, forcing the city to temporarily halt new construction to allow its infrastructure, such as water lines and roads, to catch up. With another 13,000 homes already approved, Princeton is racing to manage its transformation into a much larger city.</p>
           <p>65/100</p>
-          <a href="https://www.cbsnews.com/news/kamala-harris-wont-run-california-governor/" target="_blank"><span class="news-org">CBS News</span></a>
+          <a href="https://www.cbsnews.com/news/princeton-texas-fastest-growing-city/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>West Ham Midfielder Lucas Paqueta Cleared of Major Spot-Fixing Allegations</h2>
-          <div class="timestamp">2025-07-31 10:05:19 EDT</div>
+          <h2>Venus Williams' Comeback Streak Ends with Loss at DC Open</h2>
+          <div class="timestamp">2025-07-24 21:31:56 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>West Ham midfielder Lucas Paqueta has been cleared of all spot-fixing charges by an independent regulatory commission, nearly two years after the Football Association initiated an investigation. Paqueta was accused of deliberately getting booked to influence betting markets, an offense that could have led to a lifetime ban from the sport. While the four primary charges were found "not proven," the commission did determine that Paqueta failed to cooperate with the investigation and will decide an appropriate sanction for these breaches. Paqueta expressed immense relief and gratitude, eagerly anticipating his return to professional football.</p>
-          <p>70/100</p>
-          <a href="https://www.bbc.com/sport/football/articles/cpqnqrqe7q8o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Roblox Stock Surges on Exceeding Revenue Expectations and Robust User Expansion</h2>
-          <div class="timestamp">2025-07-31 10:01:59 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Roblox stock soared 16% following the company's second-quarter earnings report, which revealed net bookings of $1.44 billion, significantly surpassing analyst expectations. The gaming platform also demonstrated strong user engagement, with daily active users increasing to 111.8 million and hours engaged rising by 58% year-over-year. CEO David Baszucki attributed this growth to strategic investments in infrastructure, discovery, and its virtual economy, aiming to capture 10% of the global gaming content market. Despite reporting a net loss, Roblox raised its booking guidance for the third quarter and introduced new age verification tools to enhance user safety. (not investment advice)</p>
-          <p>80/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/roblox-rblx-stock-earnings.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>UK Minister Defends Potential Palestinian State Recognition Amidst Legal Debate</h2>
-          <div class="timestamp">2025-07-31 10:01:26 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>UK Trade Secretary Jonathan Reynolds has defended the government's stance on potentially recognizing a Palestinian state, arguing that legal warnings about its statehood criteria are "missing the point." Prime Minister Sir Keir Starmer outlined conditions for recognition, including a ceasefire and renewed commitment to a two-state solution. However, legal experts argue Palestine lacks defined territory and a single effective government, citing undefined borders and a divided government. Separately, Canadian Prime Minister Mark Carney also announced his country's intention to recognize a Palestinian state, driven by the "catastrophe" in Gaza and the receding prospects for a two-state solution.</p>
-          <p>55/100</p>
-          <a href="https://www.bbc.com/news/articles/c78z69x61e6o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Meta and Microsoft Stocks Soar on Robust Earnings and Escalating AI Investments</h2>
-          <div class="timestamp">2025-07-31 09:50:53 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Shares of Meta and Microsoft surged by 12% and 5% respectively, following both companies reporting better-than-expected earnings that surpassed top and bottom-line estimates. Microsoft's stock surge pushed its market capitalization past the $4 trillion mark, joining Nvidia in this exclusive club. Both tech giants are making substantial investments in artificial intelligence infrastructure, with projections for billions in capital expenditures, a trend analysts believe will significantly benefit chipmakers like Advanced Micro Devices and Broadcom. Meta's CEO Mark Zuckerberg is actively pursuing AI superintelligence, while Microsoft's generative AI scaling continues to drive strong demand for its data center infrastructure. (not investment advice)</p>
-          <p>85/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/meta-microsoft-stock-earnings-ai.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Comcast Exceeds Q2 Earnings Forecasts Despite Continued Broadband Subscriber Losses</h2>
-          <div class="timestamp">2025-07-31 09:41:16 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Comcast reported second-quarter earnings and revenue that surpassed Wall Street estimates, even as the company continued to experience losses in its broadband customer base. Despite these subscriber declines, which were less severe than anticipated, Comcast's stock saw an early trading increase, with executives highlighting new market strategies aimed at revitalizing the broadband business. The company also announced a record addition of mobile customers and strong revenue growth in its content and experiences division, driven by successful film releases and theme park performance. While its streaming platform, Peacock, saw revenue growth, it still reported losses, with a recent price increase aimed at achieving profitability. (not investment advice)</p>
-          <p>70/100</p>
-          <a href="https://www.cnbc.com/2025/07/31/comcast-cmcsa-earnings-q2-2025.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Iran Proposes "Menara" for Peaceful Nuclear Cooperation in Middle East</h2>
-          <div class="timestamp">2025-07-31 09:39:11 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Javad Zarif, former Iranian Foreign Minister, has proposed the establishment of the Middle East Network for Atomic Research and Advancement (Menara) to foster peaceful nuclear cooperation in the region. This initiative aims to realize a long-standing proposal for a zone free from weapons of mass destruction, which has been stalled for decades. Menara would facilitate mutual verification, shared facilities, and transparency for nuclear energy's peaceful applications, such as medicine and agriculture. Zarif argues that such a body is crucial for regional security and stability, especially given the escalating threat of nuclear proliferation, offering a path towards a more secure future.</p>
+          <p>Tennis legend Venus Williams, at 45 years old, saw her bid for a first winning streak since 2019 come to an end with a straight-sets loss to Magdalena Frech at the DC Open. The defeat came just two days after her celebrated first-round victory, which had made her the oldest woman to win a tour-level singles match in over two decades. Williams was competing in her first tournament since March 2024 after recovering from surgery. Despite the loss, she received a standing ovation from the crowd, acknowledging her enduring presence in the sport.</p>
           <p>60/100</p>
-          <a href="https://www.theguardian.com/commentisfree/2025/jul/31/iran-nuclear-middle-east-war-israel" target="_blank"><span class="news-org">The Guardian</span></a>
+          <a href="https://www.theguardian.com/sport/2025/jul/24/venus-williams-dc-open-loss-magdalena-frech-2025" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>D.C. Council Announces Stadium Deal with Washington Commanders Despite Presidential Opposition</h2>
+          <div class="timestamp">2025-07-24 20:57:30 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The Washington, D.C., city council chairman has announced a deal with the Washington Commanders for a new stadium at the RFK Stadium site, moving the project forward despite recent threats from President Trump. Trump had stated he would block any deal unless the team changed its name back to the Redskins, a comment the council chairman characterized as an unhelpful distraction. The agreement, which includes significant revenue benefits for the city, still faces a council vote and technical challenges related to the transfer of the federal land. However, officials appear confident they have the votes to proceed.</p>
+          <p>55/100</p>
+          <a href="https://www.cbsnews.com/news/trump-washington-commanders-deal/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Specialized Utah Facility Deciphers Illegible Mail for the U.S. Postal Service</h2>
+          <div class="timestamp">2025-07-24 20:54:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>When automated systems cannot read an address on a piece of mail, an image is sent to the U.S. Postal Service's Remote Encoding Center in Salt Lake City, Utah. At this unique facility, hundreds of highly skilled employees, known as keyers, work around the clock to decipher poor handwriting, smudges, and other issues. The center processes images of about three million letters daily, with operators keying in corrected address information at a rate of 900 pieces per hour. This crucial human intervention ensures that even the most illegibly addressed mail has a chance of reaching its destination.</p>
+          <p>85/100</p>
+          <a href="https://www.cbsnews.com/news/when-usps-cant-decipher-bad-handwriting-address-utah-facility-comes-to-rescue/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Los Angeles Catholic Archdiocese Launches Program to Aid Immigrants Fearful of Raids</h2>
+          <div class="timestamp">2025-07-24 20:13:44 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>In response to ongoing immigration raids, the Roman Catholic Archdiocese of Los Angeles has launched a program to deliver hot meals, groceries, and medicine to parishioners who are afraid to leave their homes. The initiative aims to support vulnerable members of its community, many of whom are immigrants or have immigrant family members, across Los Angeles, Ventura, and Santa Barbara counties. Tapping into existing parish networks developed during the pandemic, the program has already received significant donations, including a $50,000 contribution from businessman Rick Caruso to help families in need.</p>
+          <p>70/100</p>
+          <a href="https://www.latimes.com/california/story/2025-07-24/los-angeles-catholic-church-creates-program-to-feed-undocumented-immigrants-during-area-raids" target="_blank"><span class="news-org">LA Times</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Singer and Actress Renée Rapp Discusses Her Unfiltered Public Persona</h2>
+          <div class="timestamp">2025-07-24 20:13:35 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Pop star and actress Renée Rapp addressed her reputation as one of entertainment's most unfiltered personalities in a recent interview. Known for her candid and off-script comments during press tours, Rapp explained that she finds conventional media training boring and prefers genuine conversation. While she initially felt insecure when her personality became a topic of analysis, she has since embraced it, even poking fun at the situation in her music. The article highlights her commitment to authenticity as she navigates her rising career in music and film.</p>
+          <p>75/100</p>
+          <a href="https://www.bbc.com/news/articles/crk6yzg4j3do" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Jim Cramer Argues Big Tech Is Underspending, Not Overspending, on AI</h2>
+          <div class="timestamp">2025-07-24 19:08:55 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>CNBC's Jim Cramer asserted that major technology companies are underspending on artificial intelligence, framing the current technological race as a "winner-take-all" situation. He argued that to secure market dominance, companies like Alphabet, Amazon, and Microsoft must continue to invest heavily in AI infrastructure and talent. Citing Alphabet's strong quarterly earnings and increased capital expenditure, Cramer dismissed Wall Street skepticism, suggesting that the most accurate AI chatbot will eventually achieve a near-monopoly, justifying the massive upfront costs. (not investment advice)</p>
+          <p>80/100</p>
+          <a href="https://www.cnbc.com/2025/07/24/jim-cramer-says-big-tech-is-underspending-on-ai-heres-why.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Tech Firms Innovate to Find Natural Alternatives as FDA Phases Out Artificial Food Dyes</h2>
+          <div class="timestamp">2025-07-24 19:01:09 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>As U.S. regulators like the FDA move to ban or phase out artificial food colorings such as Red Dye No. 3, a new market for natural alternatives is booming. Tech firms are exploring innovative sources, such as using microalgae to produce a stable blue pigment, to meet the demand from major food companies. Brands like Kellogg's, Kraft Heinz, and Nestlé have pledged to remove synthetic dyes from their products. However, the industry faces challenges in matching the vividness, stability, and cost of the artificial colors they are replacing.</p>
+          <p>85/100</p>
+          <a href="https://www.bbc.com/news/articles/c4g83dpeendo" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
     </div>
