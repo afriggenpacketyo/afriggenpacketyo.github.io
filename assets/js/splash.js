@@ -144,20 +144,40 @@
   // --- Main Execution Logic ---
   // Body already has splash-active class from HTML to prevent initial scrollbar
 
-  // First preload the logo image, then listen for pageReady
+  // First preload the logo image, then start the animation
   preloadSplashLogo().then(() => {
     // Logo is preloaded, start the shimmer animation.
     if (splashLogoWrapper) splashLogoWrapper.classList.add('is-loading');
     console.log("Splash: Logo preloaded. Shimmering started.");
 
-    // Create two promises: one for a minimum hold time, one for the page ready event.
+    // For pages that dispatch allCSSLoaded (like about.html), wait for it
+    // For pages that don't (like goodnews.html, index.html), just use minimum hold time
     const minHoldPromise = new Promise(resolve => setTimeout(resolve, 1500));
-    const pageReadyPromise = new Promise(resolve => {
-      document.addEventListener('pageReady', resolve, { once: true });
-    });
+    
+    let cssReadyPromise;
+    if (document.readyState === 'complete') {
+      // If page is already loaded, resolve immediately
+      cssReadyPromise = Promise.resolve();
+    } else {
+      // Wait for either allCSSLoaded event or DOMContentLoaded + reasonable delay
+      cssReadyPromise = new Promise(resolve => {
+        const resolveIfReady = () => {
+          // For pages with allCSSLoaded event
+          if (document.readyState === 'complete') {
+            resolve();
+          }
+        };
+        
+        document.addEventListener('allCSSLoaded', resolve, { once: true });
+        window.addEventListener('load', resolve, { once: true });
+        
+        // Fallback: if neither event fires within 3 seconds, proceed anyway
+        setTimeout(resolve, 3000);
+      });
+    }
 
-    // Wait for both the minimum time to pass AND the page to be ready.
-    Promise.all([minHoldPromise, pageReadyPromise]).then(() => {
+    // Wait for both the minimum time to pass AND CSS/page to be ready
+    Promise.all([minHoldPromise, cssReadyPromise]).then(() => {
       console.log("Splash: Minimum hold time elapsed and page is ready. Starting animation.");
       // Stop the shimmer and run the main animation.
       if (splashLogoWrapper) splashLogoWrapper.classList.remove('is-loading');

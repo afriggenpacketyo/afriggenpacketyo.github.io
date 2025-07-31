@@ -1026,55 +1026,125 @@ document.addEventListener('DOMContentLoaded', function () {
     // FINAL INITIALIZATION & SPLASH SIGNAL
     // =============================================================
 
-    // Fire splash signal only after window.onload (all resources, CSS, fonts, images loaded) and next paint
-// --- START OF CODE TO ADD ---
-// =============================================================
-// ROBUST PAGE READY SIGNAL
-// =============================================================
+    // =============================================================
+    // ROBUST PAGE READY SIGNAL
+    // =============================================================
 
-function dispatchPageReadyWhenStable() {
-    // Promise for window.load event (ensures all images are loaded)
-    const windowLoadPromise = new Promise(resolve => {
-        if (document.readyState === 'complete') {
-            resolve();
-        } else {
-            window.addEventListener('load', resolve, { once: true });
+    // Wait for all <img> elements to load
+    function waitForImages() {
+        const images = Array.from(document.images);
+        return Promise.all(images.map(img => {
+            if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+            return new Promise(resolve => {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true });
+            });
+        }));
+    }
+
+    // Wait for all CSS background images to load
+    function waitForBackgroundImages() {
+        const urls = new Set();
+        document.querySelectorAll('*').forEach(el => {
+            const style = getComputedStyle(el);
+            if (style.backgroundImage && style.backgroundImage !== 'none') {
+                const matches = style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/g);
+                if (matches) {
+                    matches.forEach(match => {
+                        const url = match.replace(/url\(["']?/, '').replace(/["']?\)$/, '');
+                        urls.add(url);
+                    });
+                }
+            }
+        });
+        return Promise.all(Array.from(urls).map(url => {
+            return new Promise(resolve => {
+                const img = new window.Image();
+                img.onload = img.onerror = resolve;
+                img.src = url;
+            });
+        }));
+    }
+
+    // Wait for all stylesheets to load
+    function waitForStylesheets() {
+        const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+        return Promise.all(links.map(link => {
+            if (link.sheet) return Promise.resolve();
+            return new Promise(resolve => {
+                link.addEventListener('load', resolve, { once: true });
+                link.addEventListener('error', resolve, { once: true });
+            });
+        }));
+    }
+
+    // Wait for webfonts
+    function waitForFonts() {
+        if (document.fonts && document.fonts.ready) {
+            return document.fonts.ready;
         }
-    });
+        return Promise.resolve();
+    }
 
-    // Promise for document fonts ready (prevents layout shift from font loading)
-    const fontsReadyPromise = document.fonts.ready;
+    // Wait for DOM to be visually stable for N frames
+    function waitForVisualStability(frames = 2, timeout = 2000) {
+        return new Promise(resolve => {
+            let lastMutation = Date.now();
+            let frameCount = 0;
+            const observer = new MutationObserver(() => {
+                lastMutation = Date.now();
+                frameCount = 0;
+            });
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+            function check() {
+                if (Date.now() - lastMutation > 50) {
+                    frameCount++;
+                    if (frameCount >= frames) {
+                        observer.disconnect();
+                        resolve();
+                        return;
+                    }
+                } else {
+                    frameCount = 0;
+                }
+                if (Date.now() - lastMutation > timeout) {
+                    observer.disconnect();
+                    resolve();
+                    return;
+                }
+                requestAnimationFrame(check);
+            }
+            requestAnimationFrame(check);
+        });
+    }
 
-    // Promise to wait for critical initial animations and layout adjustments.
-    // The longest timeout in this script is for equalizeElementHeights (1500ms).
-    // We will wait slightly longer to ensure all rendering is complete.
-    const layoutSettlePromise = new Promise(resolve => setTimeout(resolve, 1600));
-
-    Promise.all([windowLoadPromise, fontsReadyPromise, layoutSettlePromise]).then(() => {
-        // Final check: ensure the main hero title is actually rendered and visible.
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle && heroTitle.offsetHeight > 0) {
-            console.log("About.js: All conditions met. Page is stable. Firing 'pageReady'.");
-            document.dispatchEvent(new CustomEvent('pageReady'));
-        } else {
-            // Fallback if the check fails, dispatch after a short delay anyway.
-            console.warn("About.js: Stability check failed, retrying pageReady dispatch in 500ms.");
-            setTimeout(() => {
-                console.log("About.js: Retrying 'pageReady' dispatch.");
-                document.dispatchEvent(new CustomEvent('pageReady'));
-            }, 500);
-        }
-    }).catch(error => {
-        console.error("About.js: Error waiting for page stability, firing pageReady to prevent app freeze.", error);
-        // Fire the event anyway so the application doesn't get stuck on the splash screen.
+    async function dispatchPageReadyWhenStable() {
+        // Wait for window.onload
+        await new Promise(resolve => {
+            if (document.readyState === 'complete') resolve();
+            else window.addEventListener('load', resolve, { once: true });
+        });
+        // Wait for stylesheets
+        await waitForStylesheets();
+        // Wait for webfonts
+        await waitForFonts();
+        // Wait for <img> elements
+        await waitForImages();
+        // Wait for CSS background images
+        await waitForBackgroundImages();
+        // Wait for visual stability
+        await waitForVisualStability();
+        // Now, everything should be visually ready
         document.dispatchEvent(new CustomEvent('pageReady'));
-    });
-}
+    }
 
-// Start the process of checking for page stability.
-dispatchPageReadyWhenStable();
-
-// =============================================================
-// END OF ROBUST PAGE READY SIGNAL
-// =============================================================
+    // Wait for allCSSLoaded event before running the robust splash check
+    if (document.querySelectorAll('link[rel="stylesheet"]').length < 5) {
+        document.addEventListener('allCSSLoaded', dispatchPageReadyWhenStable, { once: true });
+    } else {
+        dispatchPageReadyWhenStable();
+    }
+    // =============================================================
+    // END OF ROBUST PAGE READY SIGNAL
+    // =============================================================
 });

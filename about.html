@@ -95,23 +95,34 @@
             }
             `;
 
-            const styleElement = document.createElement('style');
-            styleElement.id = 'critical-splash-styles';
-            styleElement.innerHTML = (isMobile ? mobileCriticalCSS : pcCriticalCSS) + shimmerCSS;
-            document.head.appendChild(styleElement);
+    const styleElement = document.createElement('style');
+    styleElement.id = 'critical-splash-styles';
+    styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
+    document.head.appendChild(styleElement);
 
-            function loadCSS(href) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet'; link.href = href;
-                document.head.appendChild(link);
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                const cssFiles = isMobile
-                    ? ['common.css', 'mobile.css', 'hamburger.css', 'about.css', 'mobile_about.css']
-                    : ['common.css', 'pc.css', 'hamburger.css', 'about.css', 'pc_about.css'];
-                cssFiles.forEach(file => loadCSS('assets/css/' + file));
-            });
+    function loadCSS(href) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet'; link.href = href;
+      document.head.appendChild(link);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const cssFiles = isMobile
+        ? ['common.css', 'mobile.css', 'hamburger.css', 'about.css', 'mobile_about.css']
+        : ['common.css', 'pc.css', 'hamburger.css', 'about.css', 'pc_about.css'];
+      let loaded = 0;
+      cssFiles.forEach(file => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'assets/css/' + file;
+        link.onload = () => {
+          loaded++;
+          if (loaded === cssFiles.length) {
+            document.dispatchEvent(new Event('allCSSLoaded'));
+          }
+        };
+        document.head.appendChild(link);
+      });
+    });
         })();
     </script>
 </head>
@@ -305,6 +316,7 @@
 
     <!-- Core Scripts -->
     <script src="assets/js/splash.js"></script>
+    <script src="assets/js/script.js"></script>
     <script src="assets/js/header-height-manager.js"></script>
     <script src="assets/js/about.js"></script>
 
