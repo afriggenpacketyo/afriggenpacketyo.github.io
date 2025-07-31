@@ -1,6 +1,4 @@
-// Dispatch pageReady immediately for splash screen
-console.log("About.js: Dispatching 'pageReady' event for splash screen.");
-document.dispatchEvent(new CustomEvent('pageReady'));
+// Don't dispatch pageReady immediately - wait for DOM and all initialization to complete
 
 document.addEventListener('DOMContentLoaded', function () {
     // Add mobile landscape mode logo hiding functionality (copied from mobile.js)
@@ -1028,20 +1026,55 @@ document.addEventListener('DOMContentLoaded', function () {
     // FINAL INITIALIZATION & SPLASH SIGNAL
     // =============================================================
 
-    // All about.js initializations are complete. Signal to splash.js that it can proceed.
-    console.log("About.js: All initializations complete. Checking CSS before firing 'pageReady' event.");
+    // Fire splash signal only after window.onload (all resources, CSS, fonts, images loaded) and next paint
+// --- START OF CODE TO ADD ---
+// =============================================================
+// ROBUST PAGE READY SIGNAL
+// =============================================================
 
-    // Additional pageReady dispatch after DOM is loaded (backup)
-    console.log("About.js: DOM loaded, dispatching additional pageReady event.");
-    document.dispatchEvent(new CustomEvent('pageReady'));
+function dispatchPageReadyWhenStable() {
+    // Promise for window.load event (ensures all images are loaded)
+    const windowLoadPromise = new Promise(resolve => {
+        if (document.readyState === 'complete') {
+            resolve();
+        } else {
+            window.addEventListener('load', resolve, { once: true });
+        }
+    });
 
-    // Debug: Check if content is visible after splash
-    setTimeout(() => {
-        const aboutContainer = document.querySelector('.about-container');
-        const body = document.body;
-        console.log('About.js: Debug - Body classes:', body.className);
-        console.log('About.js: Debug - About container display:', aboutContainer ? getComputedStyle(aboutContainer).display : 'not found');
-        console.log('About.js: Debug - About container visibility:', aboutContainer ? getComputedStyle(aboutContainer).visibility : 'not found');
-        console.log('About.js: Debug - Header height CSS var:', getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
-    }, 2000);
+    // Promise for document fonts ready (prevents layout shift from font loading)
+    const fontsReadyPromise = document.fonts.ready;
+
+    // Promise to wait for critical initial animations and layout adjustments.
+    // The longest timeout in this script is for equalizeElementHeights (1500ms).
+    // We will wait slightly longer to ensure all rendering is complete.
+    const layoutSettlePromise = new Promise(resolve => setTimeout(resolve, 1600));
+
+    Promise.all([windowLoadPromise, fontsReadyPromise, layoutSettlePromise]).then(() => {
+        // Final check: ensure the main hero title is actually rendered and visible.
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle && heroTitle.offsetHeight > 0) {
+            console.log("About.js: All conditions met. Page is stable. Firing 'pageReady'.");
+            document.dispatchEvent(new CustomEvent('pageReady'));
+        } else {
+            // Fallback if the check fails, dispatch after a short delay anyway.
+            console.warn("About.js: Stability check failed, retrying pageReady dispatch in 500ms.");
+            setTimeout(() => {
+                console.log("About.js: Retrying 'pageReady' dispatch.");
+                document.dispatchEvent(new CustomEvent('pageReady'));
+            }, 500);
+        }
+    }).catch(error => {
+        console.error("About.js: Error waiting for page stability, firing pageReady to prevent app freeze.", error);
+        // Fire the event anyway so the application doesn't get stuck on the splash screen.
+        document.dispatchEvent(new CustomEvent('pageReady'));
+    });
+}
+
+// Start the process of checking for page stability.
+dispatchPageReadyWhenStable();
+
+// =============================================================
+// END OF ROBUST PAGE READY SIGNAL
+// =============================================================
 });
