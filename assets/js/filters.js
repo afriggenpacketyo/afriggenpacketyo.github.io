@@ -1,6 +1,22 @@
 // Add initialization flag to prevent conflicts with mobile.js
 let isInitializing = true;
 
+// Helper to escape regex special characters in user terms
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Whole-word matcher: matches term as a whole word or hyphenated word in text
+function matchWord(term, text) {
+  if (!term) return false;
+  const safeTerm = escapeRegExp(term);
+  // Use \b for word boundary matching. This is more robust as it handles
+  // punctuation (e.g., 'car.') and other non-alphanumeric separators correctly.
+  const regex = new RegExp(`\\b${safeTerm}\\b`, 'i');
+  return regex.test(text);
+}
+
+
 // Comprehensive body locking utilities for all browsers
 function applyBodyLock() {
   // Only store scroll position if body is not already locked
@@ -142,8 +158,19 @@ function applyFiltersQuietly() {
 
 // Quiet versions that don't trigger full repositioning
 function filterCardsQuietly(excludes, includes) {
-  const excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
-  const includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
+
+  // Handle terms present in both lists by ignoring them
+  const excludeSet = new Set(excludeTerms);
+  const includeSet = new Set(includeTerms);
+  const commonTerms = new Set([...excludeSet].filter(term => includeSet.has(term)));
+
+  if (commonTerms.size > 0) {
+    console.log('Common filter terms found, ignoring:', [...commonTerms]);
+    excludeTerms = excludeTerms.filter(term => !commonTerms.has(term));
+    includeTerms = includeTerms.filter(term => !commonTerms.has(term));
+  }
   let firstVisibleIndex = -1;
 
   // Apply filtering with optimal order: excludes first, then includes
@@ -155,13 +182,13 @@ function filterCardsQuietly(excludes, includes) {
 
     // Step 1: Apply excludes filter (hide if ANY exclude term matches)
     if (excludeTerms.length > 0) {
-      shouldHide = excludeTerms.some(term => summary.includes(term));
+      shouldHide = excludeTerms.some(term => matchWord(term, summary));
     }
 
     // Step 2: Apply includes filter (only if not already hidden by excludes)
     // Show only if at least one include term matches (or no includes specified)
     if (!shouldHide && includeTerms.length > 0) {
-      shouldHide = !includeTerms.some(term => summary.includes(term));
+      shouldHide = !includeTerms.some(term => matchWord(term, summary));
     }
 
     card.classList.toggle('filtered', shouldHide);
@@ -805,8 +832,19 @@ function applyFilters() {
 }
 
 function filterCards(excludes, includes) {
-  const excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
-  const includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
+
+  // Handle terms present in both lists by ignoring them
+  const excludeSet = new Set(excludeTerms);
+  const includeSet = new Set(includeTerms);
+  const commonTerms = new Set([...excludeSet].filter(term => includeSet.has(term)));
+
+  if (commonTerms.size > 0) {
+    console.log('Common filter terms found, ignoring:', [...commonTerms]);
+    excludeTerms = excludeTerms.filter(term => !commonTerms.has(term));
+    includeTerms = includeTerms.filter(term => !commonTerms.has(term));
+  }
   let firstVisibleIndex = -1;
 
   // Apply filtering with optimal order: excludes first, then includes
@@ -818,13 +856,13 @@ function filterCards(excludes, includes) {
 
     // Step 1: Apply excludes filter (hide if ANY exclude term matches)
     if (excludeTerms.length > 0) {
-      shouldHide = excludeTerms.some(term => summary.includes(term));
+      shouldHide = excludeTerms.some(term => matchWord(term, summary));
     }
 
     // Step 2: Apply includes filter (only if not already hidden by excludes)
     // Show only if at least one include term matches (or no includes specified)
     if (!shouldHide && includeTerms.length > 0) {
-      shouldHide = !includeTerms.some(term => summary.includes(term));
+      shouldHide = !includeTerms.some(term => matchWord(term, summary));
     }
 
     card.classList.toggle('filtered', shouldHide);
