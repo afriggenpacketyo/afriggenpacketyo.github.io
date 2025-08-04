@@ -565,9 +565,10 @@ window.hamburgerMenu = {
   resetToOriginalMenu() {
     if (!this.menuContent) return;
 
-    // Hide filter/excludes content
+    // Hide filter/excludes/includes content
     const filterContent = this.menuContent.querySelector('.filter-content');
     const excludesContent = this.menuContent.querySelector('.excludes-content');
+    const includesContent = this.menuContent.querySelector('.includes-content');
 
     if (filterContent) {
       filterContent.classList.remove('active');
@@ -589,6 +590,23 @@ window.hamburgerMenu = {
     if (excludesContent) {
       excludesContent.classList.remove('active');
       excludesContent.style.display = 'none';
+      
+      // Clean up excludes input listeners
+      const excludesInput = excludesContent.querySelector('#excludes-input');
+      if (excludesInput) {
+        excludesInput.blur(); // Ensure input loses focus
+      }
+    }
+
+    if (includesContent) {
+      includesContent.classList.remove('active');
+      includesContent.style.display = 'none';
+      
+      // Clean up includes input listeners
+      const includesInput = includesContent.querySelector('#includes-input');
+      if (includesInput) {
+        includesInput.blur(); // Ensure input loses focus
+      }
     }
 
     // Show original menu

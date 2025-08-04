@@ -431,6 +431,32 @@ html.dark-mode .excludes-content p {
   color: #ccc;
 }
 
+/* Includes Content */
+.includes-content {
+  display: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.includes-content.active {
+  display: block;
+}
+
+.includes-content h3 {
+  margin-bottom: 1rem;
+  color: var(--menu-content-color);
+  font-size: 1.5rem;
+}
+
+.includes-content p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+html.dark-mode .includes-content p {
+  color: #ccc;
+}
+
 /* Excludes Actions */
 .excludes-actions {
   display: flex !important;
@@ -482,6 +508,70 @@ html.dark-mode .excludes-content p {
   box-shadow: var(--secondary-btn-shadow);
 }
 
+/* Includes Actions Container */
+.includes-actions {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  margin-top: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+/* Ensure includes buttons within actions container have proper margins */
+.includes-actions .includes-btn {
+  margin: 0 !important; /* Remove individual margins, let flexbox gap handle spacing */
+}
+
+/* Includes Buttons */
+.includes-content .includes-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--excludes-btn-width);
+  height: var(--excludes-btn-height);
+  padding: 12px 20px;
+  margin: 0.5rem;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+  border: 2px solid #28a745;
+  border-radius: 12px;
+  background-color: #28a745;
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+  box-shadow: 0 4px 0 #1e7e34;
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.includes-content .includes-btn-secondary {
+  background-color: var(--secondary-btn-bg);
+  border-color: var(--secondary-btn-border);
+  box-shadow: var(--secondary-btn-shadow);
+}
+
+/* Includes Input */
+#includes-input {
+  background-color: var(--menu-content-bg);
+  color: var(--menu-content-color);
+  border: 2px solid var(--btn-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#includes-input:focus {
+  outline: none;
+  border-color: #28a745;
+  background-color: var(--menu-content-bg);
+}
+
 /* Excludes Input */
 #excludes-input {
   background-color: var(--menu-content-bg);
@@ -502,11 +592,21 @@ html.dark-mode .excludes-content p {
     opacity: 0;
     transition: opacity 0.2s ease;
   }
+  
+  #includes-input:focus::placeholder {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
 }
 
 /* Hide placeholder on mobile only when actively interacting (focus + hover) */
 @media (pointer: coarse) {
   #excludes-input:focus:hover::placeholder {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  #includes-input:focus:hover::placeholder {
     opacity: 0;
     transition: opacity 0.2s ease;
   }
@@ -688,6 +788,17 @@ body.chrome-mobile-overlay-active {
     box-shadow: var(--secondary-btn-pressed-shadow);
   }
 
+  .includes-content .includes-btn:hover {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1e7e34;
+    background-color: #1e7e34;
+  }
+
+  .includes-content .includes-btn-secondary:hover {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
   .info-btn-container:hover .info-tooltip {
     opacity: 1;
     visibility: visible;
@@ -723,6 +834,7 @@ body.chrome-mobile-overlay-active {
   .menu-content a,
   .filter-option,
   .excludes-btn,
+  .includes-btn,
   .header-hamburger,
   .header-controls-row * {
     -webkit-tap-highlight-color: transparent;
@@ -762,6 +874,17 @@ body.chrome-mobile-overlay-active {
     box-shadow: var(--secondary-btn-pressed-shadow);
   }
 
+  .includes-content .includes-btn.pressed {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1e7e34;
+    background-color: #1e7e34;
+  }
+
+  .includes-content .includes-btn-secondary.pressed {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
   .info-btn-container.show-tooltip .info-tooltip {
     opacity: 1;
     visibility: visible;
@@ -795,6 +918,17 @@ body.chrome-mobile-overlay-active {
     user-select: text;
   }
 
+  #includes-input {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    touch-action: pan-y;
+    overflow-y: auto;
+    max-height: 200px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   .excludes-content {
     overflow: hidden;
     overscroll-behavior: none;
@@ -802,6 +936,17 @@ body.chrome-mobile-overlay-active {
   }
 
   .excludes-content #excludes-input {
+    touch-action: pan-y;
+    overflow-y: auto;
+  }
+
+  .includes-content {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  .includes-content #includes-input {
     touch-action: pan-y;
     overflow-y: auto;
   }
@@ -824,13 +969,28 @@ body.chrome-mobile-overlay-active {
     padding: 1rem;
   }
 
+  .includes-content {
+    padding: 1rem;
+  }
+
   .excludes-actions {
     flex-direction: column !important;
     gap: 0.75rem !important;
     align-items: center !important; /* Ensure center alignment in column layout */
   }
 
+  .includes-actions {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: center !important; /* Ensure center alignment in column layout */
+  }
+
   .excludes-actions .excludes-btn {
+    margin: 0 !important; /* Maintain zero margins on mobile */
+    width: 200px !important; /* Consistent width for mobile */
+  }
+
+  .includes-actions .includes-btn {
     margin: 0 !important; /* Maintain zero margins on mobile */
     width: 200px !important; /* Consistent width for mobile */
   }

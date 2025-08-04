@@ -15,10 +15,10 @@ function applyBodyLock() {
 
   // Add browser-specific classes for enhanced scroll prevention
   const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
-                         /Safari/.test(navigator.userAgent) &&
-                         !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+    /Safari/.test(navigator.userAgent) &&
+    !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
   const isChromeMobile = /Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent) ||
-                         /iPhone|iPad|iPod/.test(navigator.userAgent) && /CriOS/.test(navigator.userAgent);
+    /iPhone|iPad|iPod/.test(navigator.userAgent) && /CriOS/.test(navigator.userAgent);
 
   if (isSafariMobile) {
     document.body.classList.add('safari-mobile-overlay-active');
@@ -115,8 +115,9 @@ function autoApplyFiltersOnLoad() {
 
   const shouldAutoApply = localStorage.getItem('autoApplyFilters') === 'true';
   const hasExcludes = localStorage.getItem('Excludes');
+  const hasIncludes = localStorage.getItem('Includes');
 
-  if (shouldAutoApply && hasExcludes) {
+  if (shouldAutoApply && (hasExcludes || hasIncludes)) {
     console.log('Filters: Auto-applying filters on page load...');
     applyFiltersQuietly();
   }
@@ -127,28 +128,41 @@ function applyFiltersQuietly() {
   console.log('Filters: Applying filters quietly...');
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
-  const hasFilters = !!excludes;
+  const includes = (localStorage.getItem('Includes') || '').toLowerCase();
+  const hasFilters = !!excludes || !!includes;
 
   if (!hasFilters) {
     showAllCardsQuietly();
   } else {
-    filterCardsQuietly(excludes);
+    filterCardsQuietly(excludes, includes);
   }
 
   console.log("Filters: Quiet filtering complete.");
 }
 
 // Quiet versions that don't trigger full repositioning
-function filterCardsQuietly(excludes) {
-  const excludeTerms = excludes.split(',').map(term => term.trim()).filter(Boolean);
+function filterCardsQuietly(excludes, includes) {
+  const excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  const includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let firstVisibleIndex = -1;
 
-  // Apply the .filtered class to hide cards and find the first visible one
+  // Apply filtering with optimal order: excludes first, then includes
   CardSystem.flipCards.forEach((card, index) => {
     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
 
-    const shouldHide = excludeTerms.some(term => summary.includes(term));
+    let shouldHide = false;
+
+    // Step 1: Apply excludes filter (hide if ANY exclude term matches)
+    if (excludeTerms.length > 0) {
+      shouldHide = excludeTerms.some(term => summary.includes(term));
+    }
+
+    // Step 2: Apply includes filter (only if not already hidden by excludes)
+    // Show only if at least one include term matches (or no includes specified)
+    if (!shouldHide && includeTerms.length > 0) {
+      shouldHide = !includeTerms.some(term => summary.includes(term));
+    }
 
     card.classList.toggle('filtered', shouldHide);
 
@@ -250,7 +264,7 @@ function showFilterContent() {
       <h3>Filter Options</h3>
       <div class="filter-options">
         <a href="#" class="filter-option" data-filter-type="excludes">Excludes</a>
-        <a href="#" class="filter-option coming-soon" data-filter-type="includes">Includes<span class="coming-soon-text">Coming Soon</span></a>
+        <a href="#" class="filter-option" data-filter-type="includes">Includes</a>
         <a href="#" class="filter-option coming-soon" data-filter-type="topic">Topic<span class="coming-soon-text">Coming Soon</span></a>
         <a href="#" class="filter-option coming-soon" data-filter-type="optimism">Optimism Score<span class="coming-soon-text">Coming Soon</span></a>
       </div>
@@ -284,12 +298,12 @@ function showFilterContent() {
     const autoApplyLabel = filterContent.querySelector('#auto-apply-label');
     if (autoApplyCheckbox) {
       autoApplyCheckbox.checked = localStorage.getItem('autoApplyFilters') === 'true';
-      autoApplyCheckbox.addEventListener('change', function() {
+      autoApplyCheckbox.addEventListener('change', function () {
         localStorage.setItem('autoApplyFilters', this.checked.toString());
       });
     }
     if (autoApplyLabel && autoApplyCheckbox) {
-      autoApplyLabel.addEventListener('click', function(e) {
+      autoApplyLabel.addEventListener('click', function (e) {
         autoApplyCheckbox.checked = !autoApplyCheckbox.checked;
         autoApplyCheckbox.dispatchEvent(new Event('change'));
       });
@@ -299,7 +313,7 @@ function showFilterContent() {
     const infoBtn = filterContent.querySelector('.info-btn');
     const infoBtnContainer = filterContent.querySelector('.info-btn-container');
     if (infoBtn && infoBtnContainer) {
-      infoBtn.addEventListener('click', function(e) {
+      infoBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -347,6 +361,8 @@ function showFilterContent() {
 function selectFilter(filterType) {
   if (filterType === 'excludes') {
     showExcludesSubmenu();
+  } else if (filterType === 'includes') {
+    showIncludesSubmenu();
   }
 }
 
@@ -452,6 +468,8 @@ function handleExcludesInputBlur() {
 
 function goBackToFilters() {
   const excludesContent = document.querySelector('.excludes-content');
+  const includesContent = document.querySelector('.includes-content');
+
   if (excludesContent) {
     excludesContent.style.display = 'none';
 
@@ -461,6 +479,18 @@ function goBackToFilters() {
       excludesInput.removeEventListener('focus', handleExcludesInputFocus);
       excludesInput.removeEventListener('blur', handleExcludesInputBlur);
       excludesInput.blur(); // Ensure input loses focus
+    }
+  }
+
+  if (includesContent) {
+    includesContent.style.display = 'none';
+
+    // Clean up input listeners when hiding includes content
+    const includesInput = document.getElementById('includes-input');
+    if (includesInput) {
+      includesInput.removeEventListener('focus', handleIncludesInputFocus);
+      includesInput.removeEventListener('blur', handleIncludesInputBlur);
+      includesInput.blur(); // Ensure input loses focus
     }
   }
 
@@ -506,6 +536,149 @@ function saveExcludes(event) {
     isSaveButtonActive = false;
     saveButton.textContent = originalText;
     saveButton.style.background = '#dc3545';
+  }, 1500);
+}
+
+// ===============================================
+// INCLUDES FILTERING FUNCTIONS
+// ===============================================
+
+function showIncludesSubmenu() {
+  const filterContent = document.querySelector('.filter-content');
+  if (filterContent) filterContent.style.display = 'none';
+  showIncludesContent();
+}
+
+function showIncludesContent() {
+  const menuContent = document.querySelector('.menu-content');
+  const existingIncludes = localStorage.getItem('Includes') || '';
+
+  let includesContent = menuContent.querySelector('.includes-content');
+  if (!includesContent) {
+    includesContent = document.createElement('div');
+    includesContent.className = 'includes-content';
+    includesContent.innerHTML = `
+      <h3>Include Terms</h3>
+      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Show only article summaries with<br>these words (comma-separated):</p>
+      <textarea id="includes-input" placeholder="e.g., technology, innovation" style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;">${existingIncludes}</textarea>
+      <div class="includes-actions" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#" onclick="goBackToFilters(); return false;" class="includes-btn includes-btn-secondary">Back</a>
+        <a href="#" onclick="saveIncludes(event); return false;" class="includes-btn">Save Includes</a>
+      </div>
+    `;
+    menuContent.appendChild(includesContent);
+
+    // Set up input event listeners immediately after creation
+    setupIncludesInputListeners();
+  } else {
+    document.getElementById('includes-input').value = existingIncludes;
+  }
+
+  includesContent.style.display = 'block';
+
+  // Reset save button state when showing includes content
+  const saveButton = includesContent.querySelector('.includes-btn:not(.includes-btn-secondary)');
+  if (saveButton) {
+    // Clear any pending timeout and reset state
+    if (saveIncludesButtonTimeout) {
+      clearTimeout(saveIncludesButtonTimeout);
+      saveIncludesButtonTimeout = null;
+    }
+    isSaveIncludesButtonActive = false;
+    saveButton.textContent = 'Save Includes';
+    saveButton.style.background = '#28a745';
+  }
+
+  // Refresh the button event listeners for the 3D effect
+  if (window.hamburgerMenu && typeof window.hamburgerMenu.refreshMenuLinks === 'function') {
+    window.hamburgerMenu.refreshMenuLinks();
+  }
+
+  // Apply body lock BEFORE focusing the input to prevent Chrome mobile keyboard issues
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile) {
+    // Body is already locked from hamburger menu, focus the input on next frame
+    requestAnimationFrame(() => {
+      const input = document.getElementById('includes-input');
+      if (input) {
+        input.focus();
+      }
+    });
+  } else {
+    // Desktop - no auto-focus to preserve placeholder text until user clicks
+    // User can manually click the textarea when ready to type
+  }
+}
+
+// Separate function to set up input event listeners
+function setupIncludesInputListeners() {
+  const includesInput = document.getElementById('includes-input');
+  if (!includesInput) return;
+
+  // Remove any existing listeners to prevent duplicates
+  includesInput.removeEventListener('focus', handleIncludesInputFocus);
+  includesInput.removeEventListener('blur', handleIncludesInputBlur);
+
+  // Add new listeners
+  includesInput.addEventListener('focus', handleIncludesInputFocus);
+  includesInput.addEventListener('blur', handleIncludesInputBlur);
+}
+
+// Separate handler functions for better control
+function handleIncludesInputFocus() {
+  const overlay = document.querySelector('.includes-content');
+  if (overlay && overlay.style.display !== 'none') {
+    // Ensure body lock is applied when input is focused on mobile devices
+    // This is crucial for preventing keyboard-induced scrolling glitches
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      // Always reinforce body lock when textarea gets focus on mobile
+      applyBodyLock();
+    }
+  }
+}
+
+function handleIncludesInputBlur() {
+  // Don't remove body lock on blur - let the menu close handle it
+  // This prevents the page from jumping when the user taps outside the input
+}
+
+// Variable to track save button state and timeout for includes
+let saveIncludesButtonTimeout = null;
+let isSaveIncludesButtonActive = false;
+
+function saveIncludes(event) {
+  const textarea = document.getElementById('includes-input');
+  if (!textarea) return;
+
+  // Prevent multiple clicks while save is in progress
+  if (isSaveIncludesButtonActive) return;
+
+  localStorage.setItem('Includes', textarea.value.trim());
+
+  const saveButton = event.target;
+  const originalText = 'Save Includes'; // Always use the known original text
+
+  // Set button state
+  isSaveIncludesButtonActive = true;
+  saveButton.textContent = 'Saved!';
+  saveButton.style.background = '#28a745';
+
+  // Clear any existing timeout
+  if (saveIncludesButtonTimeout) {
+    clearTimeout(saveIncludesButtonTimeout);
+  }
+
+  // Set new timeout
+  saveIncludesButtonTimeout = setTimeout(() => {
+    saveButton.textContent = originalText;
+    saveButton.style.background = '#28a745';
+    isSaveIncludesButtonActive = false;
+    // Clean up timeout
+    if (saveIncludesButtonTimeout) {
+      clearTimeout(saveIncludesButtonTimeout);
+      saveIncludesButtonTimeout = null;
+    }
   }, 1500);
 }
 
@@ -599,7 +772,8 @@ function applyFilters() {
   CardSystem.setFilteringState(true, 'filtering');
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
-  const hasFilters = !!excludes;
+  const includes = (localStorage.getItem('Includes') || '').toLowerCase();
+  const hasFilters = !!excludes || !!includes;
 
   // Store original state for proper restoration
   const originalActiveIndex = CardSystem.activeCardIndex;
@@ -609,7 +783,7 @@ function applyFilters() {
     if (!hasFilters) {
       showAllCards();
     } else {
-      filterCards(excludes);
+      filterCards(excludes, includes);
     }
   } catch (error) {
     console.error('Filters: Error during filtering:', error);
@@ -630,16 +804,28 @@ function applyFilters() {
   }
 }
 
-function filterCards(excludes) {
-  const excludeTerms = excludes.split(',').map(term => term.trim()).filter(Boolean);
+function filterCards(excludes, includes) {
+  const excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
+  const includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let firstVisibleIndex = -1;
 
-  // Apply the .filtered class to hide cards and find the first visible one
+  // Apply filtering with optimal order: excludes first, then includes
   CardSystem.flipCards.forEach((card, index) => {
     const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
     const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
 
-    const shouldHide = excludeTerms.some(term => summary.includes(term));
+    let shouldHide = false;
+
+    // Step 1: Apply excludes filter (hide if ANY exclude term matches)
+    if (excludeTerms.length > 0) {
+      shouldHide = excludeTerms.some(term => summary.includes(term));
+    }
+
+    // Step 2: Apply includes filter (only if not already hidden by excludes)
+    // Show only if at least one include term matches (or no includes specified)
+    if (!shouldHide && includeTerms.length > 0) {
+      shouldHide = !includeTerms.some(term => summary.includes(term));
+    }
 
     card.classList.toggle('filtered', shouldHide);
 
@@ -687,71 +873,73 @@ window.filtersCompleteInitialization = completeInitialization;
  * @param {number} newActiveIndex The master index of the first card to be displayed.
  */
 function repositionViewAfterFilter(newActiveIndex) {
-    const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
+  const isMobile = window.innerWidth <= 932 && 'ontouchstart' in window;
 
-    // Set filtering phase for better state tracking
-    CardSystem.filteringPhase = 'repositioning';
-    CardSystem.pendingStateChange = true;
+  // Set filtering phase for better state tracking
+  CardSystem.filteringPhase = 'repositioning';
+  CardSystem.pendingStateChange = true;
 
-    // Step 1: Handle the "all cards filtered" edge case.
-    if (newActiveIndex === -1) {
-        console.warn("Filters: All cards have been filtered out.");
-        CardSystem.activeCardIndex = -1;
-        CardSystem.pendingStateChange = false;
-        CardSystem.filteringPhase = 'idle';
-
-        if (typeof CardSystem.updateUI === 'function') {
-            CardSystem.updateUI(); // This will clear the dots.
-        }
-        return;
-    }
-
-    // Step 2: Set the new state synchronously
-    CardSystem.activeCardIndex = newActiveIndex;
-    CardSystem.previousVisibleActiveIndex = -1; // Forces the dot logic to do a full reset.
-
-    // Step 3: Perform platform-specific repositioning with proper synchronization
-    if (isMobile) {
-        if (typeof CardSystem.moveToCard === 'function') {
-            // Mobile: Let moveToCard handle both updateUI and scroll
-            CardSystem.moveToCard(newActiveIndex, false); // false for INSTANT move
-        }
-    } else {
-        // Desktop: Update UI first, then scroll
-        if (typeof CardSystem.updateUI === 'function') {
-            CardSystem.updateUI();
-
-            // Force dot container repaint with proper timing
-            const dotContainer = document.querySelector('.card-indicator');
-            if (dotContainer) {
-                // Use synchronous reflow instead of async requestAnimationFrame
-                void dotContainer.offsetHeight; // Force immediate reflow
-                dotContainer.classList.add('force-dot-repaint');
-                // Remove class synchronously to avoid async timing issues
-                setTimeout(() => {
-                    dotContainer.classList.remove('force-dot-repaint');
-                }, 0);
-                console.debug('Filters: Dot container repaint completed.');
-            } else {
-                console.warn('Filters: Dot container not found after filtering!');
-            }
-        }
-
-        if (typeof CardSystem.scrollToCard === 'function') {
-            CardSystem.scrollToCard(newActiveIndex, false); // false for INSTANT move
-        }
-    }
-
-    // Step 4: Reset state flags synchronously
+  // Step 1: Handle the "all cards filtered" edge case.
+  if (newActiveIndex === -1) {
+    console.warn("Filters: All cards have been filtered out.");
+    CardSystem.activeCardIndex = -1;
     CardSystem.pendingStateChange = false;
     CardSystem.filteringPhase = 'idle';
 
-    console.log('Filters: Repositioning completed, state synchronized.');
+    if (typeof CardSystem.updateUI === 'function') {
+      CardSystem.updateUI(); // This will clear the dots.
+    }
+    return;
+  }
+
+  // Step 2: Set the new state synchronously
+  CardSystem.activeCardIndex = newActiveIndex;
+  CardSystem.previousVisibleActiveIndex = -1; // Forces the dot logic to do a full reset.
+
+  // Step 3: Perform platform-specific repositioning with proper synchronization
+  if (isMobile) {
+    if (typeof CardSystem.moveToCard === 'function') {
+      // Mobile: Let moveToCard handle both updateUI and scroll
+      CardSystem.moveToCard(newActiveIndex, false); // false for INSTANT move
+    }
+  } else {
+    // Desktop: Update UI first, then scroll
+    if (typeof CardSystem.updateUI === 'function') {
+      CardSystem.updateUI();
+
+      // Force dot container repaint with proper timing
+      const dotContainer = document.querySelector('.card-indicator');
+      if (dotContainer) {
+        // Use synchronous reflow instead of async requestAnimationFrame
+        void dotContainer.offsetHeight; // Force immediate reflow
+        dotContainer.classList.add('force-dot-repaint');
+        // Remove class synchronously to avoid async timing issues
+        setTimeout(() => {
+          dotContainer.classList.remove('force-dot-repaint');
+        }, 0);
+        console.debug('Filters: Dot container repaint completed.');
+      } else {
+        console.warn('Filters: Dot container not found after filtering!');
+      }
+    }
+
+    if (typeof CardSystem.scrollToCard === 'function') {
+      CardSystem.scrollToCard(newActiveIndex, false); // false for INSTANT move
+    }
+  }
+
+  // Step 4: Reset state flags synchronously
+  CardSystem.pendingStateChange = false;
+  CardSystem.filteringPhase = 'idle';
+
+  console.log('Filters: Repositioning completed, state synchronized.');
 }
 
 // Initialize when DOM and CardSystem are both ready
-function initializeExcludesOverlayIfVisible() {
+function initializeFilterOverlaysIfVisible() {
   const excludesContent = document.querySelector('.excludes-content');
+  const includesContent = document.querySelector('.includes-content');
+
   if (excludesContent && excludesContent.style.display !== 'none') {
     // Ensure body lock is applied if excludes overlay is already visible
     if (!document.body.classList.contains('menu-overlay-active')) {
@@ -764,6 +952,19 @@ function initializeExcludesOverlayIfVisible() {
       setupExcludesInputListeners();
     }
   }
+
+  if (includesContent && includesContent.style.display !== 'none') {
+    // Ensure body lock is applied if includes overlay is already visible
+    if (!document.body.classList.contains('menu-overlay-active')) {
+      applyBodyLock();
+    }
+
+    // Set up input listeners if they haven't been set up yet
+    const includesInput = document.getElementById('includes-input');
+    if (includesInput) {
+      setupIncludesInputListeners();
+    }
+  }
 }
 
 // Event-driven initialization instead of timer-based
@@ -773,7 +974,7 @@ function initializeFilters() {
     return; // Not ready yet
   }
 
-  initializeExcludesOverlayIfVisible();
+  initializeFilterOverlaysIfVisible();
   console.log('Filters: Initialized successfully');
 }
 
