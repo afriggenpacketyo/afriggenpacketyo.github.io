@@ -564,6 +564,7 @@ html.dark-mode .includes-content p {
   color: var(--menu-content-color);
   border: 2px solid var(--btn-border);
   transition: border-color 0.2s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #includes-input:focus {
