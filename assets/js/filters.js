@@ -132,8 +132,10 @@ function autoApplyFiltersOnLoad() {
   const shouldAutoApply = localStorage.getItem('autoApplyFilters') === 'true';
   const hasExcludes = localStorage.getItem('Excludes');
   const hasIncludes = localStorage.getItem('Includes');
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
 
-  if (shouldAutoApply && (hasExcludes || hasIncludes)) {
+  if (shouldAutoApply && (hasExcludes || hasIncludes || hasOptimismFilter)) {
     console.log('Filters: Auto-applying filters on page load...');
     applyFiltersQuietly();
   }
@@ -145,7 +147,12 @@ function applyFiltersQuietly() {
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const includes = (localStorage.getItem('Includes') || '').toLowerCase();
-  const hasFilters = !!excludes || !!includes;
+
+  // Check for optimism score filter
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
+
+  const hasFilters = !!excludes || !!includes || hasOptimismFilter;
 
   if (!hasFilters) {
     showAllCardsQuietly();
@@ -156,10 +163,65 @@ function applyFiltersQuietly() {
   console.log("Filters: Quiet filtering complete.");
 }
 
+// Optimized filtering function using cached card data
+function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter) {
+  let firstVisibleIndex = -1;
+
+  CardSystem.flipCards.forEach((card, index) => {
+    const cardData = CardSystem.cardData[index];
+    let summary, optimismScore;
+
+    if (cardData) {
+      summary = cardData.summary;
+      optimismScore = cardData.optimismScore;
+    } else {
+      // Fallback for missing cached data
+      const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
+      summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
+      optimismScore = null;
+    }
+
+    let shouldHide = false;
+
+    // Step 1: Apply excludes filter (hide if ANY exclude term matches)
+    if (excludeTerms.length > 0) {
+      shouldHide = excludeTerms.some(term => matchWord(term, summary));
+    }
+
+    // Step 2: Apply includes filter (only if not already hidden by excludes)
+    if (!shouldHide && includeTerms.length > 0) {
+      shouldHide = !includeTerms.some(term => matchWord(term, summary));
+    }
+
+    // Step 3: Apply optimism score filter (only if not already hidden)
+    if (!shouldHide && hasOptimismFilter) {
+      if (optimismScore !== null) {
+        shouldHide = optimismScore < optimismMin || optimismScore > optimismMax;
+      } else {
+        shouldHide = true; // Hide cards without optimism scores when filter is active
+      }
+    }
+
+    card.classList.toggle('filtered', shouldHide);
+
+    if (!shouldHide && firstVisibleIndex === -1) {
+      firstVisibleIndex = index;
+    }
+  });
+
+  return firstVisibleIndex;
+}
+
 // Quiet versions that don't trigger full repositioning
 function filterCardsQuietly(excludes, includes) {
   let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
+
+  // Get optimism score filter settings
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  const optimismMin = optimismData.min;
+  const optimismMax = optimismData.max;
+  const hasOptimismFilter = optimismMin !== 0 || optimismMax !== 100;
 
   // Handle terms present in both lists by ignoring them
   const excludeSet = new Set(excludeTerms);
@@ -171,32 +233,9 @@ function filterCardsQuietly(excludes, includes) {
     excludeTerms = excludeTerms.filter(term => !commonTerms.has(term));
     includeTerms = includeTerms.filter(term => !commonTerms.has(term));
   }
-  let firstVisibleIndex = -1;
 
-  // Apply filtering with optimal order: excludes first, then includes
-  CardSystem.flipCards.forEach((card, index) => {
-    const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
-    const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-
-    let shouldHide = false;
-
-    // Step 1: Apply excludes filter (hide if ANY exclude term matches)
-    if (excludeTerms.length > 0) {
-      shouldHide = excludeTerms.some(term => matchWord(term, summary));
-    }
-
-    // Step 2: Apply includes filter (only if not already hidden by excludes)
-    // Show only if at least one include term matches (or no includes specified)
-    if (!shouldHide && includeTerms.length > 0) {
-      shouldHide = !includeTerms.some(term => matchWord(term, summary));
-    }
-
-    card.classList.toggle('filtered', shouldHide);
-
-    if (!shouldHide && firstVisibleIndex === -1) {
-      firstVisibleIndex = index;
-    }
-  });
+  // Use optimized filtering function
+  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter);
 
   // Update the active index and center the first visible card
   if (firstVisibleIndex !== -1) {
@@ -293,7 +332,7 @@ function showFilterContent() {
         <a href="#" class="filter-option" data-filter-type="excludes">Excludes</a>
         <a href="#" class="filter-option" data-filter-type="includes">Includes</a>
         <a href="#" class="filter-option coming-soon" data-filter-type="topic">Topic<span class="coming-soon-text">Coming Soon</span></a>
-        <a href="#" class="filter-option coming-soon" data-filter-type="optimism">Optimism Score<span class="coming-soon-text">Coming Soon</span></a>
+        <a href="#" class="filter-option" data-filter-type="optimism">Optimism Score</a>
       </div>
       <div class="filter-actions">
         <a href="#" onclick="goBackToMenu(); return false;" class="main-btn main-btn-secondary">Back</a>
@@ -390,6 +429,8 @@ function selectFilter(filterType) {
     showExcludesSubmenu();
   } else if (filterType === 'includes') {
     showIncludesSubmenu();
+  } else if (filterType === 'optimism') {
+    showOptimismSubmenu();
   }
 }
 
@@ -496,6 +537,7 @@ function handleExcludesInputBlur() {
 function goBackToFilters() {
   const excludesContent = document.querySelector('.excludes-content');
   const includesContent = document.querySelector('.includes-content');
+  const optimismContent = document.querySelector('.optimism-content');
 
   if (excludesContent) {
     excludesContent.style.display = 'none';
@@ -519,6 +561,10 @@ function goBackToFilters() {
       includesInput.removeEventListener('blur', handleIncludesInputBlur);
       includesInput.blur(); // Ensure input loses focus
     }
+  }
+
+  if (optimismContent) {
+    optimismContent.style.display = 'none';
   }
 
   showFilterContent();
@@ -709,6 +755,473 @@ function saveIncludes(event) {
   }, 1500);
 }
 
+// ===============================================
+// OPTIMISM SCORE FILTERING FUNCTIONS
+// ===============================================
+
+function showOptimismSubmenu() {
+  const filterContent = document.querySelector('.filter-content');
+  if (filterContent) filterContent.style.display = 'none';
+  showOptimismContent();
+}
+
+function showOptimismContent() {
+  const menuContent = document.querySelector('.menu-content');
+  let existingOptimism = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+
+  // Validate and fix any invalid stored values
+  existingOptimism = validateOptimismRange(existingOptimism);
+
+  let optimismContent = menuContent.querySelector('.optimism-content');
+  if (!optimismContent) {
+    optimismContent = document.createElement('div');
+    optimismContent.className = 'optimism-content';
+    optimismContent.innerHTML = `
+      <h3>Optimism Score Range</h3>
+      <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;">Select the optimism score range<br>for article summaries:</p>
+      <div class="optimism-slider-container">
+        <div class="optimism-values">
+          <span class="optimism-min-value">${existingOptimism.min}</span>
+          <span class="optimism-range-separator" style="display: ${existingOptimism.min === existingOptimism.max ? 'none' : 'inline'};"> - </span>
+          <span class="optimism-max-value" style="display: ${existingOptimism.min === existingOptimism.max ? 'none' : 'inline'};">${existingOptimism.max}</span>
+        </div>
+        <div class="dual-range-slider">
+          <input type="range" id="optimism-min" class="slider-thumb" min="0" max="100" step="5" value="${existingOptimism.min}">
+          <input type="range" id="optimism-max" class="slider-thumb" min="0" max="100" step="5" value="${existingOptimism.max}">
+          <div class="slider-track">
+            <div class="slider-range"></div>
+          </div>
+        </div>
+        <div class="slider-labels">
+          <span>0</span>
+          <span>25</span>
+          <span>50</span>
+          <span>75</span>
+          <span>100</span>
+        </div>
+      </div>
+      <div class="optimism-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#" onclick="goBackToFilters(); return false;" class="optimism-btn optimism-btn-secondary">Back</a>
+        <a href="#" onclick="saveOptimismScore(event); return false;" class="optimism-btn">Save Range</a>
+      </div>
+    `;
+    menuContent.appendChild(optimismContent);
+
+    // Set up slider event listeners immediately after creation
+    setupOptimismSliderListeners();
+  } else {
+    // Update existing values with validation
+    const validatedData = validateOptimismRange(existingOptimism);
+    document.getElementById('optimism-min').value = validatedData.min;
+    document.getElementById('optimism-max').value = validatedData.max;
+    updateOptimismDisplay(validatedData.min, validatedData.max);
+
+    // Update constraints after setting values
+    updateSliderConstraints();
+  }
+
+  optimismContent.style.display = 'block';
+
+  // Reset save button state when showing optimism content
+  const saveButton = optimismContent.querySelector('.optimism-btn:not(.optimism-btn-secondary)');
+  if (saveButton) {
+    saveButton.textContent = 'Save Range';
+    saveButton.style.background = '#dc3545';
+  }
+
+  // Refresh the button event listeners for the 3D effect
+  if (window.hamburgerMenu && typeof window.hamburgerMenu.refreshMenuLinks === 'function') {
+    window.hamburgerMenu.refreshMenuLinks();
+  }
+
+  // Update slider position and visuals on display
+  updateSliderRange();
+}
+
+function setupOptimismSliderListeners() {
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+  const sliderContainer = document.querySelector('.dual-range-slider');
+
+  if (minSlider && maxSlider) {
+    // Initialize constraints
+    updateSliderConstraints();
+
+    // Set up unified drag handling for both desktop and mobile
+    setupUnifiedDragHandling(minSlider, maxSlider, sliderContainer);
+  }
+}
+
+function setupUnifiedDragHandling(minSlider, maxSlider, sliderContainer) {
+  let isDragging = false;
+  let activeSlider = null;
+  let startX = 0;
+  let startMinVal = 0;
+  let startMaxVal = 0;
+  let sliderRect = null;
+
+  function getEventX(event) {
+    return event.touches ? event.touches[0].clientX : event.clientX;
+  }
+
+  function getSliderValueFromPosition(x, rect) {
+    const percentage = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+    const value = Math.round(percentage * 20) * 5; // Snap to multiples of 5 (0-100)
+    return Math.max(0, Math.min(100, value));
+  }
+
+  function handleDragStart(event) {
+    event.preventDefault();
+    isDragging = true;
+    startX = getEventX(event);
+    startMinVal = parseInt(minSlider.value);
+    startMaxVal = parseInt(maxSlider.value);
+    sliderRect = sliderContainer.getBoundingClientRect();
+
+    const clickValue = getSliderValueFromPosition(startX, sliderRect);
+
+    // Determine which slider to activate
+    if (startMinVal === startMaxVal) {
+      // Intersection case - we'll determine based on drag direction in handleDragMove
+      activeSlider = null;
+    } else {
+      // Normal case - choose closest slider
+      const distanceToMin = Math.abs(clickValue - startMinVal);
+      const distanceToMax = Math.abs(clickValue - startMaxVal);
+      activeSlider = distanceToMin <= distanceToMax ? minSlider : maxSlider;
+    }
+
+    // Add visual feedback if we have an active slider
+    if (activeSlider) {
+      activeSlider.style.zIndex = '4';
+    }
+  }
+
+  function handleDragMove(event) {
+    if (!isDragging) return;
+
+    event.preventDefault();
+    const currentX = getEventX(event);
+    const newValue = getSliderValueFromPosition(currentX, sliderRect);
+
+    // If we're at intersection and haven't determined active slider yet
+    if (!activeSlider && startMinVal === startMaxVal) {
+      const dragDistance = currentX - startX;
+
+      // Need minimum drag distance to determine direction
+      if (Math.abs(dragDistance) > 5) {
+        if (dragDistance > 0) {
+          // Dragging right - activate max slider
+          activeSlider = maxSlider;
+        } else {
+          // Dragging left - activate min slider
+          activeSlider = minSlider;
+        }
+
+        // Add visual feedback
+        activeSlider.style.zIndex = '4';
+      } else {
+        // Not enough movement yet
+        return;
+      }
+    }
+
+    if (!activeSlider) return;
+
+    // Apply collision detection
+    let constrainedValue = newValue;
+    if (activeSlider === minSlider) {
+      constrainedValue = Math.min(newValue, parseInt(maxSlider.value));
+    } else if (activeSlider === maxSlider) {
+      constrainedValue = Math.max(newValue, parseInt(minSlider.value));
+    }
+
+    // Update the active slider
+    if (parseInt(activeSlider.value) !== constrainedValue) {
+      activeSlider.value = constrainedValue;
+
+      // Update display
+      const minVal = parseInt(minSlider.value);
+      const maxVal = parseInt(maxSlider.value);
+      updateOptimismDisplay(minVal, maxVal);
+      updateSliderRange();
+    }
+  }
+
+  function handleDragEnd(event) {
+    if (!isDragging) return;
+
+    event.preventDefault();
+    isDragging = false;
+
+    // Reset z-index
+    if (activeSlider) {
+      activeSlider.style.zIndex = activeSlider === minSlider ? '3' : '2';
+    }
+
+    activeSlider = null;
+    sliderRect = null;
+  }
+
+  // Add event listeners for both mouse and touch
+  sliderContainer.addEventListener('mousedown', handleDragStart);
+  sliderContainer.addEventListener('touchstart', handleDragStart, { passive: false });
+
+  document.addEventListener('mousemove', handleDragMove);
+  document.addEventListener('touchmove', handleDragMove, { passive: false });
+
+  document.addEventListener('mouseup', handleDragEnd);
+  document.addEventListener('touchend', handleDragEnd, { passive: false });
+  document.addEventListener('touchcancel', handleDragEnd, { passive: false });
+
+  // Disable default slider behavior to prevent conflicts
+  minSlider.addEventListener('input', function (event) {
+    if (isDragging) {
+      event.preventDefault();
+      return false;
+    }
+    handleOptimismSliderChange(event);
+  });
+
+  maxSlider.addEventListener('input', function (event) {
+    if (isDragging) {
+      event.preventDefault();
+      return false;
+    }
+    handleOptimismSliderChange(event);
+  });
+}
+
+
+
+function handleOptimismSliderChange(event) {
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+
+  if (!minSlider || !maxSlider) return;
+
+  let minVal = parseInt(minSlider.value);
+  let maxVal = parseInt(maxSlider.value);
+
+  // Collision detection: prevent thumbs from crossing
+  if (event && event.target === minSlider) {
+    // User is moving the min slider - clamp it to not exceed max
+    if (minVal > maxVal) {
+      minVal = maxVal;
+      minSlider.value = minVal;
+    }
+  } else if (event && event.target === maxSlider) {
+    // User is moving the max slider - clamp it to not go below min
+    if (maxVal < minVal) {
+      maxVal = minVal;
+      maxSlider.value = maxVal;
+    }
+  } else {
+    // Programmatic change - fix any crossing
+    if (minVal > maxVal) {
+      const average = Math.round((minVal + maxVal) / 2);
+      minVal = average;
+      maxVal = average;
+      minSlider.value = minVal;
+      maxSlider.value = maxVal;
+    }
+  }
+
+  updateOptimismDisplay(minVal, maxVal);
+  updateSliderRange();
+
+  // Ensure visual state is updated
+  updateSliderThumbVisuals(minVal, maxVal);
+}
+
+function updateOptimismDisplay(minVal, maxVal) {
+  const minValueSpan = document.querySelector('.optimism-min-value');
+  const maxValueSpan = document.querySelector('.optimism-max-value');
+  const separatorSpan = document.querySelector('.optimism-range-separator');
+
+  if (minValueSpan) minValueSpan.textContent = minVal;
+  if (maxValueSpan) maxValueSpan.textContent = maxVal;
+
+  // Show/hide separator and max value based on whether values are the same
+  const showRange = minVal !== maxVal;
+  if (separatorSpan) separatorSpan.style.display = showRange ? 'inline' : 'none';
+  if (maxValueSpan) maxValueSpan.style.display = showRange ? 'inline' : 'none';
+
+  // Update slider thumb visual state for intersection
+  updateSliderThumbVisuals(minVal, maxVal);
+}
+
+function updateSliderThumbVisuals(minVal, maxVal) {
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+  const minValueSpan = document.querySelector('.optimism-min-value');
+  const maxValueSpan = document.querySelector('.optimism-max-value');
+
+  if (!minSlider || !maxSlider) return;
+
+  const isIntersection = minVal === maxVal;
+
+  console.log('Updating slider visuals:', { minVal, maxVal, isIntersection });
+
+  if (isIntersection) {
+    // Show single black dot - hide max thumb, make min thumb black
+    minSlider.classList.add('intersection');
+    maxSlider.classList.add('hidden');
+    maxSlider.classList.remove('intersection');
+
+    // Make text black for intersection state
+    if (minValueSpan) minValueSpan.classList.add('intersection');
+    if (maxValueSpan) maxValueSpan.classList.add('intersection');
+
+    console.log('Applied intersection state: min=black, max=hidden, text=black');
+  } else {
+    // Show both thumbs in their normal colors
+    minSlider.classList.remove('intersection');
+    maxSlider.classList.remove('hidden', 'intersection');
+
+    // Return text to normal colors
+    if (minValueSpan) minValueSpan.classList.remove('intersection');
+    if (maxValueSpan) maxValueSpan.classList.remove('intersection');
+
+    console.log('Applied separated state: both thumbs visible, text=normal colors');
+  }
+}
+
+function updateSliderRange() {
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+  const sliderRange = document.querySelector('.slider-range');
+
+  if (!minSlider || !maxSlider || !sliderRange) return;
+
+  const minVal = parseInt(minSlider.value);
+  const maxVal = parseInt(maxSlider.value);
+  const minPercent = (minVal / 100) * 100;
+  const maxPercent = (maxVal / 100) * 100;
+
+  sliderRange.style.left = minPercent + '%';
+  sliderRange.style.width = (maxPercent - minPercent) + '%';
+
+  // Update thumb visuals for intersection state
+  updateSliderThumbVisuals(minVal, maxVal);
+}
+
+function updateSliderConstraints() {
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+
+  if (!minSlider || !maxSlider) return;
+
+  // Reset to full range - collision detection is handled in event listeners
+  minSlider.min = '0';
+  minSlider.max = '100';
+  maxSlider.min = '0';
+  maxSlider.max = '100';
+}
+
+function validateOptimismRange(optimismData) {
+  // Ensure min and max are numbers within valid range
+  let min = Math.max(0, Math.min(100, parseInt(optimismData.min) || 0));
+  let max = Math.max(0, Math.min(100, parseInt(optimismData.max) || 100));
+
+  // Ensure min never exceeds max
+  if (min > max) {
+    // If min is greater than max, set both to the average
+    const average = Math.round((min + max) / 2);
+    min = average;
+    max = average;
+  }
+
+  return { min, max };
+}
+
+// Variable to track save button state and timeout for optimism
+let saveOptimismButtonTimeout = null;
+let isSaveOptimismButtonActive = false;
+
+function saveOptimismScore(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Prevent multiple rapid clicks
+  if (isSaveOptimismButtonActive) return;
+  isSaveOptimismButtonActive = true;
+
+  const minSlider = document.getElementById('optimism-min');
+  const maxSlider = document.getElementById('optimism-max');
+  const saveButton = document.querySelector('.optimism-btn:not(.optimism-btn-secondary)');
+
+  if (!minSlider || !maxSlider || !saveButton) return;
+
+  const minVal = parseInt(minSlider.value);
+  const maxVal = parseInt(maxSlider.value);
+
+  // Validate before saving
+  const validatedData = validateOptimismRange({ min: minVal, max: maxVal });
+
+  // Update sliders if validation changed the values
+  if (validatedData.min !== minVal) {
+    minSlider.value = validatedData.min;
+  }
+  if (validatedData.max !== maxVal) {
+    maxSlider.value = validatedData.max;
+  }
+
+  // Update display and range
+  updateOptimismDisplay(validatedData.min, validatedData.max);
+  updateSliderRange();
+
+  // Save validated data to localStorage
+  localStorage.setItem('OptimismScore', JSON.stringify(validatedData));
+
+  // Update button to show success
+  saveButton.textContent = 'Saved!';
+  saveButton.style.background = '#28a745';
+
+  // Reset button after delay
+  if (saveOptimismButtonTimeout) {
+    clearTimeout(saveOptimismButtonTimeout);
+  }
+  saveOptimismButtonTimeout = setTimeout(() => {
+    if (saveButton) {
+      saveButton.textContent = 'Save Range';
+      saveButton.style.background = '#dc3545';
+    }
+    isSaveOptimismButtonActive = false;
+    saveOptimismButtonTimeout = null;
+  }, 2000);
+}
+
+// Debug function to test optimism score filtering on mobile
+function debugOptimismFiltering() {
+  console.log('=== DEBUGGING OPTIMISM FILTERING ===');
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  console.log('Optimism settings:', optimismData);
+
+  if (!window.CardSystem || !window.CardSystem.flipCards) {
+    console.log('CardSystem or flipCards not available');
+    return;
+  }
+
+  console.log('Total cards:', window.CardSystem.flipCards.length);
+
+  window.CardSystem.flipCards.forEach((card, index) => {
+    const optimismScoreElement = card.querySelector('.optimism-score');
+    if (optimismScoreElement) {
+      const scoreText = optimismScoreElement.textContent;
+      const scoreMatch = scoreText.match(/(\d+)\/100/);
+      console.log(`Card ${index}: found optimism element, text='${scoreText}', parsed=${scoreMatch ? scoreMatch[1] : 'NO_MATCH'}`);
+    } else {
+      console.log(`Card ${index}: NO optimism element found`);
+    }
+  });
+}
+
+// Expose debug function globally for testing
+window.debugOptimismFiltering = debugOptimismFiltering;
+
 function goBackToMenu() {
   // Don't remove body lock - the hamburger menu is still open
   // unfreezeBody(); // REMOVED - this was causing the body to unlock
@@ -800,7 +1313,12 @@ function applyFilters() {
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
   const includes = (localStorage.getItem('Includes') || '').toLowerCase();
-  const hasFilters = !!excludes || !!includes;
+
+  // Check for optimism score filter
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
+
+  const hasFilters = !!excludes || !!includes || hasOptimismFilter;
 
   // Store original state for proper restoration
   const originalActiveIndex = CardSystem.activeCardIndex;
@@ -835,6 +1353,12 @@ function filterCards(excludes, includes) {
   let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
 
+  // Get optimism score filter settings
+  const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
+  const optimismMin = optimismData.min;
+  const optimismMax = optimismData.max;
+  const hasOptimismFilter = optimismMin !== 0 || optimismMax !== 100;
+
   // Handle terms present in both lists by ignoring them
   const excludeSet = new Set(excludeTerms);
   const includeSet = new Set(includeTerms);
@@ -845,32 +1369,9 @@ function filterCards(excludes, includes) {
     excludeTerms = excludeTerms.filter(term => !commonTerms.has(term));
     includeTerms = includeTerms.filter(term => !commonTerms.has(term));
   }
-  let firstVisibleIndex = -1;
 
-  // Apply filtering with optimal order: excludes first, then includes
-  CardSystem.flipCards.forEach((card, index) => {
-    const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
-    const summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-
-    let shouldHide = false;
-
-    // Step 1: Apply excludes filter (hide if ANY exclude term matches)
-    if (excludeTerms.length > 0) {
-      shouldHide = excludeTerms.some(term => matchWord(term, summary));
-    }
-
-    // Step 2: Apply includes filter (only if not already hidden by excludes)
-    // Show only if at least one include term matches (or no includes specified)
-    if (!shouldHide && includeTerms.length > 0) {
-      shouldHide = !includeTerms.some(term => matchWord(term, summary));
-    }
-
-    card.classList.toggle('filtered', shouldHide);
-
-    if (!shouldHide && firstVisibleIndex === -1) {
-      firstVisibleIndex = index;
-    }
-  });
+  // Use optimized filtering function
+  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter);
 
   // Now, trigger the repositioning logic with the index of the first available card.
   repositionViewAfterFilter(firstVisibleIndex);

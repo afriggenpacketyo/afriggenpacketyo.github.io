@@ -613,6 +613,291 @@ html.dark-mode .includes-content p {
   }
 }
 
+/* Optimism Content */
+.optimism-content {
+  display: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.optimism-content.active {
+  display: block;
+}
+
+.optimism-content h3 {
+  margin-bottom: 1rem;
+  color: var(--menu-content-color);
+  font-size: 1.5rem;
+}
+
+.optimism-content p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+html.dark-mode .optimism-content p {
+  color: #ccc;
+}
+
+/* Optimism Slider Container */
+.optimism-slider-container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--btn-bg);
+  border-radius: 12px;
+  border: 1px solid var(--btn-border);
+}
+
+.optimism-values {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--menu-content-color);
+  margin-bottom: 1.5rem;
+  min-height: 2rem;
+}
+
+.optimism-min-value {
+  color: #dc3545;
+}
+
+.optimism-max-value {
+  color: #28a745;
+}
+
+/* Intersection state - black text for single value */
+.optimism-min-value.intersection {
+  color: #333333 !important;
+}
+
+.optimism-max-value.intersection {
+  color: #333333 !important;
+}
+
+.optimism-range-separator {
+  color: var(--menu-content-color);
+  margin: 0 0.5rem;
+}
+
+/* Dual Range Slider */
+.dual-range-slider {
+  position: relative;
+  height: 40px;
+  margin: 2rem 0;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+}
+
+#optimism-min {
+  z-index: 3;
+}
+
+#optimism-max {
+  z-index: 2;
+}
+
+.slider-thumb::-webkit-slider-track {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 40px;
+  border: none;
+  outline: none;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--menu-content-color);
+  border: 3px solid var(--menu-content-bg);
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider-thumb::-moz-range-track {
+  background: transparent;
+  height: 40px;
+  border: none;
+  outline: none;
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--menu-content-color);
+  border: 3px solid var(--menu-content-bg);
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  -moz-appearance: none;
+  margin: 0;
+}
+
+.slider-thumb:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider-thumb:hover::-moz-range-thumb {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Different colors for min and max thumbs */
+#optimism-min::-webkit-slider-thumb {
+  background: #dc3545;
+  border: 3px solid var(--menu-content-bg);
+}
+
+#optimism-max::-webkit-slider-thumb {
+  background: #28a745;
+  border: 3px solid var(--menu-content-bg);
+}
+
+#optimism-min::-moz-range-thumb {
+  background: #dc3545;
+  border: 3px solid var(--menu-content-bg);
+}
+
+#optimism-max::-moz-range-thumb {
+  background: #28a745;
+  border: 3px solid var(--menu-content-bg);
+}
+
+/* Intersection state - single black dot */
+#optimism-min.intersection::-webkit-slider-thumb {
+  background: #333333 !important;
+  border: 3px solid var(--menu-content-bg) !important;
+  z-index: 10 !important;
+}
+
+#optimism-max.intersection::-webkit-slider-thumb {
+  background: #333333 !important;
+  border: 3px solid var(--menu-content-bg) !important;
+  z-index: 10 !important;
+}
+
+#optimism-min.intersection::-moz-range-thumb {
+  background: #333333 !important;
+  border: 3px solid var(--menu-content-bg) !important;
+  z-index: 10 !important;
+}
+
+#optimism-max.intersection::-moz-range-thumb {
+  background: #333333 !important;
+  border: 3px solid var(--menu-content-bg) !important;
+  z-index: 10 !important;
+}
+
+/* Hide the other thumb when in intersection state */
+#optimism-min.hidden,
+#optimism-max.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slider-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--btn-border);
+  border-radius: 3px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.slider-range {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #dc3545, #28a745);
+  border-radius: 3px;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+html.dark-mode .slider-labels {
+  color: #ccc;
+}
+
+/* Optimism Actions */
+.optimism-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  margin-top: 2rem !important;
+  flex-wrap: wrap !important;
+}
+
+.optimism-actions .optimism-btn {
+  margin: 0 !important;
+}
+
+/* Optimism Buttons */
+.optimism-content .optimism-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--excludes-btn-width);
+  height: var(--excludes-btn-height);
+  padding: 12px 20px;
+  margin: 0.5rem;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+  border: 2px solid #dc3545;
+  border-radius: 12px;
+  background-color: #dc3545;
+  transition: all 0.2s ease;
+  position: relative;
+  font-weight: 500;
+  box-shadow: 0 4px 0 #c82333;
+  transform: translateY(0);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.optimism-content .optimism-btn-secondary {
+  background-color: var(--secondary-btn-bg);
+  border-color: var(--secondary-btn-border);
+  box-shadow: var(--secondary-btn-shadow);
+}
+
 /* Auto-apply option */
 .auto-apply-option {
   margin: 1.5rem 0;
@@ -800,6 +1085,17 @@ body.chrome-mobile-overlay-active {
     box-shadow: var(--secondary-btn-pressed-shadow);
   }
 
+  .optimism-content .optimism-btn:hover {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c82333;
+    background-color: #c82333;
+  }
+
+  .optimism-content .optimism-btn-secondary:hover {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
   .info-btn-container:hover .info-tooltip {
     opacity: 1;
     visibility: visible;
@@ -836,6 +1132,7 @@ body.chrome-mobile-overlay-active {
   .filter-option,
   .excludes-btn,
   .includes-btn,
+  .optimism-btn,
   .header-hamburger,
   .header-controls-row * {
     -webkit-tap-highlight-color: transparent;
@@ -882,6 +1179,17 @@ body.chrome-mobile-overlay-active {
   }
 
   .includes-content .includes-btn-secondary.pressed {
+    background-color: var(--secondary-btn-hover);
+    box-shadow: var(--secondary-btn-pressed-shadow);
+  }
+
+  .optimism-content .optimism-btn.pressed {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c82333;
+    background-color: #c82333;
+  }
+
+  .optimism-content .optimism-btn-secondary.pressed {
     background-color: var(--secondary-btn-hover);
     box-shadow: var(--secondary-btn-pressed-shadow);
   }

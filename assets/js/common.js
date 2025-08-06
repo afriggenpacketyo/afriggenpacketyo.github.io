@@ -19,6 +19,9 @@ if (!window.location.pathname.includes('about.html')) {
         isManuallyFlipping: false,
         isUserClicking: false,
 
+        // Cached card data for efficient filtering
+        cardData: [],
+
         // Initialization state
         isLayoutReady: false,
         isFullyInitialized: false,
@@ -351,7 +354,7 @@ if (!window.location.pathname.includes('about.html')) {
         },
 
         addSectionTitles: function () {
-            this.flipCards.forEach(card => {
+            this.flipCards.forEach((card, index) => {
                 const back = card.querySelector('.flip-card-back');
 
                 // Create and add Summary title
@@ -374,6 +377,12 @@ if (!window.location.pathname.includes('about.html')) {
                 const scoreText = back.querySelector('p:nth-of-type(2)');
                 const linkElement = back.querySelector('a');
 
+                // Cache card data for efficient filtering
+                const cardData = {
+                    summary: summaryText ? summaryText.textContent.toLowerCase() : '',
+                    optimismScore: null
+                };
+
                 // Insert titles in the DOM
                 if (summaryText) {
                     back.insertBefore(summaryTitle, summaryText);
@@ -382,10 +391,12 @@ if (!window.location.pathname.includes('about.html')) {
                 if (scoreText) {
                     back.insertBefore(scoreTitle, scoreText);
 
-                    // Style the score
+                    // Style the score and cache the parsed value
                     const scoreMatch = scoreText.textContent.match(/(\d+)\/100/);
                     if (scoreMatch) {
                         const score = parseInt(scoreMatch[1]);
+                        cardData.optimismScore = score; // Cache the parsed score
+                        
                         const scoreSpan = document.createElement('span');
                         scoreSpan.className = 'optimism-score';
                         scoreSpan.textContent = score + '/100';
@@ -406,6 +417,9 @@ if (!window.location.pathname.includes('about.html')) {
                 if (linkElement) {
                     back.insertBefore(linkTitle, linkElement);
                 }
+
+                // Store cached data
+                this.cardData[index] = cardData;
             });
         },
 

@@ -52,60 +52,97 @@ window.hamburgerMenu = {
     // Only handle on desktop (check for touch capability)
     if ('ontouchstart' in window) return;
 
-    // Check if we're in the excludes submenu
-    const excludesContent = document.querySelector('.excludes-content');
-    if (!excludesContent || excludesContent.style.display === 'none') return;
+    // Check for any active submenu and handle accordingly
+    const activeSubmenu = this.getActiveSubmenu();
+    if (!activeSubmenu) return;
 
-    const textarea = document.getElementById('excludes-input');
-    if (!textarea) return;
+    const { content, textarea } = activeSubmenu;
+    
+    let isInResizeHandle = false;
+    let isInsideTextarea = false;
+    
+    if (textarea) {
+      // Get textarea boundaries
+      const textareaRect = textarea.getBoundingClientRect();
+      const resizeHandleSize = 15; // Approximate size of resize handle area
 
-    // Get textarea boundaries
-    const textareaRect = textarea.getBoundingClientRect();
-    const resizeHandleSize = 15; // Approximate size of resize handle area
+      // Check if click is in the resize handle area (bottom-right corner)
+      isInResizeHandle = (
+        e.clientX >= textareaRect.right - resizeHandleSize &&
+        e.clientY >= textareaRect.bottom - resizeHandleSize &&
+        e.clientX <= textareaRect.right &&
+        e.clientY <= textareaRect.bottom
+      );
 
-    // Check if click is in the resize handle area (bottom-right corner)
-    const isInResizeHandle = (
-      e.clientX >= textareaRect.right - resizeHandleSize &&
-      e.clientY >= textareaRect.bottom - resizeHandleSize &&
-      e.clientX <= textareaRect.right &&
-      e.clientY <= textareaRect.bottom
+      // Check if click started inside textarea bounds
+      isInsideTextarea = (
+        e.clientX >= textareaRect.left &&
+        e.clientX <= textareaRect.right &&
+        e.clientY >= textareaRect.top &&
+        e.clientY <= textareaRect.bottom
+      );
+    }
+
+    // Check if click is in the submenu content area
+    const contentRect = content.getBoundingClientRect();
+    const isInContentArea = (
+      e.clientX >= contentRect.left &&
+      e.clientX <= contentRect.right &&
+      e.clientY >= contentRect.top &&
+      e.clientY <= contentRect.bottom
     );
 
-    // Check if click started inside textarea bounds
-    const isInsideTextarea = (
-      e.clientX >= textareaRect.left &&
-      e.clientX <= textareaRect.right &&
-      e.clientY >= textareaRect.top &&
-      e.clientY <= textareaRect.bottom
-    );
-
-    // Check if click is in the excludes content area (but not necessarily textarea)
-    const excludesRect = excludesContent.getBoundingClientRect();
-    const isInExcludesArea = (
-      e.clientX >= excludesRect.left &&
-      e.clientX <= excludesRect.right &&
-      e.clientY >= excludesRect.top &&
-      e.clientY <= excludesRect.bottom
-    );
-
-    // We consider it a potential resize operation if:
+    // We consider it a potential resize/interaction operation if:
     // 1. Click is in the resize handle, OR
     // 2. Click is inside the textarea (could be selecting text or starting resize), OR
-    // 3. Click is in the excludes area (buttons, etc. - don't close menu)
-    if (isInResizeHandle || isInsideTextarea || isInExcludesArea) {
+    // 3. Click is in the submenu content area (buttons, sliders, etc. - don't close menu)
+    if (isInResizeHandle || isInsideTextarea || isInContentArea) {
       this.isResizing = true;
       this.resizeStartX = e.clientX;
       this.resizeStartY = e.clientY;
       this.resizeTarget = textarea;
 
-      console.debug('Resize tracking started:', {
+      console.debug('Interaction tracking started:', {
         isInResizeHandle,
         isInsideTextarea,
-        isInExcludesArea,
+        isInContentArea: isInContentArea,
+        submenu: content.className,
         x: e.clientX,
         y: e.clientY
       });
     }
+  },
+
+  // Helper method to get the currently active submenu
+  getActiveSubmenu() {
+    // Check excludes submenu
+    const excludesContent = document.querySelector('.excludes-content');
+    if (excludesContent && excludesContent.style.display !== 'none') {
+      return {
+        content: excludesContent,
+        textarea: document.getElementById('excludes-input')
+      };
+    }
+
+    // Check includes submenu
+    const includesContent = document.querySelector('.includes-content');
+    if (includesContent && includesContent.style.display !== 'none') {
+      return {
+        content: includesContent,
+        textarea: document.getElementById('includes-input')
+      };
+    }
+
+    // Check optimism submenu
+    const optimismContent = document.querySelector('.optimism-content');
+    if (optimismContent && optimismContent.style.display !== 'none') {
+      return {
+        content: optimismContent,
+        textarea: null // No textarea in optimism submenu
+      };
+    }
+
+    return null;
   },
 
   // New method to handle mousemove on overlay
@@ -150,25 +187,25 @@ window.hamburgerMenu = {
 
   // Modified click handler
   handleOverlayClick(e) {
-    // Don't close if we were resizing
+    // Don't close if we were resizing/interacting
     if (this.isResizing) {
-      console.debug('Menu close prevented: textarea resize operation detected');
+      console.debug('Menu close prevented: interaction operation detected');
       return;
     }
 
-    // Don't close if clicking within the excludes content area
-    const excludesContent = document.querySelector('.excludes-content');
-    if (excludesContent && excludesContent.style.display !== 'none') {
-      const excludesRect = excludesContent.getBoundingClientRect();
-      const isInExcludesArea = (
-        e.clientX >= excludesRect.left &&
-        e.clientX <= excludesRect.right &&
-        e.clientY >= excludesRect.top &&
-        e.clientY <= excludesRect.bottom
+    // Don't close if clicking within any active submenu content area
+    const activeSubmenu = this.getActiveSubmenu();
+    if (activeSubmenu) {
+      const contentRect = activeSubmenu.content.getBoundingClientRect();
+      const isInContentArea = (
+        e.clientX >= contentRect.left &&
+        e.clientX <= contentRect.right &&
+        e.clientY >= contentRect.top &&
+        e.clientY <= contentRect.bottom
       );
 
-      if (isInExcludesArea) {
-        console.debug('Menu close prevented: click within excludes area');
+      if (isInContentArea) {
+        console.debug('Menu close prevented: click within submenu area', activeSubmenu.content.className);
         return;
       }
     }
@@ -565,10 +602,11 @@ window.hamburgerMenu = {
   resetToOriginalMenu() {
     if (!this.menuContent) return;
 
-    // Hide filter/excludes/includes content
+    // Hide filter/excludes/includes/optimism content
     const filterContent = this.menuContent.querySelector('.filter-content');
     const excludesContent = this.menuContent.querySelector('.excludes-content');
     const includesContent = this.menuContent.querySelector('.includes-content');
+    const optimismContent = this.menuContent.querySelector('.optimism-content');
 
     if (filterContent) {
       filterContent.classList.remove('active');
@@ -607,6 +645,11 @@ window.hamburgerMenu = {
       if (includesInput) {
         includesInput.blur(); // Ensure input loses focus
       }
+    }
+
+    if (optimismContent) {
+      optimismContent.classList.remove('active');
+      optimismContent.style.display = 'none';
     }
 
     // Show original menu
