@@ -60,21 +60,24 @@
         return new Promise(resolve => {
             let animationEndHandler;
             let safetyTimeout;
+            let endedBy = 'unknown';
             splashLogo.classList.remove('splash-animate', 'splash-bounce', 'splash-draw', 'splash-pixel', 'splash-spin');
             function cleanup() {
                 splashLogo.removeEventListener('animationend', animationEndHandler);
                 splashLogo.removeEventListener('transitionend', animationEndHandler);
                 clearTimeout(safetyTimeout);
+                console.log(`Splash: Logo animation finished via ${endedBy}.`);
                 resolve();
             }
             animationEndHandler = function(e) {
                 if ((animationType === 'default' && e.propertyName === 'transform') || (animationType !== 'default' && e.animationName && e.animationName.startsWith('splash-'))) {
+                    endedBy = e.type === 'animationend' ? 'animationend' : 'transitionend';
                     cleanup();
                 }
             };
             splashLogo.addEventListener('animationend', animationEndHandler);
             splashLogo.addEventListener('transitionend', animationEndHandler);
-            safetyTimeout = setTimeout(cleanup, 1600);
+            safetyTimeout = setTimeout(() => { endedBy = 'safety-timeout'; cleanup(); }, 1600);
             setDesktopAnimationTarget(); // Recalculate just before animating
             const animationClass = animationType === 'default' ? 'splash-animate' : `splash-${animationType}`;
             splashLogo.classList.add(animationClass);
@@ -150,35 +153,33 @@
     if (splashLogoWrapper) splashLogoWrapper.classList.add('is-loading');
     console.log("Splash: Logo preloaded. Shimmering started.");
 
-    // For pages that dispatch allCSSLoaded (like about.html), wait for it
-    // For pages that don't (like goodnews.html, index.html), just use minimum hold time
+    // Readiness barriers
+    // 1) Minimum visual hold
     const minHoldPromise = new Promise(resolve => setTimeout(resolve, 1500));
-    
-    let cssReadyPromise;
-    if (document.readyState === 'complete') {
-      // If page is already loaded, resolve immediately
-      cssReadyPromise = Promise.resolve();
-    } else {
-      // Wait for either allCSSLoaded event or DOMContentLoaded + reasonable delay
-      cssReadyPromise = new Promise(resolve => {
-        const resolveIfReady = () => {
-          // For pages with allCSSLoaded event
-          if (document.readyState === 'complete') {
-            resolve();
-          }
-        };
-        
-        document.addEventListener('allCSSLoaded', resolve, { once: true });
-        window.addEventListener('load', resolve, { once: true });
-        
-        // Fallback: if neither event fires within 3 seconds, proceed anyway
-        setTimeout(resolve, 3000);
-      });
-    }
 
-    // Wait for both the minimum time to pass AND CSS/page to be ready
-    Promise.all([minHoldPromise, cssReadyPromise]).then(() => {
-      console.log("Splash: Minimum hold time elapsed and page is ready. Starting animation.");
+    // 2) App-ready gate via events only — pageReady (CardSystem pages) or allCSSLoaded (simple pages like about.html)
+    const appReadyPromise = new Promise(resolve => {
+      if (window.__pageReadyFired) {
+        console.log('Splash: AppReady resolved via pageReady (pre-fired).');
+        resolve('pageReady-pre');
+        return;
+      }
+
+      const onPageReady = () => {
+        console.log('Splash: AppReady resolved via pageReady event.');
+        resolve('pageReady');
+      };
+      const onAllCSS = () => {
+        console.log('Splash: AppReady resolved via allCSSLoaded event.');
+        resolve('allCSSLoaded');
+      };
+      document.addEventListener('pageReady', onPageReady, { once: true });
+      document.addEventListener('allCSSLoaded', onAllCSS, { once: true });
+    });
+
+    // Wait for both the minimum time and the app readiness barrier
+    Promise.all([minHoldPromise, appReadyPromise]).then(() => {
+      console.log("Splash: Minimum hold elapsed and AppReady met. Starting animation.");
       // Stop the shimmer and run the main animation.
       if (splashLogoWrapper) splashLogoWrapper.classList.remove('is-loading');
       runSplashAnimation();

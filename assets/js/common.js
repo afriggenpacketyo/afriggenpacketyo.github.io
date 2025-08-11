@@ -795,6 +795,8 @@ if (!window.location.pathname.includes('about.html')) {
                 if (checkCSSLoaded()) {
                     this._pageReadyDispatched = true;
                     console.log('CardSystem: CSS loaded, dispatching pageReady event for splash screen');
+                    // Expose a global flag so late listeners (e.g., splash.js) can detect that pageReady already fired
+                    window.__pageReadyFired = true;
                     document.dispatchEvent(new CustomEvent('pageReady'));
                 } else {
                     console.log('CardSystem: CSS not yet loaded, waiting...');
