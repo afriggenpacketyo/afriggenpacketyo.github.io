@@ -1,6 +1,22 @@
 // Add initialization flag to prevent conflicts with mobile.js
 let isInitializing = true;
 
+// Listen for scriptsLoaded event to mark initialization complete
+document.addEventListener('scriptsLoaded', () => {
+  console.log('Filters: Scripts loaded, marking initialization complete');
+  isInitializing = false;
+  
+  // CRITICAL FIX: Ensure filtersCompleteInitialization is available immediately
+  // when scriptsLoaded fires, preventing race condition
+  if (typeof window.filtersCompleteInitialization !== 'function') {
+    console.warn('Filters: filtersCompleteInitialization not yet defined, defining placeholder');
+    window.filtersCompleteInitialization = function(callback) {
+      console.log('Filters: Using placeholder initialization');
+      if (callback) callback();
+    };
+  }
+}, { once: true });
+
 // Helper to escape regex special characters in user terms
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -115,17 +131,34 @@ function unfreezeBody() {
   removeBodyLock();
 }
 
+// Complete initialization function called by CardSystem
+window.filtersCompleteInitialization = function(callback) {
+  console.log('Filters: Complete initialization called, callback:', typeof callback);
+  isInitializing = false;
+  
+  // Add safety check to ensure CardSystem is ready
+  if (!window.CardSystem || !window.CardSystem.isLayoutReady) {
+    console.warn('Filters: CardSystem not ready during initialization - filters will not be applied');
+    if (callback) callback();
+    return;
+  }
+  
+  autoApplyFiltersOnLoad(callback);
+};
+
 // Auto-apply filters on page load if enabled
-function autoApplyFiltersOnLoad() {
+function autoApplyFiltersOnLoad(callback) {
   // Don't auto-apply during initialization
   if (isInitializing) {
     console.log('Filters: Skipping auto-apply during initialization');
+    if (callback) callback();
     return;
   }
 
   // Also check if CardSystem layout is ready
-  if (!window.CardSystem.isLayoutReady) {
+  if (!window.CardSystem || !window.CardSystem.isLayoutReady) {
     console.log('Filters: CardSystem layout not ready, skipping auto-apply');
+    if (callback) callback();
     return;
   }
 
@@ -135,14 +168,23 @@ function autoApplyFiltersOnLoad() {
   const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
   const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
 
+  console.log('Filters: shouldAutoApply:', shouldAutoApply, 'hasFilters:', hasExcludes || hasIncludes || hasOptimismFilter);
+  
   if (shouldAutoApply && (hasExcludes || hasIncludes || hasOptimismFilter)) {
     console.log('Filters: Auto-applying filters on page load...');
-    applyFiltersQuietly();
+    applyFiltersQuietly(callback);
+  } else {
+    console.log('Filters: No filters to apply, calling callback immediately');
+    if (callback) {
+      callback();
+    } else {
+      console.warn('Filters: No callback provided to autoApplyFiltersOnLoad');
+    }
   }
 }
 
 // Silent version of applyFilters that doesn't block touch events
-function applyFiltersQuietly() {
+function applyFiltersQuietly(callback) {
   console.log('Filters: Applying filters quietly...');
 
   const excludes = (localStorage.getItem('Excludes') || '').toLowerCase();
@@ -161,6 +203,14 @@ function applyFiltersQuietly() {
   }
 
   console.log("Filters: Quiet filtering complete.");
+  
+  // Always call callback regardless of filtering results
+  if (callback) {
+    console.log("Filters: Calling completion callback");
+    callback();
+  } else {
+    console.warn("Filters: No callback provided to applyFiltersQuietly");
+  }
 }
 
 // Optimized filtering function using cached card data
@@ -1387,24 +1437,7 @@ function showAllCards() {
   repositionViewAfterFilter(0);
 }
 
-// Function to mark initialization as complete and trigger auto-apply if needed
-function completeInitialization() {
-  isInitializing = false;
-  console.log('Filters: Initialization complete, checking for auto-apply...');
-
-  // Event-driven approach: only auto-apply when CardSystem is confirmed ready
-  if (window.CardSystem && window.CardSystem.isLayoutReady) {
-    autoApplyFiltersOnLoad();
-  } else {
-    // Listen for the layout ready event instead of using a timer
-    document.addEventListener('layoutFinalized', () => {
-      autoApplyFiltersOnLoad();
-    }, { once: true });
-  }
-}
-
-// Expose the function globally so other scripts can call it
-window.filtersCompleteInitialization = completeInitialization;
+// The filtersCompleteInitialization function is defined above at line 125
 
 /**
  * REWRITTEN: This function now correctly sequences the state update, UI update,

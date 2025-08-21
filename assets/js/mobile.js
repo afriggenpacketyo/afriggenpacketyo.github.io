@@ -1761,6 +1761,14 @@
       window.CardSystem.moveToCard = moveToCard;
       window.CardSystem.resetCardHighlights = resetCardHighlights;
       // --- END EXPOSE PUBLIC METHODS ---
+
+      // Signal that mobile platform is ready
+      console.log('Mobile: Platform initialization complete, signaling readiness');
+      if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
+          window.CardSystem.registerPlatformReady('mobile');
+      } else {
+          console.warn('Mobile: CardSystem.registerPlatformReady not available');
+      }
   })();
 
   // Browser detection for Safari vs Chrome positioning

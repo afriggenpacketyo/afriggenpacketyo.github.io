@@ -41,16 +41,43 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  // Define the loading sequence
+  // Define the loading sequence with proper dependency management
   async function initializeApp() {
       try {
+          // Wait for CSS to be loaded before initializing scripts
+          await new Promise(resolve => {
+              const checkCSS = () => {
+                  const testElement = document.documentElement;
+                  const bgColor = getComputedStyle(testElement).getPropertyValue('--background-main');
+                  if (bgColor && bgColor.trim() !== '') {
+                      console.log('CSS variables detected, CSS is loaded');
+                      resolve(); // CSS already loaded
+                  } else if (window.__allCSSLoadedFired) {
+                      console.log('allCSSLoaded event already fired, proceeding');
+                      resolve();
+                  } else {
+                      console.log('Waiting for allCSSLoaded event...');
+                      document.addEventListener('allCSSLoaded', resolve, { once: true });
+                  }
+              };
+              
+              if (document.readyState === 'loading') {
+                  document.addEventListener('allCSSLoaded', resolve, { once: true });
+              } else {
+                  checkCSS();
+              }
+          });
+
+          console.log('CSS loaded, initializing scripts...');
+
+          // Load common.js first
           await loadScript('assets/js/common.js?v=20250606');
 
+          // Load platform-specific script
           const platformScript = isMobile ? 'assets/js/mobile.js?v=20250606' : 'assets/js/desktop.js?v=20250606';
           await loadScript(platformScript);
 
-          // Now that platform-specific functions are exposed on CardSystem,
-          // we can load the scripts that depend on them.
+          // Load dependent scripts in parallel
           await Promise.all([
               loadScript('assets/js/hamburger.js?v=20250606'),
               loadScript('assets/js/filters.js?v=20250606')
@@ -58,11 +85,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
           console.log('All scripts loaded successfully in correct order.');
 
+          // Mark that scripts have loaded globally
+          window.__scriptsLoadedFired = true;
+
           // Dispatch event to notify platform-specific scripts that all dependencies are ready
           document.dispatchEvent(new CustomEvent('scriptsLoaded'));
 
       } catch (error) {
           console.error('Script loading failed:', error);
+          // Still mark as loaded and dispatch the event to prevent hanging
+          window.__scriptsLoadedFired = true;
+          document.dispatchEvent(new CustomEvent('scriptsLoaded'));
       }
   }
 

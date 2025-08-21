@@ -1368,13 +1368,19 @@
             CardSystem.scrollToCard = scrollToCard;
             console.log("Desktop: Exposed scrollToCard method to CardSystem.");
 
-            // --- SIGNAL READINESS ---
-            if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
-                window.CardSystem.registerPlatformReady('desktop');
-                console.log("Desktop: Signaled readiness to CardSystem.");
-            } else {
-                console.error("Desktop: window.CardSystem.registerPlatformReady not available!");
-            }
+            // --- SIGNAL READINESS AFTER POSITIONING ---
+            // Position to active card first, then signal readiness
+            scrollToCard(CardSystem.activeCardIndex, true); // instant positioning
+            
+            // Wait one frame for positioning to complete, then signal readiness
+            requestAnimationFrame(() => {
+                if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
+                    window.CardSystem.registerPlatformReady('desktop');
+                    console.log("Desktop: Signaled readiness to CardSystem after positioning.");
+                } else {
+                    console.error("Desktop: window.CardSystem.registerPlatformReady not available!");
+                }
+            });
             // --- END SIGNAL READINESS ---
         } else {
             // If layout isn't stable yet, try again

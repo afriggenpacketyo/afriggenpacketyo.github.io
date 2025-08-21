@@ -30,6 +30,42 @@
    * This function contains all the logic to prepare and run the splash animation.
    */
   function runSplashAnimation() {
+    // ENHANCED safety check: Ensure DOM is fully ready and cards are positioned
+    const hasCardSystem = document.querySelector('.container');
+    if (hasCardSystem) {
+      // For CardSystem pages, verify cards are positioned AND properly sized
+      const activeCard = document.querySelector('.flip-card.active');
+      if (!activeCard) {
+        console.warn('Splash: Active card not found, cannot start animation');
+        console.warn('Splash: Available cards:', document.querySelectorAll('.flip-card').length);
+        console.warn('Splash: Cards with active class:', document.querySelectorAll('.flip-card.active').length);
+        return;
+      }
+      
+      // Verify the card has proper dimensions (not collapsed)
+      const rect = activeCard.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        // Check if the card is filtered (hidden by filters)
+        if (activeCard.classList.contains('filtered')) {
+          console.log('Splash: Active card is filtered, proceeding with animation anyway');
+          // Continue with animation even if active card is filtered
+        } else {
+          console.warn('Splash: Active card not properly sized, cannot start animation');
+          console.warn('Splash: Active card rect:', rect);
+          console.warn('Splash: Active card element:', activeCard);
+          console.warn('Splash: Active card computed style display:', getComputedStyle(activeCard).display);
+          console.warn('Splash: Active card computed style visibility:', getComputedStyle(activeCard).visibility);
+          return;
+        }
+      }
+      
+      // Verify CardSystem is fully initialized
+      if (!window.CardSystem || !window.CardSystem.isLayoutReady) {
+        console.warn('Splash: CardSystem not ready, cannot start animation');
+        return;
+      }
+    }
+
     // Re-grab these elements in case they weren't ready before
     const mainLogoContainer = document.querySelector('.logo-container');
     const mainSiteLogo = document.querySelector('.site-logo');
@@ -132,15 +168,6 @@
 
       // Start preloading by setting the src
       preloadImg.src = splashLogo.src;
-
-      // Safety timeout in case image loading hangs
-      setTimeout(() => {
-        if (!splashLogo.classList.contains('is-visible')) {
-          console.warn("Splash: Logo preload timeout, showing anyway");
-          showLogo();
-          resolve();
-        }
-      }, 3000); // 3 second timeout
     });
   }
 
@@ -157,24 +184,45 @@
     // 1) Minimum visual hold
     const minHoldPromise = new Promise(resolve => setTimeout(resolve, 1500));
 
-    // 2) App-ready gate via events only — pageReady (CardSystem pages) or allCSSLoaded (simple pages like about.html)
-    const appReadyPromise = new Promise(resolve => {
-      if (window.__pageReadyFired) {
-        console.log('Splash: AppReady resolved via pageReady (pre-fired).');
-        resolve('pageReady-pre');
-        return;
-      }
+    // 2) App-ready gate - purely event-driven
+    const appReadyPromise = new Promise((resolve, reject) => {
+      // Check if we're on a CardSystem page (has .container)
+      const hasCardSystem = document.querySelector('.container');
+      
+      if (hasCardSystem) {
+        // For CardSystem pages, wait for pageReady event which guarantees everything is positioned
+        let timeoutId;
+        const onPageReady = () => {
+          console.log('Splash: pageReady event received - all systems ready');
+          if (timeoutId) clearTimeout(timeoutId);
+          resolve('pageReady');
+        };
 
-      const onPageReady = () => {
-        console.log('Splash: AppReady resolved via pageReady event.');
-        resolve('pageReady');
-      };
-      const onAllCSS = () => {
-        console.log('Splash: AppReady resolved via allCSSLoaded event.');
-        resolve('allCSSLoaded');
-      };
-      document.addEventListener('pageReady', onPageReady, { once: true });
-      document.addEventListener('allCSSLoaded', onAllCSS, { once: true });
+        if (window.__pageReadyFired) {
+          console.log('Splash: pageReady already fired');
+          resolve('pageReady');
+        } else {
+          document.addEventListener('pageReady', onPageReady, { once: true });
+          
+          // Safety timeout - if pageReady doesn't fire within 5 seconds, proceed anyway
+          timeoutId = setTimeout(() => {
+            console.warn('Splash: pageReady timeout - proceeding with animation anyway');
+            resolve('pageReady-timeout');
+          }, 5000);
+        }
+      } else {
+        // For simple pages like about.html, wait for CSS or document ready
+        const onAllCSS = () => {
+          console.log('Splash: AppReady resolved via allCSSLoaded event.');
+          resolve('allCSSLoaded');
+        };
+        
+        if (window.__allCSSLoadedFired || document.readyState === 'complete') {
+          onAllCSS();
+        } else {
+          document.addEventListener('allCSSLoaded', onAllCSS, { once: true });
+        }
+      }
     });
 
     // Wait for both the minimum time and the app readiness barrier
@@ -183,6 +231,11 @@
       // Stop the shimmer and run the main animation.
       if (splashLogoWrapper) splashLogoWrapper.classList.remove('is-loading');
       runSplashAnimation();
+    }).catch((error) => {
+      console.error("Splash: Critical error during initialization:", error);
+      console.error("Splash: Cannot proceed without proper initialization - splash will remain visible");
+      // Don't proceed if we can't guarantee proper initialization
+      // The user will see the splash screen, indicating something is wrong
     });
   });
 

@@ -572,6 +572,8 @@ if (!window.location.pathname.includes('about.html')) {
                 }
 
                 this.platformReadiness[platform] = true;
+                
+                // Check readiness immediately when platform signals
                 this.checkOverallLayoutReadiness();
             } else {
                 console.warn(`CardSystem: Unknown platform "${platform}" signaled readiness.`);
@@ -598,6 +600,9 @@ if (!window.location.pathname.includes('about.html')) {
                 console.log(`CardSystem: All required readiness signals met for "${currentPlatform}". Finalizing layout.`);
                 this.isLayoutReady = true;
                 this.finalizeLayout();
+            } else {
+                console.log(`CardSystem: Platform "${currentPlatform}" not ready yet. Current readiness:`, this.platformReadiness);
+                // Will wait for platform to signal readiness - no timeout fallback
             }
 
             this._checkingReadiness = false;
@@ -626,31 +631,60 @@ if (!window.location.pathname.includes('about.html')) {
 
             // *** CRITICAL FIX: Apply filters BEFORE initial display ***
             const applyFiltersAndPosition = () => {
-                if (typeof window.filtersCompleteInitialization === 'function') {
-                    console.log('CardSystem: Applying filters before initial display...');
-                    window.filtersCompleteInitialization();
-                }
+                // Wait for all scripts to be loaded before applying filters
+                const waitForScripts = () => {
+                    return new Promise((resolve, reject) => {
+                        // Check if scripts are already loaded
+                        if (typeof window.filtersCompleteInitialization === 'function') {
+                            console.log('CardSystem: Scripts already loaded, proceeding immediately');
+                            resolve();
+                            return;
+                        }
 
-                // Use requestAnimationFrame to ensure filter DOM changes are processed
-                requestAnimationFrame(() => {
-                    // Now that filters are applied, position to the correct card
-                    if (typeof this.moveToCard === 'function') {
-                        this.moveToCard(this.activeCardIndex, false); // false = instant
-                        // Mobile positioning is synchronous, can dispatch immediately
-                        this.dispatchPageReady();
-                    } else if (typeof this.scrollToCard === 'function') {
-                        // For desktop, we need to coordinate scrolling with positioning check
-                        // Use instant scroll since we're in initialization, then verify positioning
-                        this.scrollToCard(this.activeCardIndex, true); // true = instant for desktop
+                        // Check if scriptsLoaded event already fired
+                        if (window.__scriptsLoadedFired) {
+                            console.log('CardSystem: scriptsLoaded event already fired, proceeding');
+                            resolve();
+                            return;
+                        }
+
+                        console.log('CardSystem: Waiting for scriptsLoaded event...');
                         
-                        // Wait one frame for the instant scroll to take effect, then check positioning
-                        requestAnimationFrame(() => {
-                            this.waitForDesktopPositioning();
-                        });
+                        // Set up event listener - no timeout, must wait for actual event
+                        const onScriptsLoaded = () => {
+                            console.log('CardSystem: scriptsLoaded event received');
+                            resolve();
+                        };
+                        
+                        document.addEventListener('scriptsLoaded', onScriptsLoaded, { once: true });
+                    });
+                };
+
+                waitForScripts().then(() => {
+                    console.log('CardSystem: Scripts loaded, applying filters before initial display...');
+                    
+                    // Apply filters if function is available
+                    if (typeof window.filtersCompleteInitialization === 'function') {
+                        try {
+                            // Pass callback to be called when filtering is complete
+                            window.filtersCompleteInitialization(() => {
+                                // Filtering is complete, now position and dispatch pageReady
+                                this.positionAndDispatchPageReady();
+                            });
+                        } catch (error) {
+                            console.warn('CardSystem: Error applying filters:', error);
+                            // Still dispatch pageReady even if filtering failed
+                            this.positionAndDispatchPageReady();
+                        }
                     } else {
-                        // Fallback if no positioning method available
-                        this.dispatchPageReady();
+                        console.warn('CardSystem: filtersCompleteInitialization not available');
+                        // No filtering available, just position and dispatch
+                        this.positionAndDispatchPageReady();
                     }
+                }).catch((error) => {
+                    console.error('CardSystem: Critical error in script loading:', error);
+                    console.error('CardSystem: Cannot proceed without scripts - layout will not be finalized');
+                    // Don't proceed if scripts failed to load - this indicates a serious problem
                 });
             };
 
@@ -666,113 +700,24 @@ if (!window.location.pathname.includes('about.html')) {
             console.log('CardSystem: Layout finalization complete. App is fully initialized.');
         },
 
-        // Wait for desktop positioning to complete before triggering splash
-        waitForDesktopPositioning: function () {
-            // Check if card is already positioned correctly (for instant scrolls)
-            const isAlreadyPositioned = () => {
-                const activeCard = this.flipCards[this.activeCardIndex];
-                if (!activeCard) return false;
 
-                const containerRect = this.container.getBoundingClientRect();
-                const containerCenter = containerRect.left + containerRect.width / 2;
-                const cardRect = activeCard.getBoundingClientRect();
-                const cardCenter = cardRect.left + cardRect.width / 2;
-                return Math.abs(cardCenter - containerCenter) < 10; // 10px tolerance
-            };
 
-            // If already positioned, dispatch immediately
-            if (isAlreadyPositioned()) {
-                console.log('CardSystem: Desktop already positioned, triggering splash immediately');
-                this.dispatchPageReady();
-                return;
+        // Position cards and dispatch pageReady
+        positionAndDispatchPageReady: function () {
+            // Try to position to the active card if possible
+            if (typeof this.moveToCard === 'function') {
+                // Mobile: positioning is synchronous
+                this.moveToCard(this.activeCardIndex, false); // false = instant
+            } else if (typeof this.scrollToCard === 'function') {
+                // Desktop: positioning is synchronous with scrollToCard
+                this.scrollToCard(this.activeCardIndex, false); // false = instant
             }
-
-            // Otherwise, set up event-driven detection
-            let scrollEndTimeout;
-            let isScrolling = false;
             
-            const handleScrollStart = () => {
-                isScrolling = true;
-                clearTimeout(scrollEndTimeout);
-            };
-
-            const handleScrollEnd = () => {
-                clearTimeout(scrollEndTimeout);
-                scrollEndTimeout = setTimeout(() => {
-                    if (isAlreadyPositioned()) {
-                        console.log('CardSystem: Desktop positioning verified via scroll events, triggering splash');
-                        cleanup();
-                        this.dispatchPageReady();
-                    } else {
-                        // If still not positioned after scroll ends, fall back to RAF checking
-                        console.log('CardSystem: Scroll ended but not positioned, falling back to frame checking');
-                        fallbackFrameCheck();
-                    }
-                }, 16); // One frame delay to ensure layout is complete
-            };
-
-            const cleanup = () => {
-                this.container.removeEventListener('scroll', handleScrollStart);
-                this.container.removeEventListener('scrollend', handleScrollEnd);
-                clearTimeout(scrollEndTimeout);
-            };
-
-            // Fallback frame-based checking (only used if scroll events don't work)
-            const fallbackFrameCheck = () => {
-                let stableFrames = 0;
-                let lastScrollLeft = this.container.scrollLeft;
-                
-                const checkFrame = () => {
-                    const currentScrollLeft = this.container.scrollLeft;
-                    
-                    if (Math.abs(currentScrollLeft - lastScrollLeft) < 1) {
-                        stableFrames++;
-                    } else {
-                        stableFrames = 0;
-                    }
-                    
-                    lastScrollLeft = currentScrollLeft;
-
-                    if (stableFrames >= 3 && isAlreadyPositioned()) {
-                        console.log('CardSystem: Desktop positioning verified via fallback frame check, triggering splash');
-                        this.dispatchPageReady();
-                    } else if (stableFrames < 10) { // Prevent infinite loop
-                        requestAnimationFrame(checkFrame);
-                    } else {
-                        console.warn('CardSystem: Positioning check timed out, triggering splash anyway');
-                        this.dispatchPageReady();
-                    }
-                };
-                
-                requestAnimationFrame(checkFrame);
-            };
-
-            // Set up scroll event listeners
-            this.container.addEventListener('scroll', handleScrollStart, { passive: true });
-            
-            // Use scrollend if available, otherwise fall back to scroll + timeout
-            if ('onscrollend' in this.container) {
-                this.container.addEventListener('scrollend', handleScrollEnd, { once: true });
-            } else {
-                // Fallback: detect scroll end with timeout
-                let scrollTimeout;
-                const handleScroll = () => {
-                    handleScrollStart();
-                    clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(() => {
-                        handleScrollEnd();
-                        this.container.removeEventListener('scroll', handleScroll);
-                    }, 50);
-                };
-                this.container.addEventListener('scroll', handleScroll, { passive: true });
-            }
-
-            // Safety timeout to prevent hanging
-            setTimeout(() => {
-                console.warn('CardSystem: Positioning check safety timeout, triggering splash');
-                cleanup();
+            // Always dispatch pageReady regardless of whether positioning worked
+            // Use requestAnimationFrame to ensure any DOM changes are processed
+            requestAnimationFrame(() => {
                 this.dispatchPageReady();
-            }, 2000); // 2 second max wait
+            });
         },
 
         // Centralized pageReady dispatch
@@ -783,29 +728,18 @@ if (!window.location.pathname.includes('about.html')) {
                 return;
             }
 
-            // Check if CSS is loaded by testing if styles are applied
-            const checkCSSLoaded = () => {
-                // Test if common.css variables are available
-                const testElement = document.documentElement;
-                const bgColor = getComputedStyle(testElement).getPropertyValue('--background-main');
-                return bgColor && bgColor.trim() !== '';
-            };
+            // Ensure cards have active class before dispatching
+            this.updateUI();
 
-            const dispatchWhenReady = () => {
-                if (checkCSSLoaded()) {
-                    this._pageReadyDispatched = true;
-                    console.log('CardSystem: CSS loaded, dispatching pageReady event for splash screen');
-                    // Expose a global flag so late listeners (e.g., splash.js) can detect that pageReady already fired
-                    window.__pageReadyFired = true;
-                    document.dispatchEvent(new CustomEvent('pageReady'));
-                } else {
-                    console.log('CardSystem: CSS not yet loaded, waiting...');
-                    // Check again in next frame
-                    requestAnimationFrame(dispatchWhenReady);
-                }
-            };
+            // Force a reflow to ensure DOM changes are applied
+            void document.body.offsetHeight;
 
-            dispatchWhenReady();
+            // Mark as dispatched and dispatch immediately
+            this._pageReadyDispatched = true;
+            window.__pageReadyFired = true;
+            
+            console.log('CardSystem: Dispatching pageReady event synchronously');
+            document.dispatchEvent(new CustomEvent('pageReady'));
         }
     };
 

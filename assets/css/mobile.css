@@ -2,628 +2,722 @@
    MOBILE STYLES
    ============================================================= */
 
-    /* Mobile: Hide outside logo, show header logo */
-    .logo-container {
-      display: none !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-    }
-    .header-logo-container {
-      display: flex;
-      opacity: 1;
-      visibility: visible;
-    }
-    .header-toggle-switch,
-    .header-toggle-switch *,
-    .switch,
-    .slider {
-      -webkit-tap-highlight-color: transparent !important;
-      touch-action: manipulation !important;
-    }
-    a, a:active, a:focus {
-      -webkit-tap-highlight-color: transparent !important;
-      touch-action: manipulation !important;
-    }
-    .header-toggle-switch {
-      right: 10px;
-      height: 30px;
-    }
-    .switch {
-      width: 36px;
-      height: 18px;
-    }
-    .slider:before {
-      height: 14px;
-      width: 14px;
-      left: 2px;
-      bottom: 2px;
-    }
-    input:checked + .slider:before {
-      transform: translateX(16px);
-    }
+/* Mobile: Hide outside logo, show header logo */
+.logo-container {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
 
-   .card-link-rectangle {
+.header-logo-container {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+.header-toggle-switch,
+.header-toggle-switch *,
+.switch,
+.slider {
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+}
+
+a,
+a:active,
+a:focus {
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+}
+
+.header-toggle-switch {
+  right: 10px;
+  height: 30px;
+}
+
+.switch {
+  width: 36px;
+  height: 18px;
+}
+
+.slider:before {
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+}
+
+input:checked+.slider:before {
+  transform: translateX(16px);
+}
+
+.card-link-rectangle {
+  display: none !important;
+}
+
+/* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
+html.dark-mode .flip-card.active .flip-card-front {
+  background: #3a206e;
+  color: #e0e0e0;
+}
+
+html.dark-mode .flip-card.active .flip-card-front h2,
+html.dark-mode .flip-card.active .flip-card-front p,
+html.dark-mode .flip-card.active .flip-card-front span,
+html.dark-mode .flip-card.active .flip-card-front a,
+html.dark-mode .flip-card.active .flip-card-front li,
+html.dark-mode .flip-card.active .flip-card-front strong,
+html.dark-mode .flip-card.active .flip-card-front em {
+  color: #e0e0e0;
+  border: none;
+}
+
+.container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  padding-left: 0;
+  padding-right: 0;
+  scroll-snap-type: none;
+  gap: 30px;
+  padding-top: 90px !important;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important;
+  /* 32px for visual gap, plus iOS safe area */
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  align-items: center;
+  min-height: 600px;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+.flip-card {
+  margin: 0 15px !important;
+  height: var(--card-height);
+  min-height: var(--card-height);
+}
+
+/* Mobile dark mode - establish cleaner cascade instead of using !important */
+html.dark-mode .container .flip-card {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+/* Preserve the 90% scale for inactive cards in dark mode */
+html.dark-mode .container .flip-card:not(.active) {
+  opacity: 0.65;
+  transform: scale(0.9);
+  z-index: 1;
+}
+
+html.dark-mode .container .flip-card-inner {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+}
+
+/* Front and back faces in mobile dark mode */
+html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
+  background: #3a206e !important;
+  color: #e0e0e0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+html.dark-mode .container .flip-card .flip-card-back {
+  background: rgba(35, 39, 46, 0.95);
+  color: #5ecbff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  width: 90vw;
+  padding: 25px;
+  margin: 0;
+  border-radius: var(--card-radius);
+}
+
+html.dark-mode .flip-card.flipped .flip-card-back {
+  background: rgba(35, 39, 46, 0.95);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Remove problematic ::after elements */
+html.dark-mode .container .flip-card .flip-card-back::after,
+html.dark-mode .flip-card.flipped .flip-card-back::after {
+  display: none;
+}
+
+/* Blur effect removed */
+html.dark-mode .flip-card.flipped .flip-card-back {
+  background: rgba(35, 39, 46, 0.85);
+  margin: 0;
+  box-sizing: border-box;
+  /* Keep standard width for content */
+  width: 90vw !important;
+  /* Blur effect removed */
+  position: relative;
+  /* Ensure full content width including padding */
+  padding-left: 25px;
+  padding-right: 25px;
+  /* Blur effect removed */
+  margin-left: -25px;
+  margin-right: -25px;
+  width: calc(90vw + 50px) !important;
+}
+
+/* Blur effect removed */
+html.dark-mode .flip-card.flipped .flip-card-back::before {
+  content: '';
+  position: absolute;
+  top: -25px;
+  left: -25px;
+  right: -25px;
+  bottom: -25px;
+  background: inherit;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+/* Mobile-specific dark mode fixes */
+/* This is a critical fix for mobile dark mode */
+html.dark-mode .container .flip-card .flip-card-back::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 48px;
+  background: none;
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* The flipped card case where we need to extend the width */
+html.dark-mode .flip-card.flipped .flip-card-back::after {
+  /* Extend the width to match the expanded card */
+  width: calc(100% + 50px);
+  left: -25px;
+  /* Keep the same gradient direction and color values for consistency */
+  background: none;
+}
+
+/* Active card in mobile dark mode - increase specificity instead of !important */
+/* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
+html.dark-mode .container .flip-card.active .flip-card-front,
+html.dark-mode .container .flip-card.preactivated .flip-card-front {
+  background: #3a206e;
+  color: #e0e0e0;
+  box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+  border: 1.5px solid #7c6fd8;
+  outline: none;
+}
+
+/* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
+html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
+html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
+html.dark-mode .container .flip-card.active .flip-card-front,
+html.dark-mode .container .flip-card.preactivated .flip-card-front,
+html.dark-mode .flip-card.active .flip-card-front,
+html.dark-mode .flip-card.preactivated .flip-card-front {
+  background: #3a206e !important;
+  /* deep indigo purple */
+  color: #e0e0e0 !important;
+  box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+  border: 1.5px solid #7c6fd8;
+  outline: none;
+}
+
+html.dark-mode .flip-card.card-targeted .flip-card-front {
+  background: #3a206e !important;
+  /* deep indigo purple */
+  color: #e0e0e0 !important;
+  box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
+  border: 1.5px solid #7c6fd8;
+  outline: none;
+}
+
+html.dark-mode .flip-card.active .flip-card-front * {
+  color: #e0e0e0;
+  border: none;
+}
+
+/* Keep inner card transparent to avoid rectangular appearance */
+html.dark-mode .container .flip-card.active .flip-card-inner {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+html.dark-mode .container .flip-card.active .flip-card-back {
+  background: var(--primary-blue);
+  color: #fff;
+}
+
+/* Clean transition for all cards - removing unnecessary style overrides */
+.flip-card-inner {
+  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+}
+
+.flip-card-back {
+  height: auto;
+  max-height: var(--card-height);
+}
+
+.nav-arrow {
+  display: none;
+}
+
+.page-header h1 {
+  font-size: 1.2rem;
+}
+
+header {
+  z-index: 999;
+}
+
+#left-scroll-padding,
+#right-scroll-padding {
+  flex-shrink: 0;
+  height: 1px;
+  visibility: visible !important;
+  opacity: 0;
+}
+
+.flip-card.flipped {
+  position: relative !important;
+  width: var(--card-width) !important;
+  height: var(--card-height) !important;
+  margin: 0 15px !important;
+  z-index: 100 !important;
+}
+
+.flip-card.flipped .flip-card-back {
+  position: fixed !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) rotateY(180deg) !important;
+  width: 90vw !important;
+  height: auto !important;
+  min-height: 70vh !important;
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+  padding: 25px !important;
+  z-index: 1000 !important;
+}
+
+.safari-browser .flip-card.flipped .flip-card-back {
+  top: 19.9vh !important;
+}
+
+.chrome-browser .flip-card.flipped .flip-card-back {
+  top: 21vh !important;
+}
+
+.chrome-browser .container {
+  padding-bottom: 80px !important;
+}
+
+.flip-card.flipped~.flip-card:not(.flipped) {
+  opacity: 0.7 !important;
+}
+
+.flip-card.flipped .flip-card-back .summary {
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+.card-indicator {
+  z-index: 998;
+}
+
+.flip-card-back .summary,
+.flip-card.flipped .flip-card-back .summary {
+  width: 100%;
+}
+
+.flip-card.flipped .flip-card-back .summary {
+  transform: scale(1.2);
+  width: 100%;
+}
+
+.site-logo {
+  max-width: var(--logo-max-width-mobile, 60px);
+}
+
+html.dark-mode .logo-container img.site-logo,
+html.dark-mode .header-logo-container {
+  box-shadow:
+    0 0 8px 2px #5ecbff,
+    0 0 20px 6px #39fffd,
+    0 0 40px 12px #5ecbff,
+    0 0 60px 18px #39fffd !important;
+  transition: filter 0.3s, box-shadow 0.3s;
+}
+
+/* PERFECTED: Beautiful soft-blurred top edge for swipe indicator */
+.overlay-content .swipe-indicator {
+  border: none;
+  box-shadow: none;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border-bottom-left-radius: 1px;
+  border-bottom-right-radius: 1px;
+  background: linear-gradient(to top,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.92) 20%,
+      rgba(255, 255, 255, 0.75) 40%,
+      rgba(255, 255, 255, 0.45) 65%,
+      rgba(255, 255, 255, 0.15) 85%,
+      rgba(255, 255, 255, 0) 100%);
+  color: #000;
+  font-weight: bold;
+  font-size: 1.1em;
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  z-index: 10;
+  margin: 0;
+  /* Ultra-smooth mask for perfect edge blur */
+  -webkit-mask-image: linear-gradient(to top,
+      black 0%,
+      black 40%,
+      rgba(0, 0, 0, 0.8) 60%,
+      rgba(0, 0, 0, 0.4) 80%,
+      transparent 100%);
+  mask-image: linear-gradient(to top,
+      black 0%,
+      black 40%,
+      rgba(0, 0, 0, 0.8) 60%,
+      rgba(0, 0, 0, 0.4) 80%,
+      transparent 100%);
+}
+
+/* PERFECTED: Dark mode with identical soft-blur structure */
+html.dark-mode .overlay-content .swipe-indicator {
+  background: linear-gradient(to top,
+      rgba(35, 39, 46, 0.98) 0%,
+      rgba(35, 39, 46, 0.92) 20%,
+      rgba(35, 39, 46, 0.75) 40%,
+      rgba(35, 39, 46, 0.45) 65%,
+      rgba(35, 39, 46, 0.15) 85%,
+      rgba(35, 39, 46, 0) 100%);
+  color: #5ecbff;
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  /* Identical mask for consistent edge blur */
+  -webkit-mask-image: linear-gradient(to top,
+      black 0%,
+      black 40%,
+      rgba(0, 0, 0, 0.8) 60%,
+      rgba(0, 0, 0, 0.4) 80%,
+      transparent 100%);
+  mask-image: linear-gradient(to top,
+      black 0%,
+      black 40%,
+      rgba(0, 0, 0, 0.8) 60%,
+      rgba(0, 0, 0, 0.4) 80%,
+      transparent 100%);
+}
+
+/* Ensure proper background color matching in dark mode */
+html.dark-mode .overlay-content {
+  background: #23272e;
+}
+
+html.dark-mode .flip-card.flipped .flip-card-back {
+  background: #23272e;
+  padding-bottom: calc(25px + 65px);
+  /* Add padding to account for swipe indicator */
+}
+
+/* Remove any potential spacing issues */
+html.dark-mode .overlay-content,
+html.dark-mode .flip-card-back,
+html.dark-mode .flip-card.flipped .flip-card-back {
+  margin-bottom: 0;
+}
+
+/* Ensure content doesn't overflow */
+html.dark-mode .flip-card-back-content {
+  padding-bottom: 65px;
+}
+
+/* Only use fixed/viewport style for fullscreen overlays on mobile */
+html.dark-mode .swipe-indicator {
+  color: rgba(94, 203, 255, 0.8);
+}
+
+.swipe-indicator:before,
+.swipe-indicator:after {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  position: relative;
+  margin: 0 8px;
+}
+
+.swipe-indicator:before {
+  transform: translateX(5px);
+}
+
+.swipe-indicator:after {
+  transform: translateX(-5px);
+}
+
+.swipe-indicator .scroll-text {
+  transition: opacity var(--transition-medium);
+  position: relative;
+}
+
+.scroll-text:before,
+.scroll-text:after {
+  content: '\2014';
+  /* em dash */
+  font-size: 1.3em;
+  color: inherit;
+  vertical-align: middle;
+  position: relative;
+  top: -3px;
+  margin: 0 0.11em;
+  font-weight: 400;
+}
+
+/* Ensure overlay-content does not have extra bottom padding */
+.overlay-content {
+  padding-bottom: 0 !important;
+}
+
+.overlay-content .swipe-indicator {
+  position: sticky;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  z-index: 10;
+}
+
+/* Exception: hide logo for mobile landscape via display:none as before */
+@media (orientation: landscape) {
+  .logo-container {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+    transition: none;
+  }
+}
+
+/* === Browser-Specific Styles === */
+body.safari-mobile .container.with-coverflow {
+  padding-bottom: 25px !important;
+}
+
+body.safari-mobile .card-overlay,
+body.chrome-android .card-overlay,
+body.chrome-ios .card-overlay,
+body.webview .card-overlay,
+body.wkwebview .card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-medium);
+}
+
+body.safari-mobile .card-overlay.active,
+body.chrome-android .card-overlay.active,
+body.chrome-ios .card-overlay.active,
+body.webview .card-overlay.active,
+body.wkwebview .card-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.safari-mobile .overlay-content,
+body.chrome-android .overlay-content,
+body.chrome-ios .overlay-content,
+body.webview .overlay-content,
+body.wkwebview .overlay-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 90vw;
+  height: 85vh;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 25px 25px 0 25px;
+  z-index: 1000;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+
+html.dark-mode body.safari-mobile .overlay-content,
+html.dark-mode body.chrome-android .overlay-content,
+html.dark-mode body.chrome-ios .overlay-content,
+html.dark-mode body.webview .overlay-content,
+html.dark-mode body.wkwebview .overlay-content {
+  background: var(--background-card);
+  color: var(--text-main);
+}
+
+body.safari-mobile .overlay-content .flip-card-back,
+body.chrome-android .overlay-content .flip-card-back,
+body.chrome-ios .overlay-content .flip-card-back,
+body.webview .overlay-content .flip-card-back,
+body.wkwebview .overlay-content .flip-card-back {
+  position: relative !important;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  transform: none !important;
+  flex: 1;
+}
+
+body.safari-mobile .overlay-content .flip-card-back,
+body.wkwebview .overlay-content .flip-card-back {
+  padding-bottom: 40px !important;
+}
+
+body.safari-mobile .overlay-content .flip-card-back-content,
+body.chrome-android .overlay-content .flip-card-back-content,
+body.chrome-ios .overlay-content .flip-card-back-content,
+body.webview .overlay-content .flip-card-back-content,
+body.wkwebview .overlay-content .flip-card-back-content {
+  overflow: visible;
+  height: auto;
+  padding-bottom: 56px;
+  /* Prevent swipe-indicator overlap */
+}
+
+body.safari-mobile .card-overlay.active~.container .flip-card.flipped,
+body.chrome-android .card-overlay.active~.container .flip-card.flipped,
+body.chrome-ios .card-overlay.active~.container .flip-card.flipped,
+body.webview .card-overlay.active~.container .flip-card.flipped,
+body.wkwebview .card-overlay.active~.container .flip-card.flipped {
+  visibility: hidden;
+}
+
+body.chrome-android .overlay-content .flip-card-back>*:last-child,
+body.chrome-ios .overlay-content .flip-card-back>*:last-child,
+body.webview .overlay-content .flip-card-back>*:last-child,
+body.wkwebview .overlay-content .flip-card-back>*:last-child {
+  margin-bottom: 65px !important;
+}
+
+body.safari-mobile .swipe-indicator,
+body.chrome-android .swipe-indicator,
+body.chrome-ios .swipe-indicator,
+body.webview .swipe-indicator,
+body.wkwebview .swipe-indicator {
+  margin-top: -45px !important;
+}
+
+body.safari-mobile .swipe-indicator .scroll-text,
+body.chrome-android .swipe-indicator .scroll-text,
+body.chrome-ios .swipe-indicator .scroll-text,
+body.webview .swipe-indicator .scroll-text,
+body.wkwebview .swipe-indicator .scroll-text {
+  transition: opacity var(--transition-medium);
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  body.safari-mobile .overlay-content {
+    padding-top: max(25px, env(safe-area-inset-top));
+    padding-bottom: max(25px, env(safe-area-inset-bottom));
+    padding-left: max(25px, env(safe-area-inset-left));
+    padding-right: max(25px, env(safe-area-inset-right));
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentSlideUp {
+  from {
+    transform: translate(-50%, -40%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@media (orientation: landscape) {
+  .logo-container {
+    opacity: 0 !important;
+    visibility: hidden !important;
     display: none !important;
-   }
-
-  /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
-    html.dark-mode .flip-card.active .flip-card-front {
-      background: #3a206e;
-      color: #e0e0e0;
-    }
-    html.dark-mode .flip-card.active .flip-card-front h2,
-    html.dark-mode .flip-card.active .flip-card-front p,
-    html.dark-mode .flip-card.active .flip-card-front span,
-    html.dark-mode .flip-card.active .flip-card-front a,
-    html.dark-mode .flip-card.active .flip-card-front li,
-    html.dark-mode .flip-card.active .flip-card-front strong,
-    html.dark-mode .flip-card.active .flip-card-front em {
-      color: #e0e0e0;
-      border: none;
-    }
-
-    .container {
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: auto;
-      padding-left: 0;
-      padding-right: 0;
-      scroll-snap-type: none;
-      gap: 30px;
-      padding-top: 90px !important;
-      padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important; /* 32px for visual gap, plus iOS safe area */
-      display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
-      width: 100%;
-      max-width: 100vw;
-      height: 100vh;
-      align-items: center;
-      min-height: 600px;
-    }
-    .container::-webkit-scrollbar { display: none; }
-    .flip-card {
-      margin: 0 15px !important;
-      height: var(--card-height);
-      min-height: var(--card-height);
-    }
-    /* Mobile dark mode - establish cleaner cascade instead of using !important */
-    html.dark-mode .container .flip-card {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-    }
-
-    /* Preserve the 90% scale for inactive cards in dark mode */
-    html.dark-mode .container .flip-card:not(.active) {
-      opacity: 0.65;
-      transform: scale(0.9);
-      z-index: 1;
-    }
-
-    html.dark-mode .container .flip-card-inner {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-      transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: transform;
-    }
-    /* Front and back faces in mobile dark mode */
-    html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
-      background: #3a206e !important;
-      color: #e0e0e0 !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-
-    html.dark-mode .container .flip-card .flip-card-back {
-      background: rgba(35, 39, 46, 0.95);
-      color: #5ecbff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      width: 90vw;
-      padding: 25px;
-      margin: 0;
-      border-radius: var(--card-radius);
-    }
-
-    html.dark-mode .flip-card.flipped .flip-card-back {
-      background: rgba(35, 39, 46, 0.95);
-      position: relative;
-      box-sizing: border-box;
-    }
-
-    /* Remove problematic ::after elements */
-    html.dark-mode .container .flip-card .flip-card-back::after,
-    html.dark-mode .flip-card.flipped .flip-card-back::after {
-      display: none;
-    }
-
-    /* Blur effect removed */
-    html.dark-mode .flip-card.flipped .flip-card-back {
-      background: rgba(35, 39, 46, 0.85);
-      margin: 0;
-      box-sizing: border-box;
-      /* Keep standard width for content */
-      width: 90vw !important;
-      /* Blur effect removed */
-      position: relative;
-      /* Ensure full content width including padding */
-      padding-left: 25px;
-      padding-right: 25px;
-      /* Blur effect removed */
-      margin-left: -25px;
-      margin-right: -25px;
-      width: calc(90vw + 50px) !important;
-    }
-
-    /* Blur effect removed */
-    html.dark-mode .flip-card.flipped .flip-card-back::before {
-      content: '';
-      position: absolute;
-      top: -25px;
-      left: -25px;
-      right: -25px;
-      bottom: -25px;
-      background: inherit;
-      z-index: -1;
-      border-radius: inherit;
-    }
-
-    /* Mobile-specific dark mode fixes */
-    /* This is a critical fix for mobile dark mode */
-    html.dark-mode .container .flip-card .flip-card-back::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 48px;
-      background: none;
-      border-radius: 0 0 var(--card-radius) var(--card-radius);
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    /* The flipped card case where we need to extend the width */
-    html.dark-mode .flip-card.flipped .flip-card-back::after {
-      /* Extend the width to match the expanded card */
-      width: calc(100% + 50px);
-      left: -25px;
-      /* Keep the same gradient direction and color values for consistency */
-      background: none;
-    }
-
-  /* Active card in mobile dark mode - increase specificity instead of !important */
-  /* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
-    html.dark-mode .container .flip-card.active .flip-card-front,
-    html.dark-mode .container .flip-card.preactivated .flip-card-front {
-      background: #3a206e;
-      color: #e0e0e0;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
-    }
-
-    /* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
-    html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
-    html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
-    html.dark-mode .container .flip-card.active .flip-card-front,
-    html.dark-mode .container .flip-card.preactivated .flip-card-front,
-    html.dark-mode .flip-card.active .flip-card-front,
-    html.dark-mode .flip-card.preactivated .flip-card-front {
-      background: #3a206e !important; /* deep indigo purple */
-      color: #e0e0e0 !important;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
-    }
-    html.dark-mode .flip-card.card-targeted .flip-card-front {
-      background: #3a206e !important; /* deep indigo purple */
-      color: #e0e0e0 !important;
-      box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
-      border: 1.5px solid #7c6fd8;
-      outline: none;
-    }
-    html.dark-mode .flip-card.active .flip-card-front * {
-      color: #e0e0e0;
-      border: none;
-    }
-
-    /* Keep inner card transparent to avoid rectangular appearance */
-    html.dark-mode .container .flip-card.active .flip-card-inner {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-    }
-
-    html.dark-mode .container .flip-card.active .flip-card-back {
-      background: var(--primary-blue);
-      color: #fff;
-    }
-    /* Clean transition for all cards - removing unnecessary style overrides */
-    .flip-card-inner {
-      transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: transform;
-    }
-    .flip-card-back {
-      height: auto;
-      max-height: var(--card-height);
-    }
-    .nav-arrow { display: none; }
-    .page-header h1 { font-size: 1.2rem; }
-    header { z-index: 999; }
-    #left-scroll-padding, #right-scroll-padding {
-      flex-shrink: 0;
-      height: 1px;
-      visibility: visible !important;
-      opacity: 0;
-    }
-    .flip-card.flipped {
-      position: relative !important;
-      width: var(--card-width) !important;
-      height: var(--card-height) !important;
-      margin: 0 15px !important;
-      z-index: 100 !important;
-    }
-    .flip-card.flipped .flip-card-back {
-      position: fixed !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) rotateY(180deg) !important;
-      width: 90vw !important;
-      height: auto !important;
-      min-height: 70vh !important;
-      max-height: 80vh !important;
-      overflow-y: auto !important;
-      padding: 25px !important;
-      z-index: 1000 !important;
-    }
-    .safari-browser .flip-card.flipped .flip-card-back { top: 19.9vh !important; }
-    .chrome-browser .flip-card.flipped .flip-card-back { top: 21vh !important; }
-    .chrome-browser .container { padding-bottom: 80px !important; }
-    .flip-card.flipped ~ .flip-card:not(.flipped) { opacity: 0.7 !important; }
-    .flip-card.flipped .flip-card-back .summary { font-size: 1.2rem; line-height: 1.4; }
-    .card-indicator { z-index: 998; }
-    .flip-card-back .summary, .flip-card.flipped .flip-card-back .summary {
-      width: 100%;
-    }
-    .flip-card.flipped .flip-card-back .summary {
-      transform: scale(1.2);
-      width: 100%;
-    }
-
-    .site-logo {
-      max-width: var(--logo-max-width-mobile, 60px);
-    }
-
-    html.dark-mode .logo-container img.site-logo,
-    html.dark-mode .header-logo-container  {
-      box-shadow:
-        0 0 8px 2px #5ecbff,
-        0 0 20px 6px #39fffd,
-        0 0 40px 12px #5ecbff,
-        0 0 60px 18px #39fffd !important;
-      transition: filter 0.3s, box-shadow 0.3s;
-    }
-
-  /* PERFECTED: Beautiful soft-blurred top edge for swipe indicator */
-    .overlay-content .swipe-indicator {
-      border: none;
-      box-shadow: none;
-      position: sticky;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      min-height: 65px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      border-bottom-left-radius: 1px;
-      border-bottom-right-radius: 1px;
-      background: linear-gradient(
-        to top,
-        rgba(255, 255, 255, 0.98) 0%,
-        rgba(255, 255, 255, 0.92) 20%,
-        rgba(255, 255, 255, 0.75) 40%,
-        rgba(255, 255, 255, 0.45) 65%,
-        rgba(255, 255, 255, 0.15) 85%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      color: #000;
-      font-weight: bold;
-      font-size: 1.1em;
-      backdrop-filter: blur(2.5px);
-      -webkit-backdrop-filter: blur(2.5px);
-      z-index: 10;
-      margin: 0;
-      /* Ultra-smooth mask for perfect edge blur */
-      -webkit-mask-image: linear-gradient(
-        to top,
-        black 0%,
-        black 40%,
-        rgba(0,0,0,0.8) 60%,
-        rgba(0,0,0,0.4) 80%,
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to top,
-        black 0%,
-        black 40%,
-        rgba(0,0,0,0.8) 60%,
-        rgba(0,0,0,0.4) 80%,
-        transparent 100%
-      );
-    }
-
-    /* PERFECTED: Dark mode with identical soft-blur structure */
-    html.dark-mode .overlay-content .swipe-indicator {
-      background: linear-gradient(
-        to top,
-        rgba(35, 39, 46, 0.98) 0%,
-        rgba(35, 39, 46, 0.92) 20%,
-        rgba(35, 39, 46, 0.75) 40%,
-        rgba(35, 39, 46, 0.45) 65%,
-        rgba(35, 39, 46, 0.15) 85%,
-        rgba(35, 39, 46, 0) 100%
-      );
-      color: #5ecbff;
-      backdrop-filter: blur(2.5px);
-      -webkit-backdrop-filter: blur(2.5px);
-      /* Identical mask for consistent edge blur */
-      -webkit-mask-image: linear-gradient(
-        to top,
-        black 0%,
-        black 40%,
-        rgba(0,0,0,0.8) 60%,
-        rgba(0,0,0,0.4) 80%,
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to top,
-        black 0%,
-        black 40%,
-        rgba(0,0,0,0.8) 60%,
-        rgba(0,0,0,0.4) 80%,
-        transparent 100%
-      );
-    }
-
-    /* Ensure proper background color matching in dark mode */
-    html.dark-mode .overlay-content {
-      background: #23272e;
-    }
-
-    html.dark-mode .flip-card.flipped .flip-card-back {
-      background: #23272e;
-      padding-bottom: calc(25px + 65px); /* Add padding to account for swipe indicator */
-    }
-
-    /* Remove any potential spacing issues */
-    html.dark-mode .overlay-content,
-    html.dark-mode .flip-card-back,
-    html.dark-mode .flip-card.flipped .flip-card-back {
-      margin-bottom: 0;
-    }
-
-    /* Ensure content doesn't overflow */
-    html.dark-mode .flip-card-back-content {
-      padding-bottom: 65px;
-    }
-
-  /* Only use fixed/viewport style for fullscreen overlays on mobile */
-    html.dark-mode .swipe-indicator {
-      color: rgba(94,203,255,0.8);
-    }
-    .swipe-indicator:before, .swipe-indicator:after {
-      content: '';
-      width: 20px;
-      height: 2px;
-      background: rgba(0,0,0,0.3);
-      position: relative;
-      margin: 0 8px;
-    }
-    .swipe-indicator:before { transform: translateX(5px); }
-    .swipe-indicator:after { transform: translateX(-5px); }
-    .swipe-indicator .scroll-text { transition: opacity var(--transition-medium); position: relative; }
-    .scroll-text:before, .scroll-text:after {
-      content: '\2014'; /* em dash */
-      font-size: 1.3em;
-      color: inherit;
-      vertical-align: middle;
-      position: relative;
-      top: -3px;
-      margin: 0 0.11em;
-      font-weight: 400;
-    }
-
-    /* Ensure overlay-content does not have extra bottom padding */
-    .overlay-content { padding-bottom: 0 !important; }
-
-    .overlay-content .swipe-indicator {
-      position: sticky;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      margin: 0;
-      border-radius: 0;
-      z-index: 10;
-    }
-
-  /* Exception: hide logo for mobile landscape via display:none as before */
-  @media (orientation: landscape) {
-    .logo-container {
-      opacity: 0;
-      visibility: hidden;
-      display: none;
-      transition: none;
-    }
+    transition: none !important;
   }
+}
 
-  /* === Browser-Specific Styles === */
-    body.safari-mobile .container.with-coverflow { padding-bottom: 25px !important; }
-    body.safari-mobile .card-overlay,
-    body.chrome-android .card-overlay,
-    body.chrome-ios .card-overlay,
-    body.webview .card-overlay,
-    body.wkwebview .card-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 999;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity var(--transition-medium);
-    }
-    body.safari-mobile .card-overlay.active,
-    body.chrome-android .card-overlay.active,
-    body.chrome-ios .card-overlay.active,
-    body.webview .card-overlay.active,
-    body.wkwebview .card-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-    body.safari-mobile .overlay-content,
-    body.chrome-android .overlay-content,
-    body.chrome-ios .overlay-content,
-    body.webview .overlay-content,
-    body.wkwebview .overlay-content {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 90vw;
-      height: 85vh;
-      background: #fff;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 25px 25px 0 25px;
-      z-index: 1000;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      display: flex;
-      flex-direction: column;
-    }
-
-    html.dark-mode body.safari-mobile .overlay-content,
-    html.dark-mode body.chrome-android .overlay-content,
-    html.dark-mode body.chrome-ios .overlay-content,
-    html.dark-mode body.webview .overlay-content,
-    html.dark-mode body.wkwebview .overlay-content {
-      background: var(--background-card);
-      color: var(--text-main);
-    }
-    body.safari-mobile .overlay-content .flip-card-back,
-    body.chrome-android .overlay-content .flip-card-back,
-    body.chrome-ios .overlay-content .flip-card-back,
-    body.webview .overlay-content .flip-card-back,
-    body.wkwebview .overlay-content .flip-card-back {
-      position: relative !important;
-      overflow: visible !important;
-      height: auto !important;
-      min-height: auto !important;
-      max-height: none !important;
-      transform: none !important;
-      flex: 1;
-    }
-    body.safari-mobile .overlay-content .flip-card-back,
-    body.wkwebview .overlay-content .flip-card-back {
-      padding-bottom: 40px !important;
-    }
-
-    body.safari-mobile .overlay-content .flip-card-back-content,
-    body.chrome-android .overlay-content .flip-card-back-content,
-    body.chrome-ios .overlay-content .flip-card-back-content,
-    body.webview .overlay-content .flip-card-back-content,
-    body.wkwebview .overlay-content .flip-card-back-content {
-      overflow: visible;
-      height: auto;
-      padding-bottom: 56px; /* Prevent swipe-indicator overlap */
-    }
-    body.safari-mobile .card-overlay.active ~ .container .flip-card.flipped,
-    body.chrome-android .card-overlay.active ~ .container .flip-card.flipped,
-    body.chrome-ios .card-overlay.active ~ .container .flip-card.flipped,
-    body.webview .card-overlay.active ~ .container .flip-card.flipped,
-    body.wkwebview .card-overlay.active ~ .container .flip-card.flipped {
-      visibility: hidden;
-    }
-
-    body.chrome-android .overlay-content .flip-card-back > *:last-child,
-    body.chrome-ios .overlay-content .flip-card-back > *:last-child,
-    body.webview .overlay-content .flip-card-back > *:last-child,
-    body.wkwebview .overlay-content .flip-card-back > *:last-child {
-      margin-bottom: 65px !important;
-    }
-    body.safari-mobile .swipe-indicator,
-    body.chrome-android .swipe-indicator,
-    body.chrome-ios .swipe-indicator,
-    body.webview .swipe-indicator,
-    body.wkwebview .swipe-indicator {
-      margin-top: -45px !important;
-    }
-    body.safari-mobile .swipe-indicator .scroll-text,
-    body.chrome-android .swipe-indicator .scroll-text,
-    body.chrome-ios .swipe-indicator .scroll-text,
-    body.webview .swipe-indicator .scroll-text,
-    body.wkwebview .swipe-indicator .scroll-text {
-      transition: opacity var(--transition-medium);
-    }
-    @supports (padding-top: env(safe-area-inset-top)) {
-      body.safari-mobile .overlay-content {
-        padding-top: max(25px, env(safe-area-inset-top));
-        padding-bottom: max(25px, env(safe-area-inset-bottom));
-        padding-left: max(25px, env(safe-area-inset-left));
-        padding-right: max(25px, env(safe-area-inset-right));
-      }
-    }
-    @keyframes overlayFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes contentSlideUp {
-      from { transform: translate(-50%, -40%); opacity: 0; }
-      to { transform: translate(-50%, -50%); opacity: 1; }
-    }
-
-  @media (orientation: landscape) {
-    .logo-container {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      display: none !important;
-      transition: none !important;
-    }
-  }
-
-  /* Mobile dark mode logo styles */
-    html.dark-mode .logo-container img.site-logo,
-    html.dark-mode .site-logo,
-    html.dark-mode .header-logo-container img.header-logo,
-    html.dark-mode .header-logo {
-      filter: invert(1) hue-rotate(180deg) !important;
-      box-shadow:
-        0 0 8px 2px #5ecbff,
-        0 0 20px 6px #39fffd,
-        0 0 40px 12px #5ecbff,
-        0 0 60px 18px #39fffd !important;
-      transition: filter 0.3s, box-shadow 0.3s;
-    }
+/* Mobile dark mode logo styles */
+html.dark-mode .logo-container img.site-logo,
+html.dark-mode .site-logo,
+html.dark-mode .header-logo-container img.header-logo,
+html.dark-mode .header-logo {
+  filter: invert(1) hue-rotate(180deg) !important;
+  box-shadow:
+    0 0 8px 2px #5ecbff,
+    0 0 20px 6px #39fffd,
+    0 0 40px 12px #5ecbff,
+    0 0 60px 18px #39fffd !important;
+  transition: filter 0.3s, box-shadow 0.3s;
+}
 
 
-    .swipe-indicator:before, .swipe-indicator:after {
-      display: none; /* This will hide them */
-      /* or content: none; */
-    }
-    img.header-logo {
-    margin-top: auto;
-    }
-    .page-header h1 {
-    margin-top: 30px;
-    }
+.swipe-indicator:before,
+.swipe-indicator:after {
+  display: none;
+  /* This will hide them */
+  /* or content: none; */
+}
 
-     .header-desktop-content {
-      display: none;
-     }
+img.header-logo {
+  margin-top: auto;
+}
+
+.page-header h1 {
+  margin-top: 30px;
+}
+
+.header-desktop-content {
+  display: none;
+}
