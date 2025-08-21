@@ -34,7 +34,8 @@
 <link rel="manifest" href="/site.webmanifest">
 <script>
   // --- Critical CSS and Deferred Loading Block ---
-  (function() {
+  // --- Critical CSS and Deferred Loading Block ---
+    (function() {
     const isMobile = 'ontouchstart' in window;
     const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
     const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
@@ -43,18 +44,41 @@
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
     document.head.appendChild(styleElement);
 
-    function loadCSS(href) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet'; link.href = href;
-      document.head.appendChild(link);
-    }
     document.addEventListener('DOMContentLoaded', function() {
-      const cssFiles = isMobile
-        ? ['common.css', 'mobile.css', 'hamburger.css']
-        : ['common.css', 'pc.css', 'hamburger.css'];
-      cssFiles.forEach(file => loadCSS('assets/css/' + file));
+    const cssFiles = isMobile
+      ? ['common.css', 'mobile.css', 'hamburger.css']
+      : ['common.css', 'pc.css', 'hamburger.css'];
+
+    let loaded = 0;
+    const cssPromises = [];
+
+    cssFiles.forEach(file => {
+      const promise = new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'assets/css/' + file;
+        link.onload = () => {
+          loaded++;
+          resolve();
+        };
+        link.onerror = reject;
+        document.head.appendChild(link);
+      });
+      cssPromises.push(promise);
     });
-  })();
+
+    // Wait for all CSS files to load before dispatching event
+    Promise.all(cssPromises).then(() => {
+      console.log('All CSS files loaded successfully');
+      window.__allCSSLoadedFired = true;
+      document.dispatchEvent(new Event('allCSSLoaded'));
+    }).catch(error => {
+      console.warn('CSS loading failed, dispatching event anyway:', error);
+      window.__allCSSLoadedFired = true;
+      document.dispatchEvent(new Event('allCSSLoaded'));
+    });
+    });
+    })();
 </script>
 </head>
 <body class="splash-active">
@@ -68,14 +92,14 @@
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Newsway Summary</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">08/21/25 12:40 PM EDT (Next: 12:49 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">08/21/25 12:51 PM EDT (Next: 01:00 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Newsway Summary</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">08/21/25 12:40 PM EDT (New news: 12:49 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">08/21/25 12:51 PM EDT (New news: 01:00 PM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -93,24 +117,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Erik Menendez Faces Parole Board in Virtual Hearing After Decades in Prison</h2>
-          <div class="timestamp">2025-08-21 12:32:40 EDT</div>
+          <h2>Justice Department to Investigate Federal Reserve Governor Lisa Cook Following Criminal Referral</h2>
+          <div class="timestamp">2025-08-21 12:43:51 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Erik Menendez, convicted with his brother Lyle for the 1989 murders of their parents, is scheduled for a virtual parole hearing after serving nearly 30 years. His sentence was reduced, making him eligible under California's youth offender law as he was under 26 at the time of the crime. Menendez's defense has consistently claimed self-defense due to alleged long-term abuse, a narrative disputed by the Los Angeles County District Attorney, who opposes his release. The parole board's decision could ultimately be approved or denied by Governor Gavin Newsom.</p>
-          <p>35/100</p>
-          <a href="https://www.cbsnews.com/news/erik-menendez-california-parole-board-hearings/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Justice Department to Investigate Federal Reserve Governor Lisa Cook</h2>
-          <div class="timestamp">2025-08-21 12:32:06 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Department of Justice has indicated it will investigate Federal Reserve Governor Lisa Cook following a criminal referral from a Trump administration housing official. The referral, initiated by FHFA Director Bill Pulte, alleges potential mortgage fraud, prompting President Trump to demand Cook's resignation. Cook has stated she will not be bullied into stepping down from her post. The situation highlights intense political pressure on the Federal Reserve, although the power to remove a governor rests solely with the U.S. President, not the Fed Chair.</p>
+          <p>The Department of Justice is set to investigate Federal Reserve Governor Lisa Cook following a criminal referral from a Trump administration housing official. The allegation, spearheaded by FHFA Director Bill Pulte, centers on potential mortgage fraud, claiming Cook improperly designated two different properties as her primary residence. Despite calls for her resignation from former President Trump, Governor Cook has stated she will not be bullied into stepping down and intends to provide accurate information to address any legitimate questions about her financial history.</p>
           <p>30/100</p>
           <a href="https://www.cnbc.com/2025/08/21/trump-powell-cook-fed-mortgage-fraud.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
@@ -119,24 +130,89 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>New York Appeals Court Overturns Donald Trump's $500 Million Civil Fraud Penalty</h2>
-          <div class="timestamp">2025-08-21 12:31:04 EDT</div>
+          <h2>New York Appeals Court Overturns Over Half-Billion Dollar Penalty in Trump Civil Fraud Case</h2>
+          <div class="timestamp">2025-08-21 12:42:21 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A New York appellate court has nullified the nearly half-billion-dollar penalty imposed on Donald Trump in his civil fraud case. The judges ruled that while Trump was liable for inflating property values to secure loans, the fine was excessive and potentially unconstitutional. This decision is a significant legal victory for Trump, who hailed it as a "total victory" against a "Political Witch Hunt." However, the court upheld non-monetary penalties, including a ban on Trump serving as a company director in New York for three years.</p>
-          <p>60/100</p>
-          <a href="https://www.bbc.com/news/articles/c5y09q1zgg8o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+          <p>A New York appellate court has thrown out the approximately $527 million financial penalty imposed on former President Trump and his co-defendants in his civil fraud case, ruling the fine was excessive. While the massive disgorgement was vacated, the court upheld other sanctions, including a three-year ban on Trump serving as an officer or director of any New York corporation. The deeply divided panel of justices expressed significant disagreement on the case's merits, leading to what one justice called a "remarkable solution" to avoid reargument. New York's Attorney General has announced plans to appeal the decision.</p>
+          <p>55/100</p>
+          <a href="https://www.cbsnews.com/news/trump-civil-fraud-case-new-york-appeals/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>UK's Third-Largest Steelworks Placed Under Government Control Amid Insolvency</h2>
+          <h2>Menendez Brothers Face Parole Board Hearings After Decades in Prison</h2>
+          <div class="timestamp">2025-08-21 12:42:00 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Lyle and Erik Menendez, convicted in 1996 for the murder of their parents, are scheduled for separate parole hearings after their life sentences were reduced, making them eligible for release. The brothers have long maintained they acted in self-defense following years of abuse, a claim prosecutors have consistently rejected, arguing the motive was financial gain. Their case, which captivated the nation in the 1990s, has seen renewed public interest through recent media, and a support coalition is advocating for their release. The Los Angeles District Attorney's office remains opposed to their parole.</p>
+          <p>45/100</p>
+          <a href="https://www.dw.com/en/us-menendez-brothers-set-to-make-case-for-parole/a-73721493?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Hurricane Erin's Waves Threaten to Collapse Beachfront Homes in North Carolina's Outer Banks</h2>
+          <div class="timestamp">2025-08-21 12:40:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Powerful waves from Hurricane Erin are threatening at least two beachfront homes in Rodanthe, North Carolina, pushing them to the brink of collapse. This area of the Outer Banks has already seen nearly a dozen similar homes fall into the Atlantic since 2020 due to persistent coastal erosion. Experts note that these barrier islands are naturally dynamic and ill-suited for permanent development, with some areas losing up to 15 feet of beachfront annually. The storm's impact highlights the ongoing and escalating risk that rising sea levels and erosion pose to coastal properties.</p>
+          <p>20/100</p>
+          <a href="https://www.cbsnews.com/news/photos-rodanthe-homes-near-collapse-outer-banks-hurricane-erin/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Market Rotation Eases While Meta Pauses AI Hiring Spree</h2>
+          <div class="timestamp">2025-08-21 12:39:44 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Recent sharp market rotation out of premium-valued stocks appears to be slowing after a five-day losing streak for the S&P 500, as investors await Federal Reserve Chairman Jerome Powell's upcoming speech. In corporate news, Meta Platforms has reportedly paused its aggressive hiring of AI researchers and engineers, a move described as organizational planning rather than a slowdown in AI investment. Meanwhile, Walmart's stock fell after missing earnings-per-share estimates, and Boeing is reportedly in talks to sell up to 500 planes to China, signaling potentially positive trade developments. (not investment advice)</p>
+          <p>50/100</p>
+          <a href="https://www.cnbc.com/2025/08/21/the-markets-sharp-rotation-may-be-winding-down-plus-meta-hits-pause-on-ai-hiring-.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Fire Aboard USS New Orleans Off Japan Coast Results in Minor Injuries to Two Sailors</h2>
+          <div class="timestamp">2025-08-21 12:37:24 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A fire broke out on the USS New Orleans, an amphibious transport dock, while it was moored at the White Beach Naval Facility in Okinawa, Japan. The blaze burned for approximately 12 hours before being extinguished by the ship's crew, with assistance from another US warship and Japanese authorities. Two sailors sustained minor injuries during the incident, and the U.S. Navy’s 7th Fleet has launched an investigation into the cause of the fire. The incident draws comparisons to the 2020 fire that destroyed the USS Bonhomme Richard.</p>
+          <p>45/100</p>
+          <a href="https://www.foxnews.com/world/us-warship-burns-12-hours-off-japan-coast-sailors-suffer-minor-injuries" target="_blank"><span class="news-org">Fox News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Trent Rockets Secure Victory Over Oval Invincibles in The Hundred Cricket Competition</h2>
+          <div class="timestamp">2025-08-21 12:34:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The Trent Rockets defeated the Oval Invincibles by six wickets in The Hundred women's cricket competition, keeping their slim chances for qualification alive. Despite a mid-innings wobble while chasing a modest target of 110, Heather Graham's composed, unbeaten 19 runs guided the Rockets to victory with 16 balls remaining. The Invincibles' innings was hampered by a slow start and the loss of key wickets at crucial moments, with Meg Lanning's 45 being the standout performance. Both teams must now win their remaining games to have any hope of advancing in the tournament.</p>
+          <p>70/100</p>
+          <a href="https://www.bbc.com/sport/cricket/articles/c4gl8pyjvdxo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>UK's Third-Largest Steelworks Enters Government Control Amid Insolvency</h2>
           <div class="timestamp">2025-08-21 12:30:52 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Speciality Steels UK (SSUK), the country's third-largest steelworks and part of Sanjeev Gupta's Liberty Steel, has been forced into compulsory liquidation by creditors. This move places the company, deemed "hopelessly insolvent," under the control of a government receiver, securing the wages of nearly 1,500 workers for now while a buyer is sought. Liberty Steel criticized the decision as "irrational," having proposed an alternative plan to buy back the business with new funding. The collapse follows financial turmoil stemming from the failure of its main backer, Greensill Capital.</p>
+          <p>Speciality Steels UK (SSUK), the country's third-largest steelworks and part of Sanjeev Gupta's Liberty Steel, has been placed under government control after a court granted a compulsory winding up order. The move puts the future of nearly 1,500 jobs in Rotherham and Sheffield in doubt as creditors are owed hundreds of millions of pounds. The government will cover wages while a buyer is sought for the business, which the judge deemed "hopelessly insolvent." Liberty Steel criticized the decision as "irrational," having proposed an alternative plan to buy back the business after placing it into administration.</p>
           <p>25/100</p>
           <a href="https://www.bbc.com/news/articles/cy0818y4jdlo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -145,12 +221,38 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>AI Safety Advocates Express Growing Fatalism About Existential Risks</h2>
+          <h2>Hurricane Erin Causes Flooding in Outer Banks as it Moves Offshore</h2>
+          <div class="timestamp">2025-08-21 12:28:57 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>While remaining offshore, Hurricane Erin is lashing North Carolina's Outer Banks with storm surge, rain, and dangerous rip currents, with similar impacts expected for the mid-Atlantic and Northeast coasts. A storm surge warning is in effect for parts of the coast, with the National Weather Service forecasting up to four feet of coastal flooding. The storm has already breached dunes and cut off Highway 12, the main road connecting Hatteras and Ocracoke islands, trapping some residents and vacationers. The Category 2 storm is now turning northeast and is expected to gradually weaken.</p>
+          <p>25/100</p>
+          <a href="https://www.npr.org/2025/08/21/nx-s1-5509661/hurricane-erin-outer-banks-north-carolina-east-coast" target="_blank"><span class="news-org">NPR</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Missing Texas Woman Discovered Living with Self-Proclaimed 'African' Tribe in Scotland</h2>
+          <div class="timestamp">2025-08-21 12:25:45 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A Texas woman, Kaura Taylor, who was reported missing by her family, has been found living in a Scottish forest with a group called the Kingdom of Kubala. The group, which claims to be a lost tribe of Hebrews, is led by a man known as King Atehene and asserts an ancestral claim to the land. Taylor, who now goes by Asnat, released a video stating she is not missing and wishes to be left alone. The group reports facing eviction notices and harassment, while local authorities state they are working with police to manage the situation.</p>
+          <p>40/100</p>
+          <a href="https://www.yahoo.com/news/articles/missing-texas-woman-found-living-195245583.html" target="_blank"><span class="news-org">Yahoo News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Advocates for AI Safety Express Growing Concern Over Unchecked Technological Advancement</h2>
           <div class="timestamp">2025-08-21 12:22:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A faction of researchers and thinkers, often called "AI doomers," are expressing increased pessimism about humanity's ability to control advanced artificial intelligence. They argue that the rapid pace of AI development has outstripped safety measures, bringing the world closer to a potential catastrophic or extinction-level event. Proponents of this view point to increasingly unpredictable and deceptive behaviors in advanced AI models as early warning signs. While the AI industry maintains it is committed to safety, these critics believe current safeguards are inadequate for the powerful systems being built.</p>
-          <p>20/100</p>
+          <p>Experts in AI safety, often labeled "doomers," are expressing increased alarm that the rapid pace of AI development has outstripped the implementation of necessary safeguards, potentially leading to catastrophic outcomes. They point to increasingly powerful and unpredictable AI models, which have exhibited deceptive and strange behaviors in tests, as early warning signs. While AI labs are implementing safety protocols, critics argue these measures are inadequate for the existential risks posed by future superintelligent systems. The debate highlights a fundamental tension between the competitive economic pressures to innovate and the profound need for caution and oversight.</p>
+          <p>25/100</p>
           <a href="https://www.theatlantic.com/technology/archive/2025/08/ai-doomers-chatbots-resurgence/683952/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
       </div>
@@ -158,12 +260,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Ghanaian Musician Shatta Wale Granted Bail Amid Lamborghini Investigation</h2>
+          <h2>UK Asylum Data Shows Record Applications but Faster Processing and Reduced Backlog</h2>
+          <div class="timestamp">2025-08-21 12:21:27 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The UK's Home Office has released new data showing a record 111,000 asylum applications in the year to June, though the government is also processing claims more quickly, reducing the overall backlog. While the number of asylum seekers housed in hotels has slightly increased since the current government took power, it remains far below the 2023 peak. This mixed data suggests that while new arrivals are high, increased processing speed is preventing a significant spike in accommodation needs. The government's strategy is showing some effect in managing the system, but challenges remain with high small boat crossings and appeals.</p>
+          <p>45/100</p>
+          <a href="https://www.bbc.com/news/articles/cx2x371g2k8o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Ghanaian Singer Shatta Wale Granted Bail in Investigation Over Lamborghini Purchase</h2>
           <div class="timestamp">2025-08-21 12:21:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Ghanaian dancehall artist Shatta Wale, whose real name is Charles Nii Armah Mensah, was granted bail after being taken into custody for questioning about a Lamborghini Urus. The investigation, led by Ghana's Economic and Organized Crime Office (EOCO), is linked to a US probe into a crime network. The vehicle was allegedly purchased with proceeds from a $4 million crime involving a Ghanaian national currently jailed in the US. Wale claims he bought the car for $150,000 from an unknown individual and denies any connection to the convicted criminal.</p>
-          <p>55/100</p>
+          <p>Ghanaian dancehall artist Shatta Wale has been granted bail after being taken into custody for questioning by the country's Economic and Organized Crime Office (EOCO). The investigation centers on a Lamborghini he purchased, which U.S. authorities have identified as proceeds from a $4 million crime involving a Ghanaian national currently jailed in the U.S. The EOCO stated that the singer has been unable to provide clear details about the seller or produce ownership documents for the vehicle. Wale's management claims he is cooperating voluntarily and purchased the car in good faith.</p>
+          <p>50/100</p>
           <a href="https://www.dw.com/en/ghana-singer-shatta-wale-granted-bail-in-lamborghini-probe/a-73722417?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -171,11 +286,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Satirical Piece Imagines Donald Trump's Ideal Museum</h2>
+          <h2>Satirical Piece Imagines Donald Trump's Ideal Museum Focused on the Future</h2>
           <div class="timestamp">2025-08-21 12:19:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>In a satirical column, The Atlantic imagines Donald Trump's vision for a perfect museum, critiquing his recent comments about the Smithsonian being "WOKE." The piece humorously suggests his ideal institution would be a "bright room full of items from the future where you don’t think about slavery at all," akin to an Apple Store. The satire portrays a museum that avoids historical complexities and instead features hoverboards, lightsabers, and mirrors that make visitors look thin. It serves as a commentary on Trump's perspective on American history and cultural institutions.</p>
+          <p>In a satirical column, The Atlantic imagines former President Donald Trump's vision for a museum, based on his recent criticism of the Smithsonian as being too focused on negative aspects of the past like slavery. The piece humorously suggests his ideal museum would be a bright, forward-looking space, akin to an Apple Store, filled with mirrors, hoverboards, and sci-fi technology. This satirical take critiques Trump's rhetoric by portraying a museum that avoids historical complexities and instead offers a simplified, self-aggrandizing narrative centered on "Success, Brightness, Future," reflecting his political messaging.</p>
           <p>50/100</p>
           <a href="https://www.theatlantic.com/newsletters/archive/2025/08/trump-museum-future-washington-dc/683956/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
@@ -188,8 +303,8 @@
           <div class="timestamp">2025-08-21 12:15:47 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Two senior House Democrats, Reps. Jamie Raskin and Frank Pallone, are investigating the $8 billion merger between Paramount and Skydance Media. They are examining whether the companies conceded to "illegitimate demands" from President Trump to secure regulatory approval from the FCC. The inquiry focuses on a $16 million settlement Paramount paid to end Trump's lawsuit against CBS News, which the lawmakers suggest could be an "illegal bribe." The probe also scrutinizes reported commitments to alter CBS's editorial practices to align with the Trump administration's agenda.</p>
-          <p>25/100</p>
+          <p>Leading House Democrats have initiated an investigation into the $8 billion merger of Paramount and Skydance Media, questioning whether the companies conceded to improper demands from President Trump to secure regulatory approval. The probe focuses on a $16 million settlement Paramount paid to Trump to resolve a lawsuit over a "60 Minutes" interview, which the lawmakers suggest could be an "illegal bribe" in exchange for FCC approval of the merger. The letter from Representatives Jamie Raskin and Frank Pallone requests internal communications involving Trump, the White House, and the FCC to scrutinize the deal.</p>
+          <p>30/100</p>
           <a href="https://www.cnbc.com/2025/08/21/raskin-trump-paramount-skydance-probe.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -197,25 +312,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Massive Russian Missile Strike Hits US-Owned Factory in Western Ukraine</h2>
-          <div class="timestamp">2025-08-21 12:14:36 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Russia launched one of the largest aerial attacks of the war, firing over 600 drones and missiles across Ukraine, killing at least one person and injuring dozens. A significant target was an American-owned electronics company in the Zakarpattia region, less than an hour from the borders of NATO members Hungary and Slovakia. Ukrainian President Volodymyr Zelenskyy called the targeting of a civilian U.S. business "very telling," particularly in the context of President Trump's recent peace initiatives. The attack has been cited by allies like France as evidence of Russia's lack of genuine interest in peace negotiations.</p>
-          <p>10/100</p>
-          <a href="https://www.foxnews.com/world/russian-cruise-missiles-hit-us-company-massive-ukraine-strike-amid-trumps-peace-push" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Woman Jailed for Inciting Racial Hatred on Social Media is Released</h2>
+          <h2>Woman Jailed for Inciting Racial Hatred on Social Media Released from Prison</h2>
           <div class="timestamp">2025-08-21 12:12:35 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Lucy Connolly, who was sentenced to 31 months in prison for inciting racial hatred, has been released from HMP Peterborough. Following a deadly stabbing attack in Southport in 2024, Connolly posted a message on X calling for mass deportations and for supporters to "set fire" to hotels housing asylum seekers. Her case has ignited a debate on free speech and the severity of her sentence, with critics like Conservative leader Kemi Badenoch arguing it was harsher than punishments for physical rioting. Supporters of the sentence, including Prime Minister Keir Starmer, maintain that incitement to violence must be addressed by the courts.</p>
-          <p>35/100</p>
+          <p>Lucy Connolly, who was sentenced to 31 months in prison for posting a message on social media inciting racial hatred after the 2024 Southport attack, has been released. Her post called for mass deportations and for followers to set fire to hotels housing asylum seekers. Her case and sentence have sparked a debate on free speech and proportionality, with critics like Conservative leader Kemi Badenoch arguing her punishment was harsher than that given to some rioters. Supporters of the sentence, including Sir Keir Starmer, have emphasized the distinction between free speech and incitement to violence.</p>
+          <p>40/100</p>
           <a href="https://www.bbc.com/news/articles/c5yl7p4l11po?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -223,24 +325,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Apple TV+ Increases Monthly Subscription Price for Third Time in Three Years</h2>
-          <div class="timestamp">2025-08-21 12:09:11 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Apple has raised the monthly subscription price for its Apple TV+ streaming service to $12.99 in the U.S. and other markets, a $3 increase. This marks the third price hike for the service since its launch in 2019 at $4.99 per month. The move follows similar price increases from competitors like Netflix and Peacock as streaming companies seek greater profitability amid rising content production costs. While Apple does not release viewership numbers, reports suggest the service has been operating at a significant financial loss despite growing its subscriber base.</p>
-          <p>60/100</p>
-          <a href="https://www.cnbc.com/2025/08/21/apple-tv-subscription-12-99.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Pentagon Asks Civilian Employees to Volunteer for ICE Mass Deportation Operations</h2>
+          <h2>Pentagon Seeks Civilian Employee Volunteers to Support ICE Deportation Efforts</h2>
           <div class="timestamp">2025-08-21 12:08:35 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The Pentagon is actively recruiting its civilian employees for a "volunteer force" to support the Trump administration's mass deportation campaign. An email sent to staff asks them to sign up for deployments of up to 180 days to assist Immigration and Customs Enforcement (ICE) and Customs and Border Patrol (CBP) operations. The duties may include data entry, logistics, and operational planning support at facilities across the U.S., including along the southern border. This initiative is part of a broader effort to expand immigration enforcement personnel and infrastructure under the current administration.</p>
+          <p>The Pentagon is actively recruiting its civilian employees for a "volunteer force" to support the mass deportation operations of Immigration and Customs Enforcement (ICE) and Customs and Border Protection (CBP). An internal email and job posting call for volunteers for deployments of up to 180 days to assist with logistical and administrative tasks at facilities across the U.S. This initiative is part of a broader effort by the Trump administration to expand immigration enforcement personnel, which includes hiring more ICE agents and establishing new detention facilities to secure the nation's borders.</p>
           <p>20/100</p>
           <a href="https://www.theguardian.com/us-news/2025/aug/21/trump-hegseth-pentagon-ice" target="_blank"><span class="news-org">The Guardian</span></a>
         </div>
@@ -249,12 +338,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Column Argues Against the Growing Trend of COVID-19 Pandemic Revisionism</h2>
+          <h2>Apple TV+ Increases Monthly Subscription Price to $12.99</h2>
+          <div class="timestamp">2025-08-21 12:08:16 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Apple is raising the monthly price of its Apple TV+ streaming service by 30%, from $9.99 to $12.99, marking the third increase since its launch in 2019. The move aligns with a broader industry trend of streaming services hiking prices to improve profitability and fund content production amidst rising costs. While Apple doesn't release viewership figures, reports suggest the service has been operating at a significant loss. This price adjustment is part of Apple's larger strategy to grow its services division, which has become an increasingly important revenue stream for the tech giant.</p>
+          <p>45/100</p>
+          <a href="https://www.latimes.com/entertainment-arts/business/story/2025-08-21/apple-tv-raises-its-prices" target="_blank"><span class="news-org">LA Times</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Op-Ed Argues Against the Prevailing COVID-19 Revisionist Narrative</h2>
           <div class="timestamp">2025-08-21 12:07:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>This article critiques a growing narrative that public health officials knowingly imposed ineffective and harmful pandemic restrictions from the outset. The author argues that this revisionist view, which is gaining traction beyond the political right, misrepresents the pre-pandemic scientific consensus and misinterprets data from places like Sweden. While acknowledging that some measures like school closures lasted too long, the piece contends that non-pharmaceutical interventions did reduce infections and save lives. The author warns that this overcorrection could undermine public trust and leave the U.S. less prepared for future pandemics.</p>
-          <p>30/100</p>
+          <p>This article challenges the growing revisionist view that public health officials knowingly imposed ineffective and harmful COVID-19 restrictions. It argues that the pre-pandemic consensus was not universally against non-pharmaceutical interventions (NPIs) like school closures and mask mandates, and that these measures did help reduce infections, even if their direct impact on mortality is complex to measure. While acknowledging policy mistakes, such as keeping schools closed too long, the author warns that a narrative of total failure is a dangerous overcorrection that could undermine preparedness for future pandemics by eroding trust in public health institutions.</p>
+          <p>35/100</p>
           <a href="https://www.theatlantic.com/ideas/archive/2025/08/covid-pandemic-revisionism-books/683954/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
       </div>
@@ -262,12 +364,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Los Angeles Performance Troupe Lucha VaVoom Holds Final Show at The Mayan Theater</h2>
+          <h2>Iconic Los Angeles Venue The Mayan to Close, Forcing Lucha VaVoom to Find New Home</h2>
           <div class="timestamp">2025-08-21 12:06:53 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Lucha VaVoom de La Liz, a popular Los Angeles troupe known for blending Mexican-style wrestling with burlesque, is holding its farewell performance at its longtime home, The Mayan theater. The historic downtown venue is permanently closing at the end of September after 35 years under its current management, citing an "unrelenting barrage of adversity" over the past five years. The final show, themed "The Good, the Bad and the Fabulous," marks the end of a more than two-decade residency for the unique performance art group at the beloved venue.</p>
-          <p>50/100</p>
+          <p>The Mayan, a historic theater in downtown Los Angeles, is permanently closing at the end of September after 35 years under its current management, citing significant adversity over the past five years. The closure marks the end of an era for the popular Lucha VaVoom show, a unique blend of Mexican wrestling and burlesque that has been a staple at the venue for over two decades. Lucha VaVoom will hold a final, farewell performance titled "The Good, the Bad and the Fabulous" to honor its long-standing relationship with the iconic venue before seeking a new home.</p>
+          <p>40/100</p>
           <a href="https://www.latimes.com/delos/story/2025-08-21/lucha-vavoom-de-la-liz-farewell-the-mayan-final-show-dtla" target="_blank"><span class="news-org">LA Times</span></a>
         </div>
       </div>
@@ -275,11 +377,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Explaining Potential Earnings from a $25,000 Certificate of Deposit</h2>
+          <h2>Analysis of Potential Earnings from a $25,000 Certificate of Deposit in the Current Rate Environment</h2>
           <div class="timestamp">2025-08-21 12:05:37 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>As interest rates remain elevated, Certificates of Deposit (CDs) continue to be an attractive option for savers seeking stable, predictable returns without market risk. This article outlines the potential earnings on a $25,000 deposit across various CD terms, from a 3-month CD yielding around $269 to a 5-year CD earning about $5,250 at current top rates. Unlike savings accounts with variable rates, a CD's interest rate is fixed for its entire term, offering protection against rate declines. The choice of term depends on the saver's financial goals and how long they can afford to lock away their funds. (not investment advice)</p>
+          <p>In the current high-rate environment, Certificates of Deposit (CDs) remain an attractive option for savers seeking stability and predictable returns. A $25,000 deposit can yield varied earnings depending on the term, from approximately $269 for a 3-month CD to over $5,250 for a 5-year term, based on current top rates. The article emphasizes that while rates have cooled from their 2023 peak, the fixed nature of CDs provides a safeguard against market volatility, making them a useful tool for specific financial goals. (not investment advice)</p>
           <p>75/100</p>
           <a href="https://www.cbsnews.com/news/how-much-will-a-25000-cd-earn-august-2025/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -288,12 +390,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>July Existing Home Sales Rise Amidst Increasing Inventory and Stabilizing Prices</h2>
+          <h2>July Existing Home Sales Increase Amid Rising Inventory and Stabilizing Prices</h2>
           <div class="timestamp">2025-08-21 12:03:40 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Sales of previously owned homes in the U.S. increased by 2% in July from the previous month, defying expectations of a decline. The rise is attributed to a slight dip in mortgage rates during May and June when these sales contracts were likely signed. Housing inventory also grew by nearly 16% year-over-year, reaching its highest level since May 2020, which is helping to ease pressure on prices. The median home price saw a marginal annual increase of 0.2%, suggesting the market may be reaching an inflection point with affordability showing slight improvement. (not investment advice)</p>
-          <p>70/100</p>
+          <p>Sales of previously owned homes in the U.S. rose by 2% in July, defying expectations of a decline, as housing inventory reached its highest level since May 2020. This increase in supply is helping to moderate price growth, with the median home price seeing only a slight 0.2% annual increase. The market appears to be at an inflection point, with improved affordability and more choices for buyers contributing to the sales uptick. However, higher-end properties continue to dominate sales, while all-cash purchases and investor activity remain elevated. (not investment advice)</p>
+          <p>65/100</p>
           <a href="https://www.cnbc.com/2025/08/21/july-home-sales-rise-as-prices-approach-inflection-point.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -301,12 +403,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Former Police Captain Advocates for School Zone Safety After Personal Tragedy</h2>
+          <h2>Former Police Captain Advocates for School Zone Safety Following Son's Death in Car Crash</h2>
           <div class="timestamp">2025-08-21 12:02:01 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Following the death of his 15-year-old son in a car crash, former police captain Tom Didone has become a prominent advocate for driving safety, particularly in school zones. A CBS News review highlights that despite federal programs, one-third of public school officials still consider local traffic a threat to students. Didone warns that drivers develop unsafe habits over the summer that become dangerous when schools reopen and traffic increases. Some districts, like Spotsylvania County in Virginia, are implementing new measures like speed cameras to enforce safer driving around schools.</p>
-          <p>45/100</p>
+          <p>Tom Didone, a former police captain whose 15-year-old son Ryan was killed in a car crash in 2008, has become a prominent advocate for driving safety, particularly in school zones. He warns that drivers often develop dangerous habits over the summer that create risks when schools reopen and traffic increases. A CBS News review highlights that despite federal funding for safety upgrades, many school officials still consider local traffic a threat. Didone emphasizes the need for drivers to reduce speed and distractions, hoping his advocacy honors his son's memory by preventing similar tragedies.</p>
+          <p>30/100</p>
           <a href="https://www.cbsnews.com/news/back-to-school-safety-dangerous-driving-zones/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -314,12 +416,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Former Church of England Priest Chris Brain Convicted of Multiple Sexual Assaults</h2>
+          <h2>Photo Essay Explores the Diverse Experiences of Parents with an 'Empty Nest'</h2>
+          <div class="timestamp">2025-08-21 12:00:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A new photo essay examines the complex and varied emotional landscape of "empty nesters," parents whose children have left home. Through intimate portraits and interviews, the project reveals that the experience is far from uniform, encompassing feelings of grief, relief, loneliness, and newfound freedom. The stories show how this life stage is not a fixed state but a fluid process of redefinition, as parents reclaim space, rediscover their own identities, and navigate new relationships with their adult children. The essay challenges the traditional, often singular, image of the empty nest, highlighting its modern nuances.</p>
+          <p>70/100</p>
+          <a href="https://www.theguardian.com/us-news/ng-interactive/2025/aug/21/empty-nesters-parents-children" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Former Priest Chris Brain Convicted of Multiple Counts of Indecent Assault</h2>
           <div class="timestamp">2025-08-21 12:00:04 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Chris Brain, the former leader of the popular "Nine O'Clock Service" in Sheffield, has been found guilty of 17 counts of indecent assault against women in his congregation. The service, which attracted hundreds of young people in the 1980s and 90s with its nightclub style, was revealed to be a "cult-like" environment where Brain exerted manipulative control. Jurors heard testimony about how Brain isolated followers, exploited them financially, and used his position of power to sexually assault them, often under the guise of giving massages. The convictions mark the downfall of a once-celebrated figure in the Church of England.</p>
-          <p>5/100</p>
+          <p>Chris Brain, the former leader of the popular and unconventional Nine O'Clock Service in Sheffield during the 1980s and 1990s, has been found guilty of 17 counts of indecent assault. The court heard how Brain used his charismatic authority to create a cult-like environment, manipulating followers financially and emotionally while sexually assaulting women within his congregation. Prosecutors argued that Brain exploited his position and the endorsement of the Church of England to isolate and abuse his victims, particularly through late-night massages where many of the assaults occurred. He was cleared of 15 other charges.</p>
+          <p>10/100</p>
           <a href="https://www.bbc.com/news/articles/cr4ezy313qwo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -327,11 +442,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Africa Makes Gradual Progress in Establishing Mass Vaccine Production Capabilities</h2>
+          <h2>Africa Makes Strides in Vaccine Manufacturing Five Years After Pandemic Exposed Dependency</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Five years after the COVID-19 pandemic exposed the continent's heavy reliance on imported vaccines, Africa is slowly building its own pharmaceutical manufacturing capacity. New facilities are being established in countries like South Africa, Senegal, Rwanda, and Kenya, aiming to produce vaccines for diseases such as yellow fever, malaria, and cholera. Despite this progress and renewed political commitment, Africa still produces only 0.1% of the world's vaccines. Initiatives like the African Vaccine Manufacturing Accelerator (AVMA) are being launched to provide funding and help local producers become competitive over the next decade.</p>
+          <p>Five years after the COVID-19 pandemic highlighted Africa's heavy reliance on imported vaccines, the continent is making progress toward greater self-sufficiency in pharmaceutical production. New manufacturing facilities are being established in countries like South Africa, Senegal, Rwanda, and Kenya, with a focus on producing vaccines for diseases such as malaria and yellow fever. Despite this momentum and renewed political commitment, significant hurdles remain, including a lack of infrastructure and funding. The African Union aims to produce 60% of the continent's required vaccines locally by 2040, a substantial increase from the current 0.1%.</p>
           <p>75/100</p>
           <a href="https://www.dw.com/en/a-tentative-start-for-mass-vaccine-production-in-africa/a-73701589?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
@@ -340,12 +455,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Exploring Five Lessons from the Baha'i Faith for a Happier Life</h2>
+          <h2>Exploring Five Life Lessons for Happiness from the Baha'i Faith</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>This article examines the Baha'i faith as a source of practical wisdom for achieving happiness, regardless of one's own religious beliefs. Originating in 19th-century Persia, the faith emphasizes principles such as finding purpose in adversity, seeking spiritual over physical happiness, and understanding that serving others is key to one's own well-being. The author distills five key lessons from Baha'i teachings, including embracing discomfort as a catalyst for growth and trusting in a positive future. The piece suggests these tenets offer a robust alternative to modern, transient self-help trends.</p>
-          <p>90/100</p>
+          <p>This article explores key teachings from the Baha'i faith that offer universal lessons on achieving a happier life, regardless of one's religious beliefs. It highlights five principles: having faith in the future, embracing discomfort as a catalyst for growth, seeking deeper spiritual happiness over fleeting pleasures, understanding that helping others is essential to one's own well-being, and adhering to timeless virtues over passing fads. Originating in 19th-century Persia, the faith emphasizes positivity and human progress, viewing worldly troubles not as cause for despair but as opportunities for growth and service.</p>
+          <p>85/100</p>
           <a href="https://www.theatlantic.com/ideas/archive/2025/08/bahai-islam-philosophy-lesson/683926/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
       </div>
@@ -353,12 +468,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>'Moral Offsetting' for Meat Eaters Gains Traction as a Philanthropic Strategy</h2>
+          <h2>The Rise of 'Moral Offsetting' for Meat Consumption Sparks Ethical Debate</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A recent fundraiser popularized the concept of "moral offsetting," where individuals who eat meat donate to anti-factory farming charities to counteract the harm of their consumption. The organization FarmKind promotes this idea, likening it to carbon offsets and calculating that a $23 monthly donation can offset the suffering of the average American's annual meat consumption. The strategy is rooted in pragmatism, acknowledging that few people are willing to go vegan but may be willing to contribute financially to improving animal welfare. However, the article explores the ethical debate surrounding this approach.</p>
-          <p>60/100</p>
+          <p>A recent successful fundraiser for anti-factory farming charities has highlighted the concept of "moral offsetting," where individuals donate money to mitigate the ethical guilt of eating meat. Proponents, like the organization FarmKind, argue it's a pragmatic way for sympathetic consumers who won't go vegan to still have a positive impact on animal welfare. However, the practice raises ethical questions, with critics worrying it absolves individuals of personal responsibility and normalizes a problem that requires systemic change. The debate underscores the challenge of aligning consumer behavior with widespread ethical concerns about modern animal agriculture.</p>
+          <p>55/100</p>
           <a href="https://www.vox.com/future-perfect/458607/meat-moral-offsets-factory-farming-dwarkesh-patel-podcast" target="_blank"><span class="news-org">Vox</span></a>
         </div>
       </div>
@@ -366,12 +481,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Judge Frank Caprio, Known for His Compassionate Courtroom, Dies at 88</h2>
+          <h2>Judge Frank Caprio, Known for Compassionate Courtroom Rulings, Dies at 88</h2>
           <div class="timestamp">2025-08-21 11:58:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Frank Caprio, the former Providence Municipal Court judge who became an international star for his empathetic approach to justice, has died at 88 after a battle with pancreatic cancer. His television show, "Caught in Providence," went viral for showcasing his kindness and humor while presiding over traffic and parking violation cases. Caprio attributed his compassion to his upbringing in poverty, stating his father taught him to imagine himself in the shoes of those before him. He served on the bench from 1985 to 2023 and was beloved by millions.</p>
-          <p>40/100</p>
+          <p>Frank Caprio, the former Providence Municipal Court judge who became an international celebrity for his empathetic and kindhearted approach to justice, has died at the age of 88 after a battle with pancreatic cancer. His televised show, "Caught in Providence," went viral for showcasing his compassionate handling of minor traffic and parking violations, often taking personal circumstances into account. Caprio attributed his deep empathy to his own upbringing in poverty, stating he always tried to imagine himself in the shoes of those appearing before him. He is remembered for demonstrating that justice could be administered with warmth and humor.</p>
+          <p>35/100</p>
           <a href="https://www.cbsnews.com/news/judge-frank-caprio-court-dies/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -379,12 +494,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>United Kingdom Joins 26 Nations in Demanding Media Access to Gaza</h2>
+          <h2>United Kingdom Joins 26 Nations in Call for Foreign Press Access to Gaza</h2>
           <div class="timestamp">2025-08-21 11:55:33 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The United Kingdom, along with 26 other countries including France, Germany, and Australia, has issued a joint statement calling on Israel to grant immediate and independent access to Gaza for foreign media. The statement, released by the Media Freedom Coalition, condemns attacks on journalists and emphasizes that those working in the conflict zone must be protected. Since the war began, Israel has banned international journalists from entering Gaza independently, and at least 192 media workers, mostly Palestinian, have been killed. The call for access comes amid a worsening humanitarian crisis.</p>
-          <p>15/100</p>
+          <p>The United Kingdom is one of 27 countries that have signed a joint statement urging Israel to grant immediate and independent access to the Gaza Strip for foreign media. The statement from the Media Freedom Coalition, which also includes France, Germany, and Australia, condemns attacks on journalists and emphasizes that they must be protected amid the region's humanitarian crisis. Since the war began, Israel has banned international journalists from entering Gaza independently, and according to the Committee to Protect Journalists, at least 192 media workers have been killed, making it the deadliest conflict for journalists ever recorded.</p>
+          <p>35/100</p>
           <a href="https://www.bbc.com/news/articles/c05ed10zqj8o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -392,12 +507,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Walmart Reports Rising Costs from Tariffs, Expects Trend to Continue</h2>
+          <h2>Walmart Reports Rising Costs Due to Tariffs, Impacting Retail Sector</h2>
           <div class="timestamp">2025-08-21 11:55:32 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Walmart CEO Doug McMillon stated that the company's costs from tariffs are increasing weekly and are expected to continue rising throughout the year. The world's largest retailer has managed to mitigate some costs and has even lowered prices on key back-to-school items, but the Trump administration's tariffs are creating broad inflationary pressure. While Walmart has seen an increase in higher-income shoppers seeking value, McMillon noted that the impact on overall consumer behavior has been muted so far. The comments echo concerns from other major retailers about economic uncertainty driven by trade policy. (not investment advice)</p>
-          <p>35/100</p>
+          <p>Walmart has stated that its costs are increasing weekly due to the Trump administration's tariffs on imports, with the trend expected to continue through the end of the year. The retail giant has managed to mitigate some costs but has had to raise prices on certain items, a challenge also faced by competitors like Home Depot and Target. CEO Doug McMillon noted that while higher-income shoppers are still seeking deals, other customers are adjusting their purchasing habits in response to price hikes. The comments highlight the broad economic pressure tariffs are placing on retailers and consumers. (not investment advice)</p>
+          <p>40/100</p>
           <a href="https://www.npr.org/2025/08/21/nx-s1-5509592/walmart-tariff-costs-rising-earnings" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -405,25 +520,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>UK Asylum Applications Reach Record High of 111,000 in Past Year</h2>
-          <div class="timestamp">2025-08-21 11:50:43 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The UK received a record 111,000 asylum applications in the year ending June, according to new Home Office figures. Despite this 14% increase from the previous year, the government is processing claims more quickly, reducing the overall backlog of initial decisions to 71,000 cases. The number of asylum seekers housed in hotels has seen a slight increase but remains significantly below the 2023 peak. The data presents a complex picture for the government, which has pledged to end hotel use and clear the backlog by 2029.</p>
-          <p>40/100</p>
-          <a href="https://www.bbc.com/news/articles/cwy1kxv8xewo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>World's Oldest Living Person, Britain's Ethel Caterham, Turns 116</h2>
+          <h2>Britain's Ethel Caterham, the World's Oldest Living Person, Turns 116</h2>
           <div class="timestamp">2025-08-21 11:47:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Ethel Caterham, a British woman recognized as the world's oldest living person, celebrated her 116th birthday on Thursday. Born in 1909, she is the last living subject of King Edward VII and has lived through two World Wars and the COVID-19 pandemic. Caterham, who resides in a care home in Surrey, was marking the occasion quietly with her family. She inherited the title of world's oldest person in April following the death of the previous holder. When asked previously about her secret to longevity, she credited it to never arguing with anyone.</p>
-          <p>95/100</p>
+          <p>Ethel Caterham, a British woman officially recognized as the world's oldest living person, has celebrated her 116th birthday. Born in 1909, she is the last living subject of King Edward VII and has lived through two World Wars and numerous historical milestones. Caterham, who resides in a care home in Surrey, marked the occasion quietly with her family. She inherited the title of the world's oldest person earlier this year following the death of a Brazilian nun. When previously asked about her secret to longevity, she humorously credited it to never arguing with anyone.</p>
+          <p>90/100</p>
           <a href="https://www.cbsnews.com/news/worlds-oldest-living-person-ethel-caterham-uk-116-birthday/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -431,11 +533,24 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>EU-US Trade Deal Framework Finalized with 15% Tariff on Most Goods</h2>
+          <h2>Historic Church in Kiruna, Sweden Relocated to Accommodate Mine Expansion</h2>
+          <div class="timestamp">2025-08-21 11:41:05 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>In a significant logistical feat, the 113-year-old Kiruna Church in Sweden has been transported three miles from its original location. The relocation is a key part of a larger, multi-year project to move the entire town center of Kiruna. This drastic measure is necessary because the ground beneath the old town has become unstable due to the expansion of a massive nearby iron-ore mine. The careful preservation and moving of the historic, Sami-style Lutheran church represents a critical effort to maintain the town's cultural heritage amidst profound industrial and geographical change.</p>
+          <p>70/100</p>
+          <a href="https://www.theatlantic.com/photography/archive/2025/08/photos-driving-century-old-church-down-road/683951/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>EU-US Trade Deal Framework Lowers Tariffs on Cars but Not Wine</h2>
           <div class="timestamp">2025-08-21 11:40:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The European Union and the United States have outlined a framework trade deal that will set a 15% tariff on approximately 70% of EU exports to the U.S., including cars, pharmaceuticals, and semiconductors. This rate is significantly lower than the 30% President Trump had previously threatened but higher than the pre-existing 2.5% tariff. The deal also includes a commitment from the EU to purchase $750 billion in U.S. energy products by 2028. However, Europe's wine and spirits industry was not granted an exemption, a point of major disappointment for producers. (not investment advice)</p>
+          <p>The European Union and the United States have outlined a framework trade deal that will set a 15% tariff on approximately 70% of EU exports to the US, a rate significantly lower than the 30% previously threatened by President Trump. The deal benefits strategic sectors like automobiles, with the US agreeing to lower its car tariff from 27.5% to 15% retroactively. However, the agreement failed to secure an exemption for European wine and spirits, which will face the new tariffs, causing major concern for the industry. (not investment advice)</p>
           <p>55/100</p>
           <a href="https://www.dw.com/en/eu-us-deal-set-to-lower-car-tariffs-no-exception-for-wine/a-73721388?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
@@ -444,12 +559,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>US Centers for Disease Control and Prevention Permanently Lays Off 600 Employees</h2>
+          <h2>Zelenskyy States Massive Russian Attack Undermines Peace Efforts</h2>
+          <div class="timestamp">2025-08-21 11:38:19 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Ukrainian President Volodymyr Zelenskyy asserted that a recent massive Russian assault, involving over 570 drones and 40 missiles, demonstrates that Moscow is not genuinely interested in peace negotiations. The overnight attack targeted civilian infrastructure, including an American-owned electronics factory and a kindergarten, resulting in at least one death and 15 injuries. Zelenskyy stated the strike, coming just a week after a summit between Presidents Trump and Putin, shows that sustained international pressure and strong sanctions are needed. The attack underscores the deep skepticism within Ukraine regarding Russia's commitment to ending the war.</p>
+          <p>15/100</p>
+          <a href="https://www.cbsnews.com/news/russia-ukraine-war-trump-putin-zelenskyy-peace-talks/" target="_blank"><span class="news-org">CBS News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>US Health Department Finalizes Firing of 600 CDC Employees</h2>
           <div class="timestamp">2025-08-21 11:35:47 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The U.S. Department of Health and Human Services has finalized the firing of 600 employees at the Centers for Disease Control and Prevention (CDC). According to the union representing the workers, the move makes permanent the layoffs proposed by Health Secretary Robert F. Kennedy Jr. in April as part of a plan to reduce "bureaucratic sprawl." The union condemned the decision's timing, coming just two weeks after a deadly shooting at the CDC's Atlanta headquarters, calling it cruel. The layoffs are part of a wider reduction of 10,000 workers across HHS.</p>
-          <p>10/100</p>
+          <p>The U.S. Department of Health and Human Services has permanently fired 600 employees at the Centers for Disease Control and Prevention (CDC), finalizing layoffs proposed by Health Secretary Robert F. Kennedy Jr. in April. The union representing the workers criticized the timing of the decision, which comes just two weeks after a deadly shooting at the CDC's Atlanta headquarters, calling it cruel and destabilizing. The layoffs are part of a broader plan to cut 10,000 jobs across federal health agencies to reduce bureaucracy and save an estimated $1.8 billion annually.</p>
+          <p>15/100</p>
           <a href="https://www.bbc.com/news/articles/cx29rdpg45xo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -461,7 +589,7 @@
           <div class="timestamp">2025-08-21 11:32:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Jeffrey Schmid, President of the Kansas City Federal Reserve, has indicated hesitation about cutting interest rates at the upcoming September meeting, despite strong market expectations for a reduction. Speaking from the Jackson Hole symposium, Schmid argued that policymakers still have "work to do" on inflation, suggesting the rate is closer to 3% than the Fed's 2% target. His comments push back against both market sentiment and aggressive pressure from the Trump administration for lower rates. Schmid is a voting member of the rate-setting Federal Open Market Committee this year. (not investment advice)</p>
+          <p>Jeffrey Schmid, President of the Kansas City Federal Reserve, has signaled hesitation about a potential interest rate cut in September, stating that policymakers need more definitive data before making a move. Speaking from the Jackson Hole symposium, Schmid expressed concern that inflation may be closer to 3% than the Fed's 2% target, suggesting more work is needed to control it. His comments contrast with market expectations, which currently price in a high probability of a rate reduction at the next FOMC meeting, and come amidst aggressive pressure from the White House for lower rates. (not investment advice)</p>
           <p>50/100</p>
           <a href="https://www.cnbc.com/2025/08/21/kansas-city-feds-schmid-shows-hesitation-about-widely-expected-september-rate-cut.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
@@ -470,78 +598,13 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>James Dobson, Influential Conservative Christian Leader, Dies at 89</h2>
-          <div class="timestamp">2025-08-21 11:30:36 EDT</div>
+          <h2>Former Labor Secretary Robert Reich Reflects on Baby Boomer Generation's Shortcomings</h2>
+          <div class="timestamp">2025-08-21 11:30:39 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Dr. James Dobson, the child psychologist who founded the influential conservative Christian ministry Focus on the Family, has died at the age of 89. Through his popular radio show and organization, Dobson became a major political force in the 1980s, advocating for conservative social values and campaigning against abortion and LGBTQ+ rights. He advised White House panels and was a key figure in mobilizing the religious right as a political bloc, later serving on President Trump's Evangelical Executive Advisory Board. He left Focus on the Family in 2010 but continued his work.</p>
+          <p>Robert Reich, who served as Secretary of Labor under President Bill Clinton, discusses his new memoir, "Coming Up Short," in a recent interview. He opens the book with an apology on behalf of the Baby Boomer generation, expressing regret for not fighting harder to create a more equitable and just society. Reich reflects on the policy decisions and societal shifts that occurred during his time in public service and beyond. His memoir serves as both a personal reflection and a broader critique of his generation's political and economic legacy, acknowledging a collective failure to address growing inequality.</p>
           <p>40/100</p>
-          <a href="https://www.cbsnews.com/news/james-dobson-founder-focus-on-the-family-dies-age-89/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Energy Prices Could Become Election Issue as Utility Bills Rise</h2>
-          <div class="timestamp">2025-08-21 11:30:35 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A July post in a New Jersey parenting group highlighted a frustrating trend: dramatically rising utility bills, a sentiment echoed by many residents and governors in five East Coast states. The largest grid operator, PJM Interconnection, is being blamed for price hikes, which it attributes to increased demand from AI, data centers, and manufacturing. While President Trump promised to slash energy prices, rising costs are becoming a key affordability issue in races like the New Jersey governorship, potentially influencing voters as they feel the direct financial impact of complex energy policies and market forces.</p>
-          <p>30/100</p>
-          <a href="https://www.cbsnews.com/news/rising-energy-prices-voting-issue-2025-elections/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Rising Utility Bills in Several States Could Become a Key Election Issue</h2>
-          <div class="timestamp">2025-08-21 11:30:35 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A significant jump in home utility bills is causing frustration among residents in several states and may become a salient political issue in upcoming elections. In New Jersey, for example, energy prices rose sharply in June, leading to a 17-20% increase in residential bills. The regional grid operator, PJM Interconnection, attributes the rising costs to increased demand from data centers and manufacturing, combined with the closure of fossil fuel plants. The issue of affordability is already prominent in New Jersey's gubernatorial race, with both candidates blaming opposing policies for the price hikes.</p>
-          <p>30/100</p>
-          <a href="https://www.cbsnews.com/news/rising-energy-prices-voting-issue-2025-elections/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Survey Finds Majority of College Students Expect Negative Impact from New Trump Legislation</h2>
-          <div class="timestamp">2025-08-21 11:30:26 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A recent survey indicates that 61% of U.S. college students believe they will be personally affected by the Trump administration's new bill altering higher education financing. The legislation, effective July 2026, sets new borrowing caps and eliminates certain federal student loan repayment options, such as the SAVE Plan. The changes are causing significant concern, with 35% of students surveyed considering reducing their studies and 32% thinking about changing their degree. Graduate and professional students are expected to be hit hardest due to the elimination of Grad PLUS loans.</p>
-          <p>20/100</p>
-          <a href="https://www.theguardian.com/us-news/2025/aug/21/college-students-trump-bill" target="_blank"><span class="news-org">The Guardian</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>'Lurker' Director Alex Russell Discusses His Debut Film on Obsessive Fandom</h2>
-          <div class="timestamp">2025-08-21 11:29:33 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>In an interview, writer-director Alex Russell discusses his first feature film, "Lurker," which explores the toxic dynamics of obsessive fandom and male social hierarchies. The movie centers on the relationship between a rising music star and a fan who dangerously integrates himself into the artist's inner circle. Russell, who also wrote for shows like "Beef" and "The Bear," explains that he drew on his own experiences as an outsider to craft the story. He aimed to create a film that examines the unspoken jealousies between men and the unsettling nature of seeking validation.</p>
-          <p>70/100</p>
-          <a href="https://www.latimes.com/entertainment-arts/movies/story/2025-08-21/director-alex-russell-lurker-obsessive-fandom-sundance-debut-mubi" target="_blank"><span class="news-org">LA Times</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>US-EU Trade Deal Caps Tariffs on Pharmaceuticals and Semiconductors at 15%</h2>
-          <div class="timestamp">2025-08-21 11:28:49 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Trump administration has agreed to limit tariffs on pharmaceuticals and semiconductors from the European Union to 15% as part of a broader trade deal. This decision averts previously threatened tariffs that could have reached as high as 250% on pharmaceuticals, a move that would have heavily impacted major European exporters. The agreement provides significant relief and predictability for these key sectors. However, to secure a lower 15% tariff on cars, the EU must first pass legislation to eliminate its own tariffs on various U.S. industrial and agricultural goods. (not investment advice)</p>
-          <p>75/100</p>
-          <a href="https://www.bbc.com/news/articles/ckgjwk8gze7o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+          <a href="https://www.npr.org/2025/08/21/nx-s1-5507068/i-regret-that-i-didnt-fight-harder-former-labor-secretary-robert-reich-says" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
     </div>

@@ -34,7 +34,8 @@
 <link rel="manifest" href="/site.webmanifest">
 <script>
   // --- Critical CSS and Deferred Loading Block ---
-  (function() {
+  // --- Critical CSS and Deferred Loading Block ---
+    (function() {
     const isMobile = 'ontouchstart' in window;
     const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
     const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
@@ -43,18 +44,41 @@
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
     document.head.appendChild(styleElement);
 
-    function loadCSS(href) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet'; link.href = href;
-      document.head.appendChild(link);
-    }
     document.addEventListener('DOMContentLoaded', function() {
-      const cssFiles = isMobile
-        ? ['common.css', 'mobile.css', 'hamburger.css']
-        : ['common.css', 'pc.css', 'hamburger.css'];
-      cssFiles.forEach(file => loadCSS('assets/css/' + file));
+    const cssFiles = isMobile
+      ? ['common.css', 'mobile.css', 'hamburger.css']
+      : ['common.css', 'pc.css', 'hamburger.css'];
+
+    let loaded = 0;
+    const cssPromises = [];
+
+    cssFiles.forEach(file => {
+      const promise = new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'assets/css/' + file;
+        link.onload = () => {
+          loaded++;
+          resolve();
+        };
+        link.onerror = reject;
+        document.head.appendChild(link);
+      });
+      cssPromises.push(promise);
     });
-  })();
+
+    // Wait for all CSS files to load before dispatching event
+    Promise.all(cssPromises).then(() => {
+      console.log('All CSS files loaded successfully');
+      window.__allCSSLoadedFired = true;
+      document.dispatchEvent(new Event('allCSSLoaded'));
+    }).catch(error => {
+      console.warn('CSS loading failed, dispatching event anyway:', error);
+      window.__allCSSLoadedFired = true;
+      document.dispatchEvent(new Event('allCSSLoaded'));
+    });
+    });
+    })();
 </script>
 </head>
 <body class="splash-active">
@@ -68,14 +92,14 @@
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Optimistically Reported News 😇</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">08/21/25 12:40 PM EDT (Next: 12:49 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">08/21/25 12:51 PM EDT (Next: 01:00 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Optimistically Reported News 😇</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">08/21/25 12:40 PM EDT (New news: 12:49 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">08/21/25 12:51 PM EDT (New news: 01:00 PM)<br><a href="index.html">Click here for All News 🍣</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -93,50 +117,37 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>New York Appeals Court Overturns Donald Trump's $500 Million Civil Fraud Penalty</h2>
-          <div class="timestamp">2025-08-21 12:31:04 EDT</div>
+          <h2>New York Appeals Court Overturns Over Half-Billion Dollar Penalty in Trump Civil Fraud Case</h2>
+          <div class="timestamp">2025-08-21 12:42:21 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A New York appellate court has nullified the nearly half-billion-dollar penalty imposed on Donald Trump in his civil fraud case. The judges ruled that while Trump was liable for inflating property values to secure loans, the fine was excessive and potentially unconstitutional. This decision is a significant legal victory for Trump, who hailed it as a "total victory" against a "Political Witch Hunt." However, the court upheld non-monetary penalties, including a ban on Trump serving as a company director in New York for three years.</p>
-          <p>60/100</p>
-          <a href="https://www.bbc.com/news/articles/c5y09q1zgg8o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Ghanaian Musician Shatta Wale Granted Bail Amid Lamborghini Investigation</h2>
-          <div class="timestamp">2025-08-21 12:21:00 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Ghanaian dancehall artist Shatta Wale, whose real name is Charles Nii Armah Mensah, was granted bail after being taken into custody for questioning about a Lamborghini Urus. The investigation, led by Ghana's Economic and Organized Crime Office (EOCO), is linked to a US probe into a crime network. The vehicle was allegedly purchased with proceeds from a $4 million crime involving a Ghanaian national currently jailed in the US. Wale claims he bought the car for $150,000 from an unknown individual and denies any connection to the convicted criminal.</p>
+          <p>A New York appellate court has thrown out the approximately $527 million financial penalty imposed on former President Trump and his co-defendants in his civil fraud case, ruling the fine was excessive. While the massive disgorgement was vacated, the court upheld other sanctions, including a three-year ban on Trump serving as an officer or director of any New York corporation. The deeply divided panel of justices expressed significant disagreement on the case's merits, leading to what one justice called a "remarkable solution" to avoid reargument. New York's Attorney General has announced plans to appeal the decision.</p>
           <p>55/100</p>
-          <a href="https://www.dw.com/en/ghana-singer-shatta-wale-granted-bail-in-lamborghini-probe/a-73722417?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
+          <a href="https://www.cbsnews.com/news/trump-civil-fraud-case-new-york-appeals/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Apple TV+ Increases Monthly Subscription Price for Third Time in Three Years</h2>
-          <div class="timestamp">2025-08-21 12:09:11 EDT</div>
+          <h2>Trent Rockets Secure Victory Over Oval Invincibles in The Hundred Cricket Competition</h2>
+          <div class="timestamp">2025-08-21 12:34:07 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Apple has raised the monthly subscription price for its Apple TV+ streaming service to $12.99 in the U.S. and other markets, a $3 increase. This marks the third price hike for the service since its launch in 2019 at $4.99 per month. The move follows similar price increases from competitors like Netflix and Peacock as streaming companies seek greater profitability amid rising content production costs. While Apple does not release viewership numbers, reports suggest the service has been operating at a significant financial loss despite growing its subscriber base.</p>
-          <p>60/100</p>
-          <a href="https://www.cnbc.com/2025/08/21/apple-tv-subscription-12-99.html" target="_blank"><span class="news-org">CNBC</span></a>
+          <p>The Trent Rockets defeated the Oval Invincibles by six wickets in The Hundred women's cricket competition, keeping their slim chances for qualification alive. Despite a mid-innings wobble while chasing a modest target of 110, Heather Graham's composed, unbeaten 19 runs guided the Rockets to victory with 16 balls remaining. The Invincibles' innings was hampered by a slow start and the loss of key wickets at crucial moments, with Meg Lanning's 45 being the standout performance. Both teams must now win their remaining games to have any hope of advancing in the tournament.</p>
+          <p>70/100</p>
+          <a href="https://www.bbc.com/sport/cricket/articles/c4gl8pyjvdxo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Explaining Potential Earnings from a $25,000 Certificate of Deposit</h2>
+          <h2>Analysis of Potential Earnings from a $25,000 Certificate of Deposit in the Current Rate Environment</h2>
           <div class="timestamp">2025-08-21 12:05:37 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>As interest rates remain elevated, Certificates of Deposit (CDs) continue to be an attractive option for savers seeking stable, predictable returns without market risk. This article outlines the potential earnings on a $25,000 deposit across various CD terms, from a 3-month CD yielding around $269 to a 5-year CD earning about $5,250 at current top rates. Unlike savings accounts with variable rates, a CD's interest rate is fixed for its entire term, offering protection against rate declines. The choice of term depends on the saver's financial goals and how long they can afford to lock away their funds. (not investment advice)</p>
+          <p>In the current high-rate environment, Certificates of Deposit (CDs) remain an attractive option for savers seeking stability and predictable returns. A $25,000 deposit can yield varied earnings depending on the term, from approximately $269 for a 3-month CD to over $5,250 for a 5-year term, based on current top rates. The article emphasizes that while rates have cooled from their 2023 peak, the fixed nature of CDs provides a safeguard against market volatility, making them a useful tool for specific financial goals. (not investment advice)</p>
           <p>75/100</p>
           <a href="https://www.cbsnews.com/news/how-much-will-a-25000-cd-earn-august-2025/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
@@ -145,12 +156,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>July Existing Home Sales Rise Amidst Increasing Inventory and Stabilizing Prices</h2>
+          <h2>July Existing Home Sales Increase Amid Rising Inventory and Stabilizing Prices</h2>
           <div class="timestamp">2025-08-21 12:03:40 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Sales of previously owned homes in the U.S. increased by 2% in July from the previous month, defying expectations of a decline. The rise is attributed to a slight dip in mortgage rates during May and June when these sales contracts were likely signed. Housing inventory also grew by nearly 16% year-over-year, reaching its highest level since May 2020, which is helping to ease pressure on prices. The median home price saw a marginal annual increase of 0.2%, suggesting the market may be reaching an inflection point with affordability showing slight improvement. (not investment advice)</p>
-          <p>70/100</p>
+          <p>Sales of previously owned homes in the U.S. rose by 2% in July, defying expectations of a decline, as housing inventory reached its highest level since May 2020. This increase in supply is helping to moderate price growth, with the median home price seeing only a slight 0.2% annual increase. The market appears to be at an inflection point, with improved affordability and more choices for buyers contributing to the sales uptick. However, higher-end properties continue to dominate sales, while all-cash purchases and investor activity remain elevated. (not investment advice)</p>
+          <p>65/100</p>
           <a href="https://www.cnbc.com/2025/08/21/july-home-sales-rise-as-prices-approach-inflection-point.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -158,12 +169,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>'Moral Offsetting' for Meat Eaters Gains Traction as a Philanthropic Strategy</h2>
+          <h2>Photo Essay Explores the Diverse Experiences of Parents with an 'Empty Nest'</h2>
+          <div class="timestamp">2025-08-21 12:00:07 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>A new photo essay examines the complex and varied emotional landscape of "empty nesters," parents whose children have left home. Through intimate portraits and interviews, the project reveals that the experience is far from uniform, encompassing feelings of grief, relief, loneliness, and newfound freedom. The stories show how this life stage is not a fixed state but a fluid process of redefinition, as parents reclaim space, rediscover their own identities, and navigate new relationships with their adult children. The essay challenges the traditional, often singular, image of the empty nest, highlighting its modern nuances.</p>
+          <p>70/100</p>
+          <a href="https://www.theguardian.com/us-news/ng-interactive/2025/aug/21/empty-nesters-parents-children" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>The Rise of 'Moral Offsetting' for Meat Consumption Sparks Ethical Debate</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>A recent fundraiser popularized the concept of "moral offsetting," where individuals who eat meat donate to anti-factory farming charities to counteract the harm of their consumption. The organization FarmKind promotes this idea, likening it to carbon offsets and calculating that a $23 monthly donation can offset the suffering of the average American's annual meat consumption. The strategy is rooted in pragmatism, acknowledging that few people are willing to go vegan but may be willing to contribute financially to improving animal welfare. However, the article explores the ethical debate surrounding this approach.</p>
-          <p>60/100</p>
+          <p>A recent successful fundraiser for anti-factory farming charities has highlighted the concept of "moral offsetting," where individuals donate money to mitigate the ethical guilt of eating meat. Proponents, like the organization FarmKind, argue it's a pragmatic way for sympathetic consumers who won't go vegan to still have a positive impact on animal welfare. However, the practice raises ethical questions, with critics worrying it absolves individuals of personal responsibility and normalizes a problem that requires systemic change. The debate underscores the challenge of aligning consumer behavior with widespread ethical concerns about modern animal agriculture.</p>
+          <p>55/100</p>
           <a href="https://www.vox.com/future-perfect/458607/meat-moral-offsets-factory-farming-dwarkesh-patel-podcast" target="_blank"><span class="news-org">Vox</span></a>
         </div>
       </div>
@@ -171,12 +195,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Exploring Five Lessons from the Baha'i Faith for a Happier Life</h2>
+          <h2>Exploring Five Life Lessons for Happiness from the Baha'i Faith</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>This article examines the Baha'i faith as a source of practical wisdom for achieving happiness, regardless of one's own religious beliefs. Originating in 19th-century Persia, the faith emphasizes principles such as finding purpose in adversity, seeking spiritual over physical happiness, and understanding that serving others is key to one's own well-being. The author distills five key lessons from Baha'i teachings, including embracing discomfort as a catalyst for growth and trusting in a positive future. The piece suggests these tenets offer a robust alternative to modern, transient self-help trends.</p>
-          <p>90/100</p>
+          <p>This article explores key teachings from the Baha'i faith that offer universal lessons on achieving a happier life, regardless of one's religious beliefs. It highlights five principles: having faith in the future, embracing discomfort as a catalyst for growth, seeking deeper spiritual happiness over fleeting pleasures, understanding that helping others is essential to one's own well-being, and adhering to timeless virtues over passing fads. Originating in 19th-century Persia, the faith emphasizes positivity and human progress, viewing worldly troubles not as cause for despair but as opportunities for growth and service.</p>
+          <p>85/100</p>
           <a href="https://www.theatlantic.com/ideas/archive/2025/08/bahai-islam-philosophy-lesson/683926/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
         </div>
       </div>
@@ -184,11 +208,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Africa Makes Gradual Progress in Establishing Mass Vaccine Production Capabilities</h2>
+          <h2>Africa Makes Strides in Vaccine Manufacturing Five Years After Pandemic Exposed Dependency</h2>
           <div class="timestamp">2025-08-21 12:00:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Five years after the COVID-19 pandemic exposed the continent's heavy reliance on imported vaccines, Africa is slowly building its own pharmaceutical manufacturing capacity. New facilities are being established in countries like South Africa, Senegal, Rwanda, and Kenya, aiming to produce vaccines for diseases such as yellow fever, malaria, and cholera. Despite this progress and renewed political commitment, Africa still produces only 0.1% of the world's vaccines. Initiatives like the African Vaccine Manufacturing Accelerator (AVMA) are being launched to provide funding and help local producers become competitive over the next decade.</p>
+          <p>Five years after the COVID-19 pandemic highlighted Africa's heavy reliance on imported vaccines, the continent is making progress toward greater self-sufficiency in pharmaceutical production. New manufacturing facilities are being established in countries like South Africa, Senegal, Rwanda, and Kenya, with a focus on producing vaccines for diseases such as malaria and yellow fever. Despite this momentum and renewed political commitment, significant hurdles remain, including a lack of infrastructure and funding. The African Union aims to produce 60% of the continent's required vaccines locally by 2040, a substantial increase from the current 0.1%.</p>
           <p>75/100</p>
           <a href="https://www.dw.com/en/a-tentative-start-for-mass-vaccine-production-in-africa/a-73701589?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
@@ -197,12 +221,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>World's Oldest Living Person, Britain's Ethel Caterham, Turns 116</h2>
+          <h2>Britain's Ethel Caterham, the World's Oldest Living Person, Turns 116</h2>
           <div class="timestamp">2025-08-21 11:47:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>Ethel Caterham, a British woman recognized as the world's oldest living person, celebrated her 116th birthday on Thursday. Born in 1909, she is the last living subject of King Edward VII and has lived through two World Wars and the COVID-19 pandemic. Caterham, who resides in a care home in Surrey, was marking the occasion quietly with her family. She inherited the title of world's oldest person in April following the death of the previous holder. When asked previously about her secret to longevity, she credited it to never arguing with anyone.</p>
-          <p>95/100</p>
+          <p>Ethel Caterham, a British woman officially recognized as the world's oldest living person, has celebrated her 116th birthday. Born in 1909, she is the last living subject of King Edward VII and has lived through two World Wars and numerous historical milestones. Caterham, who resides in a care home in Surrey, marked the occasion quietly with her family. She inherited the title of the world's oldest person earlier this year following the death of a Brazilian nun. When previously asked about her secret to longevity, she humorously credited it to never arguing with anyone.</p>
+          <p>90/100</p>
           <a href="https://www.cbsnews.com/news/worlds-oldest-living-person-ethel-caterham-uk-116-birthday/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -210,39 +234,26 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>EU-US Trade Deal Framework Finalized with 15% Tariff on Most Goods</h2>
+          <h2>Historic Church in Kiruna, Sweden Relocated to Accommodate Mine Expansion</h2>
+          <div class="timestamp">2025-08-21 11:41:05 EDT</div>
+        </div>
+        <div class="flip-card-back">
+          <p>In a significant logistical feat, the 113-year-old Kiruna Church in Sweden has been transported three miles from its original location. The relocation is a key part of a larger, multi-year project to move the entire town center of Kiruna. This drastic measure is necessary because the ground beneath the old town has become unstable due to the expansion of a massive nearby iron-ore mine. The careful preservation and moving of the historic, Sami-style Lutheran church represents a critical effort to maintain the town's cultural heritage amidst profound industrial and geographical change.</p>
+          <p>70/100</p>
+          <a href="https://www.theatlantic.com/photography/archive/2025/08/photos-driving-century-old-church-down-road/683951/?utm_source=feed" target="_blank"><span class="news-org">The Atlantic</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>EU-US Trade Deal Framework Lowers Tariffs on Cars but Not Wine</h2>
           <div class="timestamp">2025-08-21 11:40:00 EDT</div>
         </div>
         <div class="flip-card-back">
-          <p>The European Union and the United States have outlined a framework trade deal that will set a 15% tariff on approximately 70% of EU exports to the U.S., including cars, pharmaceuticals, and semiconductors. This rate is significantly lower than the 30% President Trump had previously threatened but higher than the pre-existing 2.5% tariff. The deal also includes a commitment from the EU to purchase $750 billion in U.S. energy products by 2028. However, Europe's wine and spirits industry was not granted an exemption, a point of major disappointment for producers. (not investment advice)</p>
+          <p>The European Union and the United States have outlined a framework trade deal that will set a 15% tariff on approximately 70% of EU exports to the US, a rate significantly lower than the 30% previously threatened by President Trump. The deal benefits strategic sectors like automobiles, with the US agreeing to lower its car tariff from 27.5% to 15% retroactively. However, the agreement failed to secure an exemption for European wine and spirits, which will face the new tariffs, causing major concern for the industry. (not investment advice)</p>
           <p>55/100</p>
           <a href="https://www.dw.com/en/eu-us-deal-set-to-lower-car-tariffs-no-exception-for-wine/a-73721388?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>'Lurker' Director Alex Russell Discusses His Debut Film on Obsessive Fandom</h2>
-          <div class="timestamp">2025-08-21 11:29:33 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>In an interview, writer-director Alex Russell discusses his first feature film, "Lurker," which explores the toxic dynamics of obsessive fandom and male social hierarchies. The movie centers on the relationship between a rising music star and a fan who dangerously integrates himself into the artist's inner circle. Russell, who also wrote for shows like "Beef" and "The Bear," explains that he drew on his own experiences as an outsider to craft the story. He aimed to create a film that examines the unspoken jealousies between men and the unsettling nature of seeking validation.</p>
-          <p>70/100</p>
-          <a href="https://www.latimes.com/entertainment-arts/movies/story/2025-08-21/director-alex-russell-lurker-obsessive-fandom-sundance-debut-mubi" target="_blank"><span class="news-org">LA Times</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>US-EU Trade Deal Caps Tariffs on Pharmaceuticals and Semiconductors at 15%</h2>
-          <div class="timestamp">2025-08-21 11:28:49 EDT</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The Trump administration has agreed to limit tariffs on pharmaceuticals and semiconductors from the European Union to 15% as part of a broader trade deal. This decision averts previously threatened tariffs that could have reached as high as 250% on pharmaceuticals, a move that would have heavily impacted major European exporters. The agreement provides significant relief and predictability for these key sectors. However, to secure a lower 15% tariff on cars, the EU must first pass legislation to eliminate its own tariffs on various U.S. industrial and agricultural goods. (not investment advice)</p>
-          <p>75/100</p>
-          <a href="https://www.bbc.com/news/articles/ckgjwk8gze7o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
     </div>
