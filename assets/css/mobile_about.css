@@ -146,16 +146,37 @@
     }
 
     .glass-card, .process-step {
-        width: 100%;
-        max-width: 100%;
-        margin-bottom: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 320px;
+        margin: 0 auto 1rem auto;
     }
 
     .process-step {
-        margin-bottom: 0.5rem; /* Reduced space between steps */
+        margin: 0 auto 0.5rem auto; /* Center horizontally with reduced bottom margin */
         display: flex; /* Use flexbox for equal height */
         flex-direction: column;
         justify-content: center; /* Center content vertically */
+        align-items: center; /* Center content horizontally */
+        padding: 1.5rem 1rem; /* Equal padding on all sides */
+        text-align: center; /* Center text alignment */
+        min-height: 120px; /* Ensure consistent height */
+    }
+
+    /* Reset margins for step elements to ensure perfect centering */
+    .process-step .step-number {
+        margin: 0 0 0.5rem 0; /* Only small bottom margin */
+    }
+
+    .process-step .step-content {
+        margin: 0; /* Remove all margins */
+    }
+
+    .process-step .step-content h3 {
+        margin: 0 0 0.3rem 0; /* Minimal bottom margin */
+    }
+
+    .process-step .step-content p {
+        margin: 0; /* Remove all margins */
     }
 
     .process-arrow {

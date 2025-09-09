@@ -208,6 +208,10 @@ document.addEventListener('DOMContentLoaded', function () {
         link.addEventListener('click', function (e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
+            // Skip if targetId is just '#' or empty
+            if (!targetId || targetId === '#') {
+                return;
+            }
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
                 // Use your existing device detection
@@ -799,7 +803,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function showSourcesOverlay() {
+    // Preload and decode all logo images so the animation is consistent even with cache
+    function preloadSourceLogos() {
+        const promises = newsSources.map(file => {
+            const url = `assets/images/news_logos/${file}`;
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = async () => {
+                    // Try to decode to ensure it's ready for paint; ignore errors
+                    if (img.decode) {
+                        try { await img.decode(); } catch (e) { /* ignore */ }
+                    }
+                    resolve();
+                };
+                img.onerror = resolve; // resolve anyway to avoid blocking
+                img.src = url;
+                // Encourage eager load
+                // Note: decode hint cannot be set on Image(), but we still attempt above
+            });
+        });
+        return Promise.all(promises);
+    }
+
+    async function showSourcesOverlay() {
         // Create overlay if it doesn't exist
         let overlay = document.getElementById('sources-overlay');
         if (!overlay) {
@@ -807,9 +833,42 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(overlay);
         }
 
+        // Reset logo states so animation replays every time overlay opens
+        try {
+            const grid = overlay.querySelector('.sources-grid');
+            if (grid) {
+                const logos = grid.querySelectorAll('.source-logo');
+                logos.forEach(logo => {
+                    // Disable transitions while we reset to avoid back-animate flashes
+                    const prevTransition = logo.style.transition;
+                    logo.style.transition = 'none';
+                    logo.style.left = '50%';
+                    logo.style.top = '50%';
+                    logo.style.transform = 'translate(-50%, -50%) scale(0.2)';
+                    logo.style.opacity = '0';
+                    logo.style.transitionDelay = '0ms';
+                    // Force style flush so the reset sticks
+                    void logo.offsetHeight;
+                    // Restore transition
+                    logo.style.transition = prevTransition || 'transform 500ms cubic-bezier(.2,.8,.2,1), opacity 350ms ease';
+                });
+            }
+        } catch (e) { /* noop */ }
+
         // Show overlay
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        // Ensure images are decoded before animating, but don't block too long
+        const preload = preloadSourceLogos();
+        const timeout = new Promise(resolve => setTimeout(resolve, 150));
+        await Promise.race([preload, timeout]);
+
+        // Force reflow so initial styles are committed before transitions
+        void overlay.offsetHeight;
+
+        // Kick off animation slightly after becoming visible for smoother start
+        setTimeout(() => applyCircularPacking(true), 40);
     }
 
     function createSourcesOverlay() {
@@ -825,16 +884,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'close-sources';
-        closeBtn.innerHTML = '×';
         closeBtn.addEventListener('click', hideSourcesOverlay);
 
         const grid = document.createElement('div');
         grid.className = 'sources-grid';
 
-        // Create logo elements
+        // Create logo elements (start centered and scaled down for entry animation)
         newsSources.forEach((logoFile, index) => {
             const logoContainer = document.createElement('div');
             logoContainer.className = 'source-logo';
+            // Initial state: centered and small
+            logoContainer.style.left = '50%';
+            logoContainer.style.top = '50%';
+            logoContainer.style.transform = 'translate(-50%, -50%) scale(0.2)';
+            logoContainer.style.opacity = '0';
+            logoContainer.style.transition = 'transform 500ms cubic-bezier(.2,.8,.2,1), opacity 350ms ease';
 
             const img = document.createElement('img');
             img.src = `assets/images/news_logos/${logoFile}`;
@@ -855,8 +919,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Apply circular packing after DOM is ready
         setTimeout(() => {
-            applyCircularPacking();
-        }, 100);
+            applyCircularPacking(true); // animate from center
+        }, 60);
 
         // Close on overlay click
         overlay.addEventListener('click', function (e) {
@@ -869,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Circular packing algorithm with dynamic container sizing (Apple Watch style)
-    function applyCircularPacking() {
+    function applyCircularPacking(animateFromCenter = false) {
         const grid = document.querySelector('.sources-grid');
         const logos = grid.querySelectorAll('.source-logo');
 
@@ -898,10 +962,11 @@ document.addEventListener('DOMContentLoaded', function () {
             ringsNeeded++;
         }
 
-        // Calculate required container dimensions
+        // Calculate required container dimensions with edge padding
         const maxRingRadius = (ringsNeeded - 1) * spacing;
-        const requiredWidth = (maxRingRadius * 2) + (circleSize * 2);
-        const requiredHeight = (maxRingRadius * 2) + (circleSize * 2);
+        const edgePadding = Math.round(circleSize * 0.5); // extra space between bubbles and container edges
+        const requiredWidth = (maxRingRadius * 2) + (circleSize * 2) + (edgePadding * 2);
+        const requiredHeight = (maxRingRadius * 2) + (circleSize * 2) + (edgePadding * 2);
 
         // Update container size
         grid.style.width = `${Math.max(requiredWidth, 300)}px`;
@@ -917,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const positions = [];
 
         // Center circle
-        positions.push({ x: centerX, y: centerY });
+        positions.push({ x: centerX, y: centerY, ring: 0 });
 
         // Generate ring positions in circular pattern
         for (let ring = 1; ring < ringsNeeded; ring++) {
@@ -930,7 +995,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let step = Math.PI * 2 / circlesInRing;
             positions.push({ // First position at bottom
                 x: centerX + radius * Math.cos(baseAngle),
-                y: centerY + radius * Math.sin(baseAngle)
+                y: centerY + radius * Math.sin(baseAngle),
+                ring
             });
             for (let i = 1; i < circlesInRing; i++) {
                 // Alternate left/right from bottom
@@ -938,11 +1004,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 let angle = baseAngle + direction * offset;
                 positions.push({
                     x: centerX + radius * Math.cos(angle),
-                    y: centerY + radius * Math.sin(angle)
+                    y: centerY + radius * Math.sin(angle),
+                    ring
                 });
                 direction *= -1; // Switch direction each time
             }
         }
+
+        // Precompute max distance for stagger
+        const maxDistance = Math.max(1, maxRingRadius);
 
         // Apply positions to logos
         logos.forEach((logo, index) => {
@@ -950,13 +1020,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 const pos = positions[index];
                 logo.style.left = `${pos.x - circleRadius}px`;
                 logo.style.top = `${pos.y - circleRadius}px`;
-                logo.style.transform = 'translate(0, 0)';
+                // Final transform (remove centering translate and scale to 1)
+                const finalTransform = 'translate(0, 0) scale(1)';
 
-                // Add subtle stagger animation
-                logo.style.animationDelay = `${index * 0.05}s`;
-                logo.style.opacity = '0';
-                logo.style.animation = 'circleFadeIn 0.5s ease-out forwards';
-                logo.style.display = 'block';
+                if (animateFromCenter) {
+                    // Stagger based on distance from center to animate outward
+                    const dx = pos.x - centerX;
+                    const dy = pos.y - centerY;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    const normalized = Math.min(1, distance / maxDistance);
+                    const delayMs = Math.round(80 + normalized * 420); // 80ms..500ms
+                    logo.style.transitionDelay = `${delayMs}ms`;
+                    // Trigger transition to final state
+                    requestAnimationFrame(() => {
+                        logo.style.transform = finalTransform;
+                        logo.style.opacity = '1';
+                        logo.style.display = 'block';
+                    });
+                } else {
+                    logo.style.transform = finalTransform;
+                    logo.style.opacity = '1';
+                    logo.style.display = 'block';
+                }
             } else {
                 // Hide excess logos that don't fit
                 logo.style.display = 'none';
@@ -969,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`🔄 Rings needed: ${ringsNeeded}, Max radius: ${maxRingRadius}px`);
     }
 
-    // Add CSS animation for circle fade-in with Apple Watch-style bounce
+    // Add CSS animation for initial circle fade-in only (no hover animation here)
     const circleAnimation = document.createElement('style');
     circleAnimation.textContent = `
         @keyframes circleFadeIn {
@@ -985,16 +1070,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 opacity: 1;
                 transform: scale(1);
             }
-        }
-
-        @keyframes circleHover {
-            0% { transform: scale(1.15); }
-            50% { transform: scale(1.18); }
-            100% { transform: scale(1.15); }
-        }
-
-        .source-logo:hover {
-            animation: circleHover 0.6s ease-in-out;
         }
     `;
     document.head.appendChild(circleAnimation);
