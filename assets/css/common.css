@@ -456,7 +456,8 @@
       right: 0;
       z-index: 50;
       transition: opacity var(--transition-medium);
-      line-height: 0;
+      padding: 4px 0;
+      transform: translateZ(0);
     }
     .flip-card.flipped .card-indicator {
       opacity: 0;
@@ -466,7 +467,6 @@
       background: var(--indicator-dot);
       border-radius: 50%;
       transition: all var(--transition-fast);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       cursor: pointer;
       display: none;
       align-items: center;
@@ -475,21 +475,35 @@
       font-size: 8px;
       width: 20px;
       height: 20px;
-      box-sizing: content-box;
+      box-sizing: border-box;
       transform-origin: center center;
       position: relative;
       vertical-align: middle;
       outline: none;
       -webkit-tap-highlight-color: transparent;
+      margin: 4px 0;
+      box-shadow: none;
+    }
+    
+    .indicator-dot::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      pointer-events: none;
     }
     .indicator-dot.visible { display: flex; }
-    .indicator-dot.size-small { transform: scale(1.2); opacity: 0.4; margin: 0 3px; }
-    .indicator-dot.size-mid { transform: scale(1.5); opacity: 0.6; margin: 0 6.5px; }
-    .indicator-dot.size-large { transform: scale(1.8); opacity: 0.8; margin: 0 10px; }
+    .indicator-dot.size-small { transform: scale(1.2); opacity: 0.4; margin: 4px 3px; }
+    .indicator-dot.size-mid { transform: scale(1.5); opacity: 0.6; margin: 4px 6.5px; }
+    .indicator-dot.size-large { transform: scale(1.8); opacity: 0.8; margin: 4px 10px; }
     .indicator-dot.size-active {
       transform: scale(2);
       opacity: 1;
-      margin: 0 12px;
+      margin: 4px 12px;
       background: var(--indicator-dot-active);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }

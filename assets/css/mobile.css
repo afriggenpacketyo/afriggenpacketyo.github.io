@@ -260,6 +260,9 @@ html.dark-mode .container .flip-card.active .flip-card-back {
   color: #fff;
 }
 
+body.safari-mobile .container .flip-card.active {
+  transform: translateY(-20px);
+}
 /* Clean transition for all cards - removing unnecessary style overrides */
 .flip-card-inner {
   transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -334,7 +337,74 @@ header {
 }
 
 .card-indicator {
-  z-index: 998;
+  z-index: 1000; /* Higher than pill bar (999) to ensure dots are visible */
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s ease;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge */
+  user-select: none;         /* Standard */
+  -webkit-touch-callout: none; /* iOS Safari */
+}
+
+/* Simplified pill bar - clean single element design */
+.scrolling-bar {
+    position: absolute;
+    pointer-events: none;
+    z-index: 998; /* Lower than card-indicator (1000) to ensure dots are visible */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    contain: layout style;
+    overflow: hidden;
+    /* Clean pill shape - single element */
+    background: linear-gradient(90deg,
+        rgba(94, 203, 255, 0.8) 0%,
+        rgba(94, 203, 255, 0.95) 25%,
+        rgba(94, 203, 255, 1) 50%,
+        rgba(94, 203, 255, 0.95) 75%,
+        rgba(94, 203, 255, 0.8) 100%);
+    border-radius: 99px;
+    box-shadow: 0 0 20px rgba(94, 203, 255, 0.6);
+}
+
+/* Dark mode support for the simplified pill bar */
+html.dark-mode .scrolling-bar {
+    background: linear-gradient(90deg,
+        rgba(94, 203, 255, 0.9) 0%,
+        rgba(94, 203, 255, 0.98) 25%,
+        rgba(94, 203, 255, 1) 50%,
+        rgba(94, 203, 255, 0.98) 75%,
+        rgba(94, 203, 255, 0.9) 100%);
+    box-shadow: 0 0 20px rgba(94, 203, 255, 0.7);
+    z-index: 998; /* Match the light mode z-index */
+}
+
+.scrolling-bar.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Remove the separate components for cleaner design */
+.scrolling-bar-main,
+.scrolling-bar-left-endpoint,
+.scrolling-bar-right-endpoint {
+    display: none;
+}
+
+/* Full-width pill bar - no viewport constraints needed since we handle it in JS */
+@media (max-width: 1024px) {
+    .scrolling-bar {
+        /* Additional mobile optimizations */
+        min-height: 50px; /* Ensure minimum touch target */
+        z-index: 998; /* Match the base z-index */
+    }
+}
+
+/* Remove the old pseudo-element styles that were interfering with dots */
+.card-indicator.scrolling-active::before,
+.card-indicator.scrolling-active::after,
+.card-indicator.scrolling-active > .indicator-dot:last-child::after {
+    display: none;
 }
 
 .flip-card-back .summary,

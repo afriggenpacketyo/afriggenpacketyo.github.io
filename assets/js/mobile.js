@@ -464,39 +464,212 @@
       container.addEventListener('touchmove', container._touchmoveHandler, { passive: false });
       container.addEventListener('touchend', container._touchendHandler);
 
-      // Setup card indicator click handlers
       const cardIndicator = document.querySelector('.card-indicator');
-      cardIndicator.querySelectorAll('.indicator-dot').forEach((dot) => {
-          dot.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const index = parseInt(dot.dataset.index);
 
-              // Get distance between current and target index to adjust animation duration
-              const currentIndex = CardSystem.activeCardIndex;
-              const indexDistance = Math.abs(index - currentIndex);
+      // --- NEW: Touch and Hold Scrolling for Dot Indicator ---
+      let holdTimer = null;
+      let isDotScrollActive = false;
+      let dotTouchStartX = 0; // Still needed to detect if touch has moved too far
+      let hasMovedTooFar = false;
 
-              // For distant jumps (more than 2 cards away), adjust animation parameters
-              if (indexDistance > 2) {
-                  // Save original transition duration
-                  const originalDuration = TRANSITION_DURATION;
+      // Create a simple pill bar element
+      const createScrollingBar = () => {
+          let scrollingBar = document.querySelector('.scrolling-bar');
+          if (!scrollingBar) {
+            scrollingBar = document.createElement('div');
+            scrollingBar.className = 'scrolling-bar';
+            // Simple single element - no inner HTML needed
+            document.body.appendChild(scrollingBar);
+            console.log('Mobile: Simple pill bar created and added to DOM');
+          }
+          return scrollingBar;
+      };
 
-                  // Temporarily increase transition duration based on distance
-                  const adjustedDuration = Math.min(TRANSITION_DURATION * (1 + indexDistance * 0.15), 350);
-                  container.style.transition = `all ${adjustedDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+      const scrollingBar = createScrollingBar();
 
-                  // Move to card with animation
-                  moveToCard(index, true);
+      const handleDotTouchStart = (e) => {
+          console.log('Mobile: Touch started on dot indicator');
+          e.stopPropagation();
+          dotTouchStartX = e.touches[0].clientX;
+          isDotScrollActive = false;
+          hasMovedTooFar = false;
 
-                  // Reset to original duration after this transition
-                  setTimeout(() => {
-                      container.style.transition = `all ${originalDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
-                  }, adjustedDuration + 50);
-              } else {
-                  // For adjacent cards, use normal animation
-                  moveToCard(index, true);
+          // Hide the scrolling bar initially
+          scrollingBar.classList.remove('active');
+          console.log('Mobile: Scrolling bar hidden initially');
+
+          holdTimer = setTimeout(() => {
+              if (!hasMovedTooFar) {
+                  console.log('Mobile: Touch held for 500ms - activating scroll mode');
+                  isDotScrollActive = true;
+                  if (navigator.vibrate) navigator.vibrate(50);
+                  cardIndicator.classList.add('scrolling-active'); // Restore visual feedback
+                  scrollingBar.classList.add('active'); // Show scrolling bar
+                  console.log('Mobile: Scrolling mode activated - bar should be visible now');
+                  console.log('Mobile: Scrolling bar element:', scrollingBar);
+                  console.log('Mobile: Scrolling bar classes:', scrollingBar.className);
+
+                  // Position the scrolling bar immediately when activated
+                  const indicatorRect = cardIndicator.getBoundingClientRect();
+
+                  // Position pill bar to full viewport width with breathing room
+                  const viewportWidth = window.innerWidth;
+                  const breathingRoom = 20; // 20px margin on each side
+                  const barLeft = breathingRoom;
+                  const barRight = viewportWidth - breathingRoom;
+                  const barWidth = barRight - barLeft;
+
+                  // Calculate vertical centering around the dot indicators
+                  const indicatorCenterY = indicatorRect.top + (indicatorRect.height / 2);
+                  const pillBarHeight = indicatorRect.height + 24; // Frame the dots with padding
+                  const barTop = indicatorCenterY - (pillBarHeight / 2); // Center vertically around dots
+
+                  scrollingBar.style.left = barLeft + 'px';
+                  scrollingBar.style.top = barTop + 'px';
+                  scrollingBar.style.width = barWidth + 'px';
+                  scrollingBar.style.height = pillBarHeight + 'px';
+
+                  console.log('Mobile: Initial vertically centered pill bar:', {
+                    viewportWidth: viewportWidth,
+                    breathingRoom: breathingRoom,
+                    barLeft: barLeft,
+                    barRight: barRight,
+                    barWidth: barWidth,
+                    indicatorCenterY: indicatorCenterY,
+                    pillBarHeight: pillBarHeight,
+                    barTop: barTop
+                  });
               }
-          });
-      });
+          }, 500); // Reduced to 0.5 seconds
+      };
+
+      const handleDotTouchMove = (e) => {
+          e.stopPropagation();
+          if (!e.touches || e.touches.length === 0) return;
+          const touchCurrentX = e.touches[0].clientX;
+
+          if (Math.abs(touchCurrentX - dotTouchStartX) > 15 && holdTimer) {
+              clearTimeout(holdTimer);
+              holdTimer = null;
+              hasMovedTooFar = true;
+          }
+
+          if (isDotScrollActive) {
+              // NEW: Absolute positional mapping
+              const indicatorRect = cardIndicator.getBoundingClientRect();
+              // Calculate the progress of the touch across the indicator (0.0 to 1.0)
+              let progress = (touchCurrentX - indicatorRect.left) / indicatorRect.width;
+              // Clamp progress to ensure it's between 0 and 1
+              progress = Math.max(0, Math.min(1, progress));
+
+              // Calculate the target scrollLeft based on this progress
+              const maxScroll = container.scrollWidth - container.clientWidth;
+              const newScrollLeft = progress * maxScroll;
+
+              container.scrollLeft = newScrollLeft;
+
+              // Position pill bar to full viewport width with breathing room
+              const viewportWidth = window.innerWidth;
+              const breathingRoom = 20; // 20px margin on each side
+              const barLeft = breathingRoom;
+              const barRight = viewportWidth - breathingRoom;
+              const barWidth = barRight - barLeft;
+
+              // Calculate vertical centering around the dot indicators
+              const currentIndicatorRect = cardIndicator.getBoundingClientRect();
+              const indicatorCenterY = currentIndicatorRect.top + (currentIndicatorRect.height / 2);
+              const pillBarHeight = currentIndicatorRect.height + 24; // Frame the dots with padding
+              const barTop = indicatorCenterY - (pillBarHeight / 2); // Center vertically around dots
+
+              scrollingBar.style.left = barLeft + 'px';
+              scrollingBar.style.top = barTop + 'px';
+              scrollingBar.style.width = barWidth + 'px';
+              scrollingBar.style.height = pillBarHeight + 'px';
+
+              console.log('Mobile: Vertically centered pill bar:', {
+                viewportWidth: viewportWidth,
+                breathingRoom: breathingRoom,
+                barLeft: barLeft,
+                barRight: barRight,
+                barWidth: barWidth,
+                indicatorCenterY: indicatorCenterY,
+                pillBarHeight: pillBarHeight,
+                barTop: barTop
+              });
+
+              // --- NEW: Real-time card activation ---
+              const currentScroll = container.scrollLeft;
+              let closestCardIndex = -1;
+              let minDistance = Infinity;
+              const containerCenter = container.offsetWidth / 2;
+
+              flipCards.forEach((card, index) => {
+                  if (!card.classList.contains('filtered')) {
+                      const cardCenter = card.offsetLeft - currentScroll + (card.offsetWidth / 2);
+                      const distance = Math.abs(containerCenter - cardCenter);
+                      if (distance < minDistance) {
+                          minDistance = distance;
+                          closestCardIndex = index;
+                      }
+                  }
+              });
+
+              // Update the active card if it has changed to keep UI in sync
+              if (closestCardIndex !== -1 && CardSystem.activeCardIndex !== closestCardIndex) {
+                  CardSystem.activeCardIndex = closestCardIndex;
+                  CardSystem.updateUI(); // This will update dot indicators and card classes
+              }
+          }
+      };
+
+      function handleDotTouchEnd(e) {
+          e.stopPropagation();
+
+          clearTimeout(holdTimer);
+          holdTimer = null;
+
+          if (isDotScrollActive) {
+              const currentScroll = container.scrollLeft;
+              let closestCardIndex = -1;
+              let minDistance = Infinity;
+              const containerCenter = container.offsetWidth / 2;
+
+              flipCards.forEach((card, index) => {
+                  if (!card.classList.contains('filtered')) {
+                      const cardCenter = card.offsetLeft - currentScroll + (card.offsetWidth / 2);
+                      const distance = Math.abs(containerCenter - cardCenter);
+                      if (distance < minDistance) {
+                          minDistance = distance;
+                          closestCardIndex = index;
+                      }
+                  }
+              });
+
+              if (closestCardIndex !== -1) {
+                  moveToCard(closestCardIndex, true);
+              }
+          } else if (!hasMovedTooFar) {
+              // This was a tap, not a hold or drag. Find which dot was tapped.
+              const tappedDot = e.target.closest('.indicator-dot');
+              if (tappedDot) {
+                  const index = parseInt(tappedDot.dataset.index);
+                  if (!isNaN(index)) {
+                      moveToCard(index, true);
+                  }
+              }
+          }
+
+          isDotScrollActive = false;
+          cardIndicator.classList.remove('scrolling-active');
+          scrollingBar.classList.remove('active'); // Hide scrolling bar
+      }
+
+      if (cardIndicator) {
+          cardIndicator.addEventListener('touchstart', handleDotTouchStart, { passive: true });
+          cardIndicator.addEventListener('touchmove', handleDotTouchMove, { passive: true });
+          cardIndicator.addEventListener('touchend', handleDotTouchEnd);
+          cardIndicator.addEventListener('touchcancel', handleDotTouchEnd);
+      }
 
       // Card click handler for toggling flip state
       flipCards.forEach((card, index) => {
