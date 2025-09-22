@@ -260,9 +260,6 @@ html.dark-mode .container .flip-card.active .flip-card-back {
   color: #fff;
 }
 
-body.safari-mobile .container .flip-card.active {
-  transform: translateY(-20px);
-}
 /* Clean transition for all cards - removing unnecessary style overrides */
 .flip-card-inner {
   transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);

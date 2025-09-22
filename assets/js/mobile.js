@@ -6,6 +6,22 @@
     if (isMobile && typeof window !== 'undefined' && 'scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
+
+    // Check if Safari Mobile and screen height >= iPhone 13 Pro (2532px)
+    const isSafariMobile = /safari/i.test(ua) && /mobile/i.test(ua);
+    const screenHeight = window.screen.height;
+    const shouldApplyTransform = isSafariMobile && screenHeight >= 2532;
+
+    // Conditionally apply transform for Safari Mobile on larger screens
+    if (shouldApplyTransform) {
+      const style = document.createElement('style');
+      style.textContent = `
+        body.safari-mobile .container .flip-card.active {
+          transform: translateY(-20px);
+        }
+      `;
+      document.head.appendChild(style);
+    }
   })();
   (function() {
       // PROTECTION: Exit early if we're on the about page
