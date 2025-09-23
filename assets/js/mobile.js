@@ -1507,6 +1507,11 @@
           toggleHeaderBanner(false);
           toggleLogoVisibility(false);
 
+          // Sync UI (hide dots while overlay is active)
+          if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+              window.CardSystem.updateUI();
+          }
+
           // Hide indicators when overlay is opened
           const cardIndicator = document.querySelector('.card-indicator');
           if (cardIndicator) {
@@ -1614,6 +1619,10 @@
                   console.log("Mobile: closeOverlay: Showing header, indicators, logo because in portrait.");
                   toggleLogoVisibility(true);
                   recalculateEntireLayout(true);
+              }
+              // Sync UI (show dots again if appropriate)
+              if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+                  window.CardSystem.updateUI();
               }
               closeOverlay.isClosing = false;
           });

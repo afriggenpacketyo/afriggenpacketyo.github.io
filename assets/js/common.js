@@ -82,19 +82,23 @@ if (!window.location.pathname.includes('about.html')) {
                 }
             });
 
-            // Show/hide indicator container based on currently flipped card - KEEP VISIBLE IN REGULAR MODE
+            // Show/hide indicator container based on active overlays - KEEP VISIBLE IN REGULAR MODE
             const cardIndicator = document.querySelector('.card-indicator');
             if (cardIndicator) {
-                // Only hide dots if there's an active overlay (hamburger menu)
-                const overlay = document.querySelector('.hamburger-overlay');
-                const isOverlayActive = overlay && overlay.style.display !== 'none';
+                // Correctly detect hamburger menu overlay (id="menu-overlay") and its visibility
+                const menuOverlay = document.getElementById('menu-overlay');
+                const isHamburgerOpen = !!(menuOverlay && menuOverlay.classList.contains('show'));
 
-                if (isOverlayActive) {
-                    // Hide dots only when overlay is active
+                // Detect mobile card overlay (created in mobile.js) being active
+                const isCardOverlayActive = !!document.querySelector('.card-overlay.active');
+
+                const mustHideDots = isHamburgerOpen || isCardOverlayActive;
+
+                if (mustHideDots) {
                     cardIndicator.style.opacity = '0';
                     cardIndicator.style.pointerEvents = 'none';
                 } else {
-                    // Always show dots in regular mode - never hide them for flipped cards
+                    // Always show dots in regular mode
                     cardIndicator.style.opacity = '1';
                     cardIndicator.style.pointerEvents = 'auto';
                 }

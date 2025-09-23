@@ -543,6 +543,11 @@ window.hamburgerMenu = {
     this.hamburger?.classList.add('active');
     this.isOpen = true;
 
+    // Sync UI (e.g., hide dots while menu is open)
+    if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+      window.CardSystem.updateUI();
+    }
+
     // Disable keyboard navigation while overlay is open
     // Use the function exposed by CardSystem in desktop.js
     if (window.CardSystem && typeof window.CardSystem.detachKeyboardHandlers === 'function') {
@@ -575,6 +580,11 @@ window.hamburgerMenu = {
     this.overlay.classList.remove('show', 'filter-mode');
     this.hamburger?.classList.remove('active');
     this.isOpen = false;
+
+    // Sync UI (e.g., show dots again if appropriate)
+    if (window.CardSystem && typeof window.CardSystem.updateUI === 'function') {
+      window.CardSystem.updateUI();
+    }
 
     // Reset menu content to original state
     this.resetToOriginalMenu();
