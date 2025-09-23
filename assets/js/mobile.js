@@ -634,6 +634,8 @@
               if (closestCardIndex !== -1 && CardSystem.activeCardIndex !== closestCardIndex) {
                   CardSystem.activeCardIndex = closestCardIndex;
                   CardSystem.updateUI(); // This will update dot indicators and card classes
+                  // Clear any lingering preview highlight that would override active styles
+                  if (typeof resetCardHighlights === 'function') resetCardHighlights();
               }
           }
       };

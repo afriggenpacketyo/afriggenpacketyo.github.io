@@ -56,9 +56,11 @@ input:checked+.slider:before {
 }
 
 /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
+/* Dark mode (mobile): Active card front must be purple (override desktop/global blue) */
 html.dark-mode .flip-card.active .flip-card-front {
-  background: #3a206e;
-  color: #e0e0e0;
+  background: #3a206e !important;
+  color: #e0e0e0 !important;
+  border: 1.5px solid #7c6fd8;
 }
 
 html.dark-mode .flip-card.active .flip-card-front h2,
@@ -209,8 +211,7 @@ html.dark-mode .flip-card.flipped .flip-card-back::after {
 }
 
 /* Active card in mobile dark mode - increase specificity instead of !important */
-/* OVERRIDE: Active card front in mobile dark mode should be purple, not blue */
-html.dark-mode .container .flip-card.active .flip-card-front,
+/* Active uses blue; keep preactivated purple highlight if desired */
 html.dark-mode .container .flip-card.preactivated .flip-card-front {
   background: #3a206e;
   color: #e0e0e0;
@@ -219,15 +220,20 @@ html.dark-mode .container .flip-card.preactivated .flip-card-front {
   outline: none;
 }
 
-/* ABSOLUTE OVERRIDE: guarantee dark mode active card color is always purple */
+/* Ensure ACTIVE stays purple on mobile dark mode with higher specificity */
 html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
-html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
 html.dark-mode .container .flip-card.active .flip-card-front,
+html.dark-mode .flip-card.active .flip-card-front {
+  background: #3a206e !important;
+  color: #e0e0e0 !important;
+  border: 1.5px solid #7c6fd8;
+}
+
+/* Keep preactivated highlight purple */
+html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
 html.dark-mode .container .flip-card.preactivated .flip-card-front,
-html.dark-mode .flip-card.active .flip-card-front,
 html.dark-mode .flip-card.preactivated .flip-card-front {
   background: #3a206e !important;
-  /* deep indigo purple */
   color: #e0e0e0 !important;
   box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
   border: 1.5px solid #7c6fd8;
