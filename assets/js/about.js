@@ -44,9 +44,126 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         Promise.all([photoPromise, cssPromise]).then(() => {
-            console.log("About.js: All critical assets loaded. Dispatching 'aboutPageReady'.");
-            window.__aboutPageReadyFired = true;
-            document.dispatchEvent(new Event('aboutPageReady'));
+            console.log("About.js: Critical assets (photo+CSS) loaded. Marking checkpoint 'aboutCriticalAssetsLoaded'.");
+            window.__aboutCriticalAssetsLoaded = true;
+            document.dispatchEvent(new Event('aboutCriticalAssetsLoaded'));
+        });
+    }
+
+    /**
+     * Rigorous stability gate: resolves only after a continuous quiet window where:
+     * - No layout shifts occurred (excluding user input driven),
+     * - No long tasks occurred,
+     * - No in-flight fetch/XHR requests are pending.
+     * Keeps existing explicit gates (styles, fonts, images) separate.
+     */
+    function waitForTrueStability({ quietWindow = 250, timeout = 5000 } = {}) {
+        return new Promise((resolve) => {
+            let quietSince = performance.now();
+            let inFlight = 0;
+            let timeoutId = null;
+            let rafId = null;
+
+            // Preserve originals to restore on cleanup
+            const originalFetch = window.fetch ? window.fetch.bind(window) : null;
+            const OriginalXHR = window.XMLHttpRequest;
+
+            // Track layout shifts and long tasks
+            const perfObservers = [];
+            try {
+                // Layout Shift observer
+                const lsObserver = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        // Ignore shifts caused by recent user input
+                        if (entry && entry.value > 0 && !(entry.hadRecentInput)) {
+                            quietSince = performance.now();
+                        }
+                    }
+                });
+                lsObserver.observe({ entryTypes: ['layout-shift'] });
+                perfObservers.push(lsObserver);
+
+                // Long Task observer
+                const ltObserver = new PerformanceObserver((list) => {
+                    if (list.getEntries().length) {
+                        quietSince = performance.now();
+                    }
+                });
+                ltObserver.observe({ entryTypes: ['longtask'] });
+                perfObservers.push(ltObserver);
+            } catch (e) {
+                // PerformanceObserver not supported for these entries; continue with network-only rigor.
+            }
+
+            // Instrument fetch
+            if (originalFetch) {
+                window.fetch = function(...args) {
+                    inFlight++;
+                    const p = originalFetch(...args);
+                    const finalize = () => { inFlight = Math.max(0, inFlight - 1); quietSince = performance.now(); };
+                    p.then(finalize).catch(finalize);
+                    return p;
+                };
+            }
+
+            // Instrument XHR
+            if (OriginalXHR) {
+                function InstrumentedXHR() {
+                    const xhr = new OriginalXHR();
+                    let opened = false;
+                    let sent = false;
+                    const finalize = () => { inFlight = Math.max(0, inFlight - 1); quietSince = performance.now(); };
+                    const onReady = () => {
+                        if (xhr.readyState === 4) {
+                            finalize();
+                            xhr.removeEventListener('readystatechange', onReady);
+                        }
+                    };
+                    const origOpen = xhr.open;
+                    const origSend = xhr.send;
+                    xhr.open = function(...a) { opened = true; return origOpen.apply(xhr, a); };
+                    xhr.send = function(...a) {
+                        if (opened && !sent) { inFlight++; sent = true; }
+                        xhr.addEventListener('readystatechange', onReady);
+                        return origSend.apply(xhr, a);
+                    };
+                    return xhr;
+                }
+                InstrumentedXHR.prototype = OriginalXHR.prototype;
+                window.XMLHttpRequest = InstrumentedXHR;
+            }
+
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (rafId) cancelAnimationFrame(rafId);
+                // Restore fetch/XHR
+                if (originalFetch) window.fetch = originalFetch;
+                if (OriginalXHR) window.XMLHttpRequest = OriginalXHR;
+                // Disconnect observers
+                for (const obs of perfObservers) {
+                    try { obs.disconnect(); } catch (_) {}
+                }
+            };
+
+            const check = () => {
+                const now = performance.now();
+                if (inFlight === 0 && now - quietSince >= quietWindow) {
+                    console.log(`About.js: True stability achieved (no shifts, no long tasks, no requests) for ${quietWindow}ms.`);
+                    cleanup();
+                    resolve();
+                    return;
+                }
+                rafId = requestAnimationFrame(check);
+            };
+
+            timeoutId = setTimeout(() => {
+                console.warn(`About.js: waitForTrueStability timed out after ${timeout}ms. Proceeding.`);
+                cleanup();
+                resolve();
+            }, timeout);
+
+            // Kick off loop
+            rafId = requestAnimationFrame(check);
         });
     }
 
@@ -1212,34 +1329,70 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Wait for DOM to be visually stable for N frames
-    function waitForVisualStability(frames = 2, timeout = 2000) {
-        return new Promise(resolve => {
-            let lastMutation = Date.now();
-            let frameCount = 0;
-            const observer = new MutationObserver(() => {
-                lastMutation = Date.now();
-                frameCount = 0;
+    /**
+     * Waits for the page to be "ready" by monitoring network activity and main thread idle time.
+     * This provides a more reliable signal than MutationObserver for knowing when to perform
+     * actions that depend on a stable layout and fully loaded resources.
+     *
+     * @param {object} [options] - Configuration options.
+     * @param {number} [options.idleTimeout=100] - Milliseconds of network and CPU inactivity to consider the page stable.
+     * @param {number} [options.timeout=5000] - Maximum time to wait in milliseconds before resolving.
+     * @returns {Promise<void>} A promise that resolves when the page is considered ready.
+     */
+    function waitForPageReady({ idleTimeout = 100, timeout = 5000 } = {}) {
+        return new Promise((resolve) => {
+            let timeoutId = null;
+            let lastNetworkActivity = performance.now();
+            let idleCallbackId = null;
+            const ric = window.requestIdleCallback || function (cb, opts) { return setTimeout(cb, (opts && opts.timeout) || 1); };
+            const cic = window.cancelIdleCallback || function (id) { clearTimeout(id); };
+
+            const observer = new PerformanceObserver((list) => {
+                const entries = list.getEntries();
+                if (entries.length > 0) {
+                    lastNetworkActivity = performance.now();
+                }
             });
-            observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
-            function check() {
-                if (Date.now() - lastMutation > 50) {
-                    frameCount++;
-                    if (frameCount >= frames) {
-                        observer.disconnect();
+
+            observer.observe({ entryTypes: ["resource", "navigation"] });
+
+            const checkIdleState = () => {
+                if (idleCallbackId) {
+                    cic(idleCallbackId);
+                }
+
+                idleCallbackId = ric(() => {
+                    const now = performance.now();
+                    if (now - lastNetworkActivity > idleTimeout) {
+                        // Network has been idle, and main thread is idle.
+                        console.log(`About.js: Page is ready. Network and CPU have been idle for over ${idleTimeout}ms.`);
+                        cleanup();
                         resolve();
-                        return;
+                    } else {
+                        // Still active, check again.
+                        checkIdleState();
                     }
-                } else {
-                    frameCount = 0;
+                }, { timeout: idleTimeout });
+            };
+
+            const cleanup = () => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
                 }
-                if (Date.now() - lastMutation > timeout) {
-                    observer.disconnect();
-                    resolve();
-                    return;
+                if (idleCallbackId) {
+                    cic(idleCallbackId);
                 }
-                requestAnimationFrame(check);
-            }
-            requestAnimationFrame(check);
+                observer.disconnect();
+            };
+
+            timeoutId = setTimeout(() => {
+                console.warn(`About.js: waitForPageReady timed out after ${timeout}ms.`);
+                cleanup();
+                resolve(); // Resolve anyway to not block execution.
+            }, timeout);
+
+            // Start the first check.
+            checkIdleState();
         });
     }
 
@@ -1257,9 +1410,13 @@ document.addEventListener('DOMContentLoaded', function () {
         await waitForImages();
         // Wait for CSS background images
         await waitForBackgroundImages();
-        // Wait for visual stability
-        await waitForVisualStability();
+        // All explicit readiness gates satisfied (no heuristic idle wait)
         // Now, everything should be visually ready
+        // Dispatch aboutPageReady first for splash.js on About page
+        window.__aboutPageReadyFired = true;
+        document.dispatchEvent(new CustomEvent('aboutPageReady'));
+        // Also dispatch a general pageReady for any shared listeners
+        window.__pageReadyFired = true;
         document.dispatchEvent(new CustomEvent('pageReady'));
     }
 

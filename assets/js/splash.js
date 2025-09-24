@@ -148,22 +148,48 @@
 
       const preloadImg = new Image();
 
-      const showLogo = () => {
+      function showLogoAndWaitForFadeIn() {
+        // Add visible class to trigger CSS opacity transition
         if (!splashLogo.classList.contains('is-visible')) {
           splashLogo.classList.add('is-visible');
         }
-      };
+
+        // Compute transition duration for a precise safety timeout
+        const styles = getComputedStyle(splashLogo);
+        const durations = styles.transitionDuration.split(',').map(s => parseFloat(s) || 0);
+        const maxDurationSec = durations.length ? Math.max(...durations) : 0;
+        const safetyMs = Math.max(300, Math.round(maxDurationSec * 1000) + 50);
+
+        // If there is no transition or opacity is already at 1, resolve immediately
+        const currentOpacity = parseFloat(styles.opacity);
+        const hasTransition = maxDurationSec > 0;
+        if (!hasTransition || currentOpacity >= 1) {
+          resolve();
+          return;
+        }
+
+        let resolved = false;
+        const onEnd = (e) => {
+          if (resolved) return;
+          if (!e || e.propertyName === 'opacity') {
+            resolved = true;
+            splashLogo.removeEventListener('transitionend', onEnd);
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+        const timer = setTimeout(() => onEnd(null), safetyMs);
+        splashLogo.addEventListener('transitionend', onEnd);
+      }
 
       preloadImg.onload = () => {
         console.log("Splash: Logo image fully preloaded");
-        showLogo();
-        resolve();
+        showLogoAndWaitForFadeIn();
       };
 
       preloadImg.onerror = () => {
         console.warn("Splash: Failed to preload logo image, showing anyway");
-        showLogo();
-        resolve(); // Still resolve to continue with animation
+        showLogoAndWaitForFadeIn(); // Still proceed, but ensure fade-in completes
       };
 
       // Start preloading by setting the src
