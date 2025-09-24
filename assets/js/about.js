@@ -1,6 +1,56 @@
 // Don't dispatch pageReady immediately - wait for DOM and all initialization to complete
 
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Robust Page Load Coordinator ---
+    function coordinatePageLoad() {
+        console.log("About.js: Starting page load coordination.");
+
+        const profilePhoto = document.querySelector('.avatar-placeholder-image');
+        
+        const photoPromise = new Promise((resolve) => {
+            if (!profilePhoto || !profilePhoto.src) {
+                console.warn("About.js: Profile photo not found or has no src. Resolving photo promise immediately.");
+                resolve();
+                return;
+            }
+
+            if (profilePhoto.complete) {
+                console.log("About.js: Profile photo already loaded from cache.");
+                resolve();
+            } else {
+                const img = new Image();
+                img.onload = () => {
+                    console.log("About.js: Profile photo preloaded successfully.");
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.warn("About.js: Failed to preload profile photo.");
+                    resolve(); // Resolve anyway to not block the page
+                };
+                img.src = profilePhoto.src;
+            }
+        });
+
+        const cssPromise = new Promise((resolve) => {
+            if (window.__allCSSLoadedFired) {
+                console.log("About.js: CSS was already loaded.");
+                resolve();
+            } else {
+                document.addEventListener('allCSSLoaded', () => {
+                    console.log("About.js: 'allCSSLoaded' event received.");
+                    resolve();
+                }, { once: true });
+            }
+        });
+
+        Promise.all([photoPromise, cssPromise]).then(() => {
+            console.log("About.js: All critical assets loaded. Dispatching 'aboutPageReady'.");
+            window.__aboutPageReadyFired = true;
+            document.dispatchEvent(new Event('aboutPageReady'));
+        });
+    }
+
+    coordinatePageLoad();
     // Add mobile landscape mode logo hiding functionality (copied from mobile.js)
     (function () {
         // Immediate logo blocking for landscape mode

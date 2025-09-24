@@ -211,16 +211,31 @@
           }, 5000);
         }
       } else {
-        // For simple pages like about.html, wait for CSS or document ready
-        const onAllCSS = () => {
-          console.log('Splash: AppReady resolved via allCSSLoaded event.');
-          resolve('allCSSLoaded');
-        };
-        
-        if (window.__allCSSLoadedFired || document.readyState === 'complete') {
-          onAllCSS();
+        // For simple pages, determine the correct readiness event
+        if (document.body.classList.contains('about-page')) {
+          // For about.html, wait for its specific ready signal which includes image preloading
+          const onAboutPageReady = () => {
+            console.log('Splash: AppReady resolved via aboutPageReady event.');
+            resolve('aboutPageReady');
+          };
+
+          if (window.__aboutPageReadyFired) {
+            onAboutPageReady();
+          } else {
+            document.addEventListener('aboutPageReady', onAboutPageReady, { once: true });
+          }
         } else {
-          document.addEventListener('allCSSLoaded', onAllCSS, { once: true });
+          // Fallback for any other simple pages: wait for CSS or document ready
+          const onAllCSS = () => {
+            console.log('Splash: AppReady resolved via allCSSLoaded event.');
+            resolve('allCSSLoaded');
+          };
+          
+          if (window.__allCSSLoadedFired || document.readyState === 'complete') {
+            onAllCSS();
+          } else {
+            document.addEventListener('allCSSLoaded', onAllCSS, { once: true });
+          }
         }
       }
     });
