@@ -357,6 +357,12 @@ header {
   -webkit-touch-callout: none; /* iOS Safari */
 }
 
+/* WKWebView: Eliminate inline text spacing that creates bottom gap */
+body.wkwebview .card-indicator {
+  font-size: 0;
+  line-height: 0;
+}
+
 /* Simplified pill bar - clean single element design */
 .scrolling-bar {
     position: absolute;
