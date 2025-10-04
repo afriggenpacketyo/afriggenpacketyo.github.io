@@ -274,7 +274,7 @@
         }
     }
 
-    // Add a new function to dynamically position the logo
+    // Add a function to dynamically position the logo (desktop only)
     function updateLogoPosition() {
         const logoContainer = document.querySelector('.logo-container');
         const header = document.querySelector('header');
@@ -1350,7 +1350,7 @@
     console.log("iPod-style cover flow initialized");
 
     // Initial positioning
-    updateLogoPosition();    // Desktop initialization function
+    updateLogoPosition();
     function initDesktop() {
         console.log("Desktop: Initializing desktop specific logic...");
 

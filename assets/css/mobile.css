@@ -2,6 +2,14 @@
    MOBILE STYLES
    ============================================================= */
 
+/* ✅ CRITICAL: Prevent pinch zoom at CSS level (modern standard) */
+html,
+body {
+  touch-action: pan-x pan-y !important;
+  -ms-touch-action: pan-x pan-y !important;
+  overscroll-behavior: none !important;
+}
+
 /* Mobile: Hide outside logo, show header logo */
 .logo-container {
   display: none !important;
@@ -81,7 +89,7 @@ html.dark-mode .flip-card.active .flip-card-front em {
   padding-right: 0;
   scroll-snap-type: none;
   gap: 30px;
-  padding-top: 90px !important;
+  /* padding-top: handled by JavaScript for perfect centering */
   padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important;
   /* 32px for visual gap, plus iOS safe area */
   display: flex;
@@ -90,7 +98,7 @@ html.dark-mode .flip-card.active .flip-card-front em {
   width: 100%;
   max-width: 100vw;
   height: 100vh;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to allow padding-top to work */
   min-height: 600px;
 }
 
@@ -341,7 +349,7 @@ header {
 
 .card-indicator {
   z-index: 1000; /* Higher than pill bar (999) to ensure dots are visible */
-  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.3s ease, bottom 0.3s ease;
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none;    /* Firefox */
   -ms-user-select: none;     /* IE/Edge */
@@ -615,6 +623,9 @@ body.wkwebview .card-overlay {
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--transition-medium);
+  /* ✅ CRITICAL: Prevent pinch zoom on overlay */
+  touch-action: pan-y !important;
+  -ms-touch-action: pan-y !important;
 }
 
 body.safari-mobile .card-overlay.active,
@@ -639,6 +650,9 @@ body.wkwebview .overlay-content {
   max-width: 90vw;
   height: 85vh;
   background: #fff;
+  /* ✅ CRITICAL: Prevent pinch zoom, allow vertical scroll only */
+  touch-action: pan-y !important;
+  -ms-touch-action: pan-y !important;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow-y: auto;

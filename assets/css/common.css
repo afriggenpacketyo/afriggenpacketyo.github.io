@@ -638,10 +638,10 @@
       opacity: 1;
       visibility: visible;
       display: block;
-      transition: opacity 0.3s, visibility 0.3s;
+      transition: opacity 0.3s, visibility 0.3s, top 0.3s ease;
       padding: 15px 15px 15px 15px;
       /* contain: layout paint; */ /* Commented out to prevent shadow clipping */
-      will-change: transform, opacity;
+      will-change: transform, opacity, top;
     }
     .site-logo {
       max-width: var(--logo-max-width, 80px);

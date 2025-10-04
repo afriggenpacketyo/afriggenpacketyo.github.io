@@ -34,6 +34,10 @@ if (!window.location.pathname.includes('about.html')) {
             desktop: false
         },
 
+        // Navigation coordination system to prevent multiple active dots
+        _navigationLock: false,
+        _pendingNavigation: null,
+
         // Dot indicator properties
         visibleStartIndex: 0,
         visibleRange: 9, // Show a maximum of 9 dots at a time
@@ -46,18 +50,144 @@ if (!window.location.pathname.includes('about.html')) {
         SWIPE_DISTANCE_THRESHOLD: 30,
         POSITION_THRESHOLD: 0.4,
 
+        // Spacing system constants and calculations
+        // a = distance from header bottom to logo center
+        // b = distance from logo bottom/center to active card top
+        // c = distance from header bottom to active card top (also bottom to dots)
+        // Rules: a = b, c = a + b
+        calculateSystematicSpacing: function() {
+            const header = document.querySelector('.page-header');
+            const logo = document.querySelector('.newsway-logo');
+            const cardIndicator = document.querySelector('.card-indicator');
+            
+            if (!header || !logo || !cardIndicator) {
+                console.warn('Spacing system: Required elements not found', {
+                    header: !!header,
+                    logo: !!logo, 
+                    cardIndicator: !!cardIndicator,
+                    deviceType: this.isMobileDevice() ? 'mobile' : 'desktop'
+                });
+                return null;
+            }
+            
+            const headerRect = header.getBoundingClientRect();
+            const logoRect = logo.getBoundingClientRect();
+            const indicatorRect = cardIndicator.getBoundingClientRect();
+            
+            const headerBottom = headerRect.bottom;
+            const logoCenter = logoRect.top + (logoRect.height / 2);
+            const logoBottom = logoRect.bottom;
+            const indicatorTop = indicatorRect.top;
+            
+            // Calculate a: distance from header bottom to logo center
+            const a = logoCenter - headerBottom;
+            
+            // b equals a (logo is centered between header and active card)
+            const b = a;
+            
+            // c = a + b (total spacing from header to active card)
+            const c = a + b;
+            
+            // Calculate active card center position
+            const activeCardCenterY = headerBottom + c;
+            
+            // Validate spacing makes sense
+            const totalAvailableSpace = indicatorTop - headerBottom;
+            const requiredSpace = c * 2; // Space above and below active card
+            
+            if (requiredSpace > totalAvailableSpace) {
+                console.warn('Spacing system: Not enough space for systematic layout', {
+                    required: requiredSpace,
+                    available: totalAvailableSpace
+                });
+                return null;
+            }
+            
+            return {
+                a: a,
+                b: b, 
+                c: c,
+                headerBottom: headerBottom,
+                logoCenter: logoCenter,
+                logoBottom: logoBottom,
+                indicatorTop: indicatorTop,
+                activeCardCenterY: activeCardCenterY,
+                activeCardTopY: headerBottom + c
+            };
+        },
+
+        // Utility function to measure and log current header-to-card distance
+        logHeaderToCardDistance: function() {
+            const header = document.querySelector('.page-header');
+            const activeCard = this.flipCards[this.activeCardIndex];
+            
+            if (!header || !activeCard) {
+                console.log('Header-to-Card Distance: Cannot measure - elements not found', {
+                    header: !!header,
+                    activeCard: !!activeCard,
+                    activeCardIndex: this.activeCardIndex
+                });
+                return null;
+            }
+            
+            const headerRect = header.getBoundingClientRect();
+            const cardRect = activeCard.getBoundingClientRect();
+            
+            const headerBottom = headerRect.bottom;
+            const cardTop = cardRect.top;
+            const distance = cardTop - headerBottom;
+            
+            console.log(`Header-to-Card Distance: ${distance.toFixed(2)}px`, {
+                'Header bottom': headerBottom.toFixed(2) + 'px',
+                'Active card top': cardTop.toFixed(2) + 'px',
+                'Distance': distance.toFixed(2) + 'px',
+                'Active card index': this.activeCardIndex,
+                'Device type': this.isMobileDevice() ? 'mobile' : 'desktop'
+            });
+            
+            return distance;
+        },
+
+        // Apply systematic spacing to cards (desktop and mobile)
+        applySystematicSpacing: function() {
+            if (!this.container) return;
+            
+            const spacing = this.calculateSystematicSpacing();
+            if (!spacing) return;
+            
+            const activeCard = this.flipCards[this.activeCardIndex];
+            if (!activeCard) return;
+            
+            const activeCardRect = activeCard.getBoundingClientRect();
+            const currentCardTop = activeCardRect.top;
+            const cardHeight = activeCardRect.height;
+            
+            // Calculate where the card top should be for systematic spacing
+            const idealCardTop = spacing.activeCardTopY;
+            
+            // For consistent centering, all cards should have their center at the same Y position
+            const idealCardCenterY = spacing.activeCardCenterY;
+            const idealCardTopForCenter = idealCardCenterY - (cardHeight / 2);
+            
+            // Use the center-based positioning for consistency
+            const moveAmount = idealCardTopForCenter - currentCardTop;
+            
+            // Apply the transform
+            this.container.style.transform = `translateY(${moveAmount}px)`;
+            
+            console.log('Systematic spacing applied:', {
+                'a (header to logo center)': spacing.a.toFixed(2) + 'px',
+                'b (logo to card)': spacing.b.toFixed(2) + 'px', 
+                'c (header to card)': spacing.c.toFixed(2) + 'px',
+                'Card center Y': idealCardCenterY.toFixed(2) + 'px',
+                'Move amount': moveAmount.toFixed(2) + 'px'
+            });
+        },
+
         // Utility functions
         updateUI: function () {
-            // Ensure header is accounted for before positioning cards
-            const header = document.querySelector('.page-header');
-            if (header && this.container) {
-                const headerHeight = header.offsetHeight;
-                const minPadding = headerHeight + 20;
-                const currentPadding = parseInt(getComputedStyle(this.container).paddingTop);
-                if (currentPadding < minPadding) {
-                    this.container.style.paddingTop = minPadding + 'px';
-                }
-            }
+            // Don't recalculate centering on every card change - it interferes with swipes
+            // Centering is now handled once on initialization and resize only
 
             // Find the correct active index if the current one is filtered
             this.ensureActiveCardVisible();
@@ -106,6 +236,112 @@ if (!window.location.pathname.includes('about.html')) {
 
             // Run the new, filter-aware dot styling logic
             this.updateInstagramStyleDots(this.activeCardIndex);
+        },
+
+        // UPDATED: Mobile centering with Safari safety checks (no systematic spacing on mobile)
+        updateMobileVerticalCentering: function() {
+            if (!this.container || !this.isMobileDevice()) return;
+            
+            // Mobile layout doesn't have .newsway-logo element, so skip systematic spacing
+            // and use the proven mobile centering logic directly
+            console.log('Mobile: Using optimized mobile centering (systematic spacing not applicable)');
+            
+            const header = document.querySelector('.page-header');
+            const cardIndicator = document.querySelector('.card-indicator');
+            const activeCard = this.flipCards[this.activeCardIndex];
+            
+            if (!header || !cardIndicator || !activeCard) return;
+            
+            // SAFARI SAFETY: Ensure elements have actual dimensions before measuring
+            if (header.offsetHeight === 0 || cardIndicator.offsetHeight === 0 || activeCard.offsetHeight === 0) {
+                console.warn('Mobile centering: Elements not ready, skipping');
+                return;
+            }
+            
+            // Get the EXACT positions for perfect centering calculation
+            const headerRect = header.getBoundingClientRect();
+            const indicatorRect = cardIndicator.getBoundingClientRect();
+            const activeCardRect = activeCard.getBoundingClientRect();
+            
+            const headerBottom = headerRect.bottom;
+            const indicatorTop = indicatorRect.top;
+            const currentCardTop = activeCardRect.top;
+            const cardHeight = activeCardRect.height;
+            
+            // THE WORKING CALCULATION - perfect centering between header and indicator
+            const availableSpace = indicatorTop - headerBottom;
+            
+            // SAFARI SAFETY: Validate measurements make sense
+            if (availableSpace <= 0 || cardHeight <= 0) {
+                console.warn('Mobile centering: Invalid measurements, skipping', {
+                    availableSpace,
+                    cardHeight,
+                    headerBottom,
+                    indicatorTop
+                });
+                return;
+            }
+            const idealCardTop = headerBottom + (availableSpace - cardHeight) / 2;
+            const moveAmount = idealCardTop - currentCardTop;
+            
+            // Apply centering transform ONCE - don't touch it again during swipes
+            this.container.style.transform = `translateY(${moveAmount}px)`;
+            this.container._centeringApplied = true;
+            
+            console.log('Mobile fallback centering applied:', {
+                'Header bottom': headerBottom.toFixed(2) + 'px',
+                'Indicator top': indicatorTop.toFixed(2) + 'px',
+                'Available space': availableSpace.toFixed(2) + 'px',
+                'Move amount': moveAmount.toFixed(2) + 'px',
+                'Safari safety checks passed': true
+            });
+
+            // ONE-TIME: Calculate and set proportional height for all cards based on this viewport
+            this.setProportionalCardHeight(availableSpace);
+        },
+
+        // NEW: Calculate and set proportional card height once for all cards (viewport-specific)
+        setProportionalCardHeight: function(totalAvailableSpace) {
+            if (!this.isMobileDevice() || this.container._heightSet) return;
+            
+            // Calculate proportional height: maintain 1/30th gaps (≈31.25px on typical mobile viewport)
+            // Top gap = 1/30, Bottom gap = 1/30, Card = 28/30 of available space
+            const gapRatio = 1/16;  // Each gap is 1/30th of available space
+            const cardHeightRatio = 1 - (2 * gapRatio);  // 28/30 = 0.9333...
+            const calculatedHeight = totalAvailableSpace * cardHeightRatio;
+            const calculatedGapSize = totalAvailableSpace * gapRatio;
+            
+            // Apply this height to ALL cards once
+            this.flipCards.forEach(card => {
+                card.style.height = `${calculatedHeight}px`;
+                
+                // Ensure inner elements scale properly
+                const cardInner = card.querySelector('.flip-card-inner');
+                const cardFront = card.querySelector('.flip-card-front');
+                const cardBack = card.querySelector('.flip-card-back');
+                
+                if (cardInner) cardInner.style.height = '100%';
+                if (cardFront) cardFront.style.height = '100%';
+                if (cardBack) cardBack.style.height = '100%';
+            });
+            
+            // Mark as set to prevent recalculation
+            this.container._heightSet = true;
+            
+            console.log('Mobile: Proportional height set for all cards:', {
+                'Total available space': totalAvailableSpace.toFixed(2) + 'px',
+                'Gap ratio (each)': `1/30 (${(gapRatio * 100).toFixed(2)}%)`,
+                'Card height ratio': `28/30 (${(cardHeightRatio * 100).toFixed(2)}%)`,
+                'Calculated gap size': calculatedGapSize.toFixed(2) + 'px',
+                'Calculated card height': calculatedHeight.toFixed(2) + 'px',
+                'Applied to': this.flipCards.length + ' cards',
+                'Verification - Total': `${calculatedGapSize.toFixed(1)} + ${calculatedHeight.toFixed(1)} + ${calculatedGapSize.toFixed(1)} = ${(calculatedGapSize * 2 + calculatedHeight).toFixed(1)}px`
+            });
+        },
+        
+        // Mobile device detection - same logic as CSS file selection
+        isMobileDevice: function() {
+            return 'ontouchstart' in window;
         },
 
         /**
@@ -442,7 +678,16 @@ if (!window.location.pathname.includes('about.html')) {
 
         // Setup card indicator
         setupCardIndicator: function () {
-            const cardIndicator = document.createElement('div');
+            // CRITICAL: Don't recreate if it already exists (preserves event listeners)
+            let cardIndicator = document.querySelector('.card-indicator');
+            
+            if (cardIndicator) {
+                console.log('Card indicator already exists - preserving existing element and event listeners');
+                return cardIndicator;
+            }
+            
+            // Only create if it doesn't exist
+            cardIndicator = document.createElement('div');
             cardIndicator.className = 'card-indicator';
 
             this.flipCards.forEach((_, index) => {
@@ -454,6 +699,7 @@ if (!window.location.pathname.includes('about.html')) {
             });
 
             document.body.appendChild(cardIndicator);
+            console.log('Card indicator created for the first time');
             return cardIndicator;
         },
 
@@ -464,22 +710,266 @@ if (!window.location.pathname.includes('about.html')) {
                 return;
             }
 
-            // Add coverflow class
+            const isMobile = this.isMobileDevice();
+            console.log('CardSystem: Device detection - Mobile:', isMobile, 'Width:', window.innerWidth);
+
+            // CRITICAL: Create cardIndicator IMMEDIATELY so mobile.js can attach events
             this.container.classList.add('with-coverflow');
+            this.setupCardIndicator(); // This must happen synchronously!
+            
+            // Dispatch event to notify mobile.js that cardIndicator is ready for event attachment
+            document.dispatchEvent(new CustomEvent('cardIndicatorReady'));
+            console.log('CardSystem: Card indicator created and cardIndicatorReady event dispatched');
 
-            // Setup card indicator
-            this.setupCardIndicator();
+            if (isMobile) {
+                // BULLETPROOF SEQUENCING: Wait for complete resource loading before calculations
+                this.waitForCompleteResourceLoading()
+                    .then(() => this.calculateCardHeightFromCompleteUI())
+                    .then((cardHeight) => this.processCardsWithGuaranteedHeight(cardHeight))
+                    .then(() => this.finalizeAndShow())
+                    .catch((error) => {
+                        console.error('Mobile initialization failed:', error);
+                        this.fallbackInit();
+                    });
+            } else {
+                // Desktop: Standard approach  
+                this.loadUIInfrastructureForDesktop()
+                    .then(() => this.processCardsAndFinalize(false));
+            }
+        },
 
-            // Preload images
-            this.preloadImages();
+        // NEW: Load UI infrastructure for desktop only  
+        loadUIInfrastructureForDesktop: function() {
+            return new Promise((resolve) => {
+                // Infrastructure already set up in init(), just resolve
+                console.log("Desktop: UI infrastructure ready");
+                requestAnimationFrame(() => resolve());
+            });
+        },
 
-            // Add section titles
-            this.addSectionTitles();
+        // NEW: Wait for complete resource loading - fonts, CSS, layout completion
+        waitForCompleteResourceLoading: function() {
+            return new Promise((resolve) => {
+                const promises = [];
+                
+                // Wait for fonts to load
+                if (document.fonts) {
+                    promises.push(document.fonts.ready);
+                }
+                
+                // Wait for stylesheets to load
+                const styleSheets = Array.from(document.styleSheets);
+                styleSheets.forEach(sheet => {
+                    if (sheet.href && !sheet.disabled) {
+                        promises.push(new Promise((resolveSheet) => {
+                            const link = document.querySelector(`link[href="${sheet.href}"]`);
+                            if (link && !link.sheet) {
+                                link.addEventListener('load', resolveSheet);
+                            } else {
+                                resolveSheet();
+                            }
+                        }));
+                    }
+                });
+                
+                // Wait for DOM to be completely ready
+                if (document.readyState !== 'complete') {
+                    promises.push(new Promise((resolveLoad) => {
+                        window.addEventListener('load', resolveLoad);
+                    }));
+                }
+                
+                Promise.all(promises).then(() => {
+                    // Additional frame to ensure layout is complete
+                    requestAnimationFrame(() => {
+                        console.log('COMPLETE RESOURCE LOADING FINISHED - All fonts, CSS, and layout ready');
+                        resolve();
+                    });
+                });
+            });
+        },
 
-            // Initial UI update
-            this.updateUI();
+        // NEW: Calculate card height from complete UI (ONE calculation, guaranteed correct)
+        calculateCardHeightFromCompleteUI: function() {
+            return new Promise((resolve, reject) => {
+                const header = document.querySelector('.page-header');
+                const cardIndicator = document.querySelector('.card-indicator');
+                
+                if (!header || !cardIndicator) {
+                    reject(new Error('UI elements not found after complete loading'));
+                    return;
+                }
 
-            console.log("CardSystem initialized");
+                // Force layout calculation
+                header.offsetHeight; // Trigger layout
+                cardIndicator.offsetHeight; // Trigger layout
+                
+                const headerRect = header.getBoundingClientRect();
+                const indicatorRect = cardIndicator.getBoundingClientRect();
+                
+                const availableSpace = indicatorRect.top - headerRect.bottom;
+                
+                if (availableSpace <= 100) {
+                    reject(new Error('Insufficient space detected: ' + availableSpace + 'px'));
+                    return;
+                }
+                
+                const gapRatio = 1/16;
+                const calculatedCardHeight = availableSpace * (1 - (2 * gapRatio));
+                
+                console.log('CARD HEIGHT CALCULATED FROM COMPLETE UI (ONE PERFECT CALCULATION):', {
+                    'Header bottom': headerRect.bottom.toFixed(3) + 'px',
+                    'Indicator top': indicatorRect.top.toFixed(3) + 'px',
+                    'Available space': availableSpace.toFixed(3) + 'px',
+                    'Calculated height': calculatedCardHeight.toFixed(3) + 'px'
+                });
+                
+                resolve(calculatedCardHeight);
+            });
+        },
+
+        // NEW: Process cards with guaranteed correct height
+        processCardsWithGuaranteedHeight: function(cardHeight) {
+            return new Promise((resolve) => {
+                this.flipCards.forEach(card => {
+                    card.style.height = `${cardHeight}px`;
+                    
+                    const cardInner = card.querySelector('.flip-card-inner');
+                    const cardFront = card.querySelector('.flip-card-front');
+                    const cardBack = card.querySelector('.flip-card-back');
+                    
+                    if (cardInner) cardInner.style.height = '100%';
+                    if (cardFront) cardFront.style.height = '100%';
+                    if (cardBack) cardBack.style.height = '100%';
+                });
+                
+                this.container._heightSet = true;
+                
+                console.log('CARDS PROCESSED WITH GUARANTEED HEIGHT:', {
+                    'Height applied': cardHeight.toFixed(3) + 'px',
+                    'Cards updated': this.flipCards.length
+                });
+                
+                resolve();
+            });
+        },
+
+        // NEW: Finalize and show everything
+        finalizeAndShow: function() {
+            return new Promise((resolve) => {
+                // Preload images, add sections, update UI
+                this.preloadImages();
+                this.addSectionTitles();
+                this.updateUI();
+                
+                // Apply positioning with correct card heights
+                if (!this.container._centeringApplied) {
+                    this.updateMobileVerticalCentering();
+                }
+                
+                // Setup responsive centering (no longer needs to handle touch events)
+                this.setupResponsiveCentering();
+                
+                console.log('MOBILE INITIALIZATION COMPLETE - Event-based coordination active');
+                resolve();
+            });
+        },
+
+        // NEW: Fallback initialization
+        fallbackInit: function() {
+            console.warn('Using fallback initialization');
+            // Infrastructure already set up, just finalize
+            this.processCardsAndFinalize(false);
+        },
+
+
+        // NEW: Process cards with correct heights, then finalize
+        processCardsAndFinalize: function(isMobile, calculatedCardHeight = null) {
+            return new Promise((resolve) => {
+                // Apply calculated height to cards if mobile
+                if (isMobile && calculatedCardHeight) {
+                    this.flipCards.forEach(card => {
+                        card.style.height = `${calculatedCardHeight}px`;
+                        
+                        // Ensure inner elements scale properly
+                        const cardInner = card.querySelector('.flip-card-inner');
+                        const cardFront = card.querySelector('.flip-card-front');
+                        const cardBack = card.querySelector('.flip-card-back');
+                        
+                        if (cardInner) cardInner.style.height = '100%';
+                        if (cardFront) cardFront.style.height = '100%';
+                        if (cardBack) cardBack.style.height = '100%';
+                    });
+                    
+                    // Mark height as set to prevent recalculation
+                    this.container._heightSet = true;
+                    
+                    console.log('CARDS PROCESSED WITH GUARANTEED CORRECT HEIGHT:', {
+                        'Applied height': calculatedCardHeight.toFixed(3) + 'px',
+                        'Cards processed': this.flipCards.length
+                    });
+                }
+
+                // Preload images
+                this.preloadImages();
+
+                // Add section titles
+                this.addSectionTitles();
+
+                // Initial UI update (cards now have correct height)
+                this.updateUI();
+
+                // Apply positioning
+                if (isMobile) {
+                    if (!this.container._centeringApplied) {
+                        this.updateMobileVerticalCentering();
+                    }
+                } else {
+                    // Desktop: Apply systematic spacing
+                    setTimeout(() => {
+                        this.applySystematicSpacing();
+                    }, 100);
+                }
+
+                // Add event listeners for responsive centering
+                this.setupResponsiveCentering();
+
+                console.log("CardSystem initialized with BULLETPROOF sequencing");
+                resolve();
+            });
+        },
+
+        // RESTORED: Setup necessary event listeners but avoid responsive recalculation  
+        setupResponsiveCentering: function() {
+            // Don't do responsive recalculation to avoid Safari race conditions
+            // But ensure event listeners are properly set up for mobile functionality
+            
+            if (this.isMobileDevice()) {
+                // Ensure dot indicator is ready for touch events
+                const cardIndicator = document.querySelector('.card-indicator');
+                if (cardIndicator) {
+                    // Force a layout calculation to ensure element is positioned
+                    cardIndicator.offsetHeight;
+                    console.log('Mobile: Dot indicator prepared for touch events');
+                } else {
+                    console.warn('Mobile: Card indicator not found for touch setup');
+                }
+            }
+            
+            console.log('Mobile: Event listeners enabled, responsive recalculation disabled');
+        },
+
+        // Utility debounce function
+        debounce: function(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         },
 
         // Add initialization for dots
@@ -520,6 +1010,53 @@ if (!window.location.pathname.includes('about.html')) {
                 }
             }
             return currentIndex; // No previous visible card found
+        },
+
+        // ✅ CRITICAL: Navigation coordination system to prevent multiple active dots
+        requestNavigation: function(newIndex, source = 'unknown') {
+            // Validate index
+            if (newIndex < 0 || newIndex >= this.flipCards.length) {
+                console.warn(`Navigation: Invalid index ${newIndex} from ${source}`);
+                return false;
+            }
+
+            // Check if navigation is locked
+            if (this._navigationLock) {
+                console.log(`Navigation: Locked, queuing request from ${source} for index ${newIndex}`);
+                this._pendingNavigation = { index: newIndex, source: source };
+                return false;
+            }
+
+            // Check if already at target index
+            if (this.activeCardIndex === newIndex) {
+                console.log(`Navigation: Already at index ${newIndex}, ignoring ${source} request`);
+                return true;
+            }
+
+            // Lock navigation and update state atomically
+            this._navigationLock = true;
+            console.log(`Navigation: Accepted ${source} request for index ${newIndex}`);
+
+            // Update active card index
+            this.activeCardIndex = newIndex;
+            
+            // Update UI immediately
+            this.updateUI();
+            
+            // Release lock after one frame to allow UI updates
+            setTimeout(() => {
+                this._navigationLock = false;
+                
+                // Process any pending navigation
+                if (this._pendingNavigation) {
+                    const pending = this._pendingNavigation;
+                    this._pendingNavigation = null;
+                    console.log(`Navigation: Processing queued ${pending.source} request for index ${pending.index}`);
+                    this.requestNavigation(pending.index, `queued-${pending.source}`);
+                }
+            }, 16); // One frame duration
+
+            return true;
         },
 
         // Utility function to ensure active card is not filtered

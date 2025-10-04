@@ -1,16 +1,170 @@
 // Mobile-specific implementation
 (function() {
     // --- ENSURE MANUAL SCROLL RESTORATION ON MOBILE BROWSERS ---
-    var ua = navigator.userAgent.toLowerCase();
-    var isMobile = /iphone|ipad|ipod|android/.test(ua);
-    if (isMobile && typeof window !== 'undefined' && 'scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
-    }
+  var ua = navigator.userAgent.toLowerCase();
+  var isMobile = /iphone|ipad|ipod|android/.test(ua);
+  if (isMobile && typeof window !== 'undefined' && 'scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
 
-    // Check if Safari Mobile and screen height >= iPhone 13 Pro (2532px)
-    const isSafariMobile = /safari/i.test(ua) && /mobile/i.test(ua);
-    const screenHeight = window.screen.height;
-    const shouldApplyTransform = isSafariMobile && screenHeight >= 2532;
+  // --- COMPREHENSIVE ZOOM RESET & PREVENTION SYSTEM ---
+  // Fix for Safari's "pinch zoom out to minimize tab" bug and Chrome mobile zoom issues
+  (function() {
+    const isSafariMobile = /safari/i.test(ua) && /mobile/i.test(ua) && !/chrome|crios|fxios/.test(ua);
+    const isChromeAndroid = /chrome/i.test(ua) && /android/i.test(ua);
+    const isChromeiOS = /crios/i.test(ua);
+    
+    // Apply to Safari Mobile and Chrome Mobile
+    if (!isSafariMobile && !isChromeAndroid && !isChromeiOS) return;
+    
+    const browserName = isSafariMobile ? 'Safari Mobile' : (isChromeAndroid ? 'Chrome Android' : 'Chrome iOS');
+    console.log(`🔧 ${browserName}: Initializing zoom reset system`);
+    
+    // Force immediate zoom reset on page load
+    function forceZoomReset() {
+      try {
+        // Method 1: Scroll to top and force zoom reset
+        window.scrollTo(0, 0);
+        
+        // Method 2: Temporarily modify viewport to force reset
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          const originalContent = viewport.getAttribute('content');
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no');
+          
+          // Force reflow
+          document.body.offsetHeight;
+          
+          // Restore original viewport after reset
+          setTimeout(() => {
+            viewport.setAttribute('content', originalContent);
+          }, 100);
+        }
+        
+        // Method 3: Force layout recalculation
+        document.documentElement.style.zoom = '1';
+        document.body.style.zoom = '1';
+        
+        console.log(`✅ ${browserName}: Zoom reset applied`);
+      } catch (error) {
+        console.warn(`⚠️ ${browserName}: Zoom reset failed:`, error);
+      }
+    }
+    
+    // Detect if page is zoomed and attempt correction
+    function detectAndCorrectZoom() {
+      const viewportWidth = window.innerWidth;
+      const documentWidth = document.documentElement.clientWidth;
+      const screenWidth = window.screen.width;
+      
+      // Calculate zoom level
+      const zoomLevel = screenWidth / viewportWidth;
+      const isZoomed = Math.abs(zoomLevel - 1) > 0.1; // Allow small tolerance
+      
+      if (isZoomed) {
+        console.log(`🔍 ${browserName}: Zoom detected (${zoomLevel.toFixed(2)}x), attempting correction`);
+        forceZoomReset();
+        
+        // Try additional correction methods
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          setTimeout(() => window.scrollTo(0, 0), 50);
+        }, 200);
+      }
+    }
+    
+    // Apply zoom reset immediately
+    forceZoomReset();
+    
+    // Apply zoom reset when page is fully loaded
+    window.addEventListener('load', () => {
+      forceZoomReset();
+      setTimeout(detectAndCorrectZoom, 500);
+    });
+    
+    // Apply zoom reset when page becomes visible (tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        setTimeout(() => {
+          forceZoomReset();
+          detectAndCorrectZoom();
+        }, 100);
+      }
+    });
+    
+    // Apply zoom reset on orientation change
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        forceZoomReset();
+        detectAndCorrectZoom();
+      }, 300);
+    });
+    
+    // Prevent the pinch-to-minimize gesture by intercepting zoom-out attempts
+    let lastTouchDistance = 0;
+    let zoomOutAttempts = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 2) {
+        lastTouchDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        zoomOutAttempts = 0;
+      }
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 2) {
+        const currentDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        
+        // Detect zoom-out gesture (fingers moving closer)
+        if (currentDistance < lastTouchDistance * 0.9) {
+          zoomOutAttempts++;
+          
+          // If aggressive zoom-out detected, try to prevent it
+          if (zoomOutAttempts > 3) {
+            e.preventDefault();
+            console.log(`🛡️ ${browserName}: Prevented aggressive zoom-out gesture`);
+          }
+        }
+        
+        lastTouchDistance = currentDistance;
+      }
+    }, { passive: false });
+    
+    // Emergency zoom reset on any detected zoom issues
+    window.addEventListener('resize', () => {
+      setTimeout(detectAndCorrectZoom, 100);
+    });
+    
+    console.log(`✅ ${browserName}: Zoom prevention system initialized`);
+    
+    // Expose emergency zoom reset function globally
+    window.emergencyZoomReset = function() {
+      console.log('🚨 Emergency zoom reset triggered');
+      forceZoomReset();
+      setTimeout(detectAndCorrectZoom, 100);
+    };
+    
+    // Add keyboard shortcut for emergency reset (Cmd+0 or Ctrl+0 equivalent)
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
+        e.preventDefault();
+        window.emergencyZoomReset();
+      }
+    });
+    
+  })();
+  // --- END ZOOM RESET SYSTEM ---
+
+  // Check if Safari Mobile and screen height >= iPhone 13 Pro (2532px)
+  const isSafariMobile = /safari/i.test(ua) && /mobile/i.test(ua);
+  const screenHeight = window.screen.height;
+  const shouldApplyTransform = isSafariMobile && screenHeight >= 2532;
 
     // Conditionally apply transform for Safari Mobile on larger screens
     if (shouldApplyTransform) {
@@ -64,6 +218,12 @@
       let touchStartTime = 0;
       let isTouchActive = false;
       let isAnimating = false;
+      
+      // Expose animation state globally for CardSystem centering
+      window.MobileCardSystem = window.MobileCardSystem || {};
+      Object.defineProperty(window.MobileCardSystem, 'isAnimating', {
+          get: function() { return isAnimating; }
+      });
       let initialScrollLeft = 0;
       let currentDragOffset = 0;
       let lastDragTimestamp = 0;
@@ -72,6 +232,7 @@
       let swipeInProgress = false; // Track if a swipe has triggered card movement
       let lastSwipeDirection = 0; // -1 for left, 1 for right, 0 for none
       let pendingCardIndex = -1; // Track which card we're transitioning to
+      
 
       // Constants - Use values from CardSystem to avoid magic numbers
       const SWIPE_THRESHOLD = CardSystem.SWIPE_DISTANCE_THRESHOLD; // Minimum distance for a swipe
@@ -152,11 +313,13 @@
           // Store the pending target card index
           pendingCardIndex = index;
 
-          // Update CardSystem state
-          CardSystem.activeCardIndex = index;
+          // ✅ CRITICAL: Use navigation coordination to prevent multiple active dots
+          const navigationAccepted = CardSystem.requestNavigation(index, 'moveToCard');
+          if (!navigationAccepted) {
+              console.warn(`Mobile: Navigation to ${index} was rejected by coordination system`);
+              return;
+          }
 
-          // Update UI elements like active classes and highlights
-          CardSystem.updateUI();
           resetCardHighlights();
 
           // Get the target card and calculate its centered position
@@ -252,6 +415,11 @@
           // If a card is flipped, ignore new touches
           if (CardSystem.currentlyFlippedCard) return;
 
+          // Only prevent zoom (multi-touch), allow single taps for card flipping
+          if (e.touches.length > 1) {
+              e.preventDefault(); // Prevent pinch zoom
+          }
+
           // Allow touch input even during swipe animation - makes it interruptible
           // Only check for flipped card, not swipeInProgress
 
@@ -276,10 +444,9 @@
               // If there was a pending target, make that the new active index
               // This ensures we don't skip cards while making transitions interruptible
               if (pendingCardIndex >= 0) {
-                  CardSystem.activeCardIndex = pendingCardIndex;
+                  // ✅ CRITICAL: Use navigation coordination
+                  CardSystem.requestNavigation(pendingCardIndex, 'pendingMove');
                   pendingCardIndex = -1;
-                  // Update UI to reflect the new active card
-                  CardSystem.updateUI();
                   resetCardHighlights();
               }
           }
@@ -475,18 +642,27 @@
           preactivatedCard = null;
       }
 
-      // Add the event listeners
-      container.addEventListener('touchstart', container._touchstartHandler, { passive: true });
+      // Add the event listeners (passive: false to allow preventDefault for zoom prevention)
+      container.addEventListener('touchstart', container._touchstartHandler, { passive: false });
       container.addEventListener('touchmove', container._touchmoveHandler, { passive: false });
-      container.addEventListener('touchend', container._touchendHandler);
+      container.addEventListener('touchend', container._touchendHandler, { passive: false });
 
-      const cardIndicator = document.querySelector('.card-indicator');
+      // --- DOT INDICATOR TOUCH EVENT SETUP ---
+      function setupDotIndicatorEvents() {
+          const cardIndicator = document.querySelector('.card-indicator');
+          
+          if (!cardIndicator) {
+              console.warn('Mobile: cardIndicator not found, skipping touch event setup');
+              return;
+          }
 
-      // --- NEW: Touch and Hold Scrolling for Dot Indicator ---
-      let holdTimer = null;
-      let isDotScrollActive = false;
-      let dotTouchStartX = 0; // Still needed to detect if touch has moved too far
-      let hasMovedTooFar = false;
+          console.log('Mobile: Setting up dot indicator touch events');
+
+          // --- Touch and Hold Scrolling for Dot Indicator ---
+          let holdTimer = null;
+          let isDotScrollActive = false;
+          let dotTouchStartX = 0; // Still needed to detect if touch has moved too far
+          let hasMovedTooFar = false;
 
       // Create a simple pill bar element
       const createScrollingBar = () => {
@@ -505,6 +681,7 @@
 
       const handleDotTouchStart = (e) => {
           console.log('Mobile: Touch started on dot indicator');
+          e.preventDefault(); // Prevent zoom and other default behaviors
           e.stopPropagation();
           dotTouchStartX = e.touches[0].clientX;
           isDotScrollActive = false;
@@ -560,6 +737,7 @@
       };
 
       const handleDotTouchMove = (e) => {
+          e.preventDefault(); // Prevent zoom and scrolling
           e.stopPropagation();
           if (!e.touches || e.touches.length === 0) return;
           const touchCurrentX = e.touches[0].clientX;
@@ -632,8 +810,8 @@
 
               // Update the active card if it has changed to keep UI in sync
               if (closestCardIndex !== -1 && CardSystem.activeCardIndex !== closestCardIndex) {
-                  CardSystem.activeCardIndex = closestCardIndex;
-                  CardSystem.updateUI(); // This will update dot indicators and card classes
+                  // ✅ CRITICAL: Use navigation coordination
+                  CardSystem.requestNavigation(closestCardIndex, 'dotScrolling');
                   // Clear any lingering preview highlight that would override active styles
                   if (typeof resetCardHighlights === 'function') resetCardHighlights();
               }
@@ -641,6 +819,7 @@
       };
 
       function handleDotTouchEnd(e) {
+          e.preventDefault(); // Prevent zoom and other default behaviors
           e.stopPropagation();
 
           clearTimeout(holdTimer);
@@ -682,11 +861,87 @@
           scrollingBar.classList.remove('active'); // Hide scrolling bar
       }
 
-      if (cardIndicator) {
-          cardIndicator.addEventListener('touchstart', handleDotTouchStart, { passive: true });
-          cardIndicator.addEventListener('touchmove', handleDotTouchMove, { passive: true });
-          cardIndicator.addEventListener('touchend', handleDotTouchEnd);
-          cardIndicator.addEventListener('touchcancel', handleDotTouchEnd);
+          // Attach touch event listeners to cardIndicator (passive: false to allow preventDefault)
+          cardIndicator.addEventListener('touchstart', handleDotTouchStart, { passive: false });
+          cardIndicator.addEventListener('touchmove', handleDotTouchMove, { passive: false });
+          cardIndicator.addEventListener('touchend', handleDotTouchEnd, { passive: false });
+          cardIndicator.addEventListener('touchcancel', handleDotTouchEnd, { passive: false });
+          
+          console.log('Mobile: Dot indicator touch events successfully attached');
+      }
+
+      // Listen for cardIndicatorReady event from common.js
+      document.addEventListener('cardIndicatorReady', setupDotIndicatorEvents);
+      
+      // Also try to set up immediately in case the event already fired
+      setupDotIndicatorEvents();
+
+      // --- COMPREHENSIVE ZOOM PREVENTION ---
+      // Prevent ALL zoom while preserving text selection and functionality
+      let lastTouchEnd = 0;
+      let lastTouchTarget = null;
+      let zoomTouchStartTime = 0;
+      let isLongPress = false;
+
+      // BODY-LEVEL ZOOM PREVENTION - covers ALL areas
+      document.body.addEventListener('touchstart', function(e) {
+          zoomTouchStartTime = Date.now();
+          isLongPress = false;
+          
+          // Always prevent multi-touch (pinch zoom) everywhere
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              console.log('Mobile: Pinch zoom prevented on body');
+              return;
+          }
+
+          // Start timer to detect long press for text selection
+          setTimeout(() => {
+              if (Date.now() - zoomTouchStartTime >= 500) {
+                  isLongPress = true; // Allow text selection after 500ms
+              }
+          }, 500);
+
+      }, { passive: false });
+
+      document.body.addEventListener('touchmove', function(e) {
+          // Always prevent multi-touch moves
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              console.log('Mobile: Multi-touch move prevented on body');
+          }
+      }, { passive: false });
+
+      // COMPREHENSIVE DOUBLE-TAP PREVENTION
+      document.addEventListener('touchend', function(e) {
+          const now = Date.now();
+          const target = e.target;
+          const touchDuration = now - zoomTouchStartTime;
+          
+          // If this is a double-tap (within 300ms of last tap on same target)
+          if (now - lastTouchEnd <= 300 && lastTouchTarget === target) {
+              // Always prevent double-tap zoom unless it's a long press for text selection
+              if (!isLongPress || touchDuration < 500) {
+                  e.preventDefault();
+                  console.log('Mobile: Double-tap zoom prevented on', target.tagName, target.className);
+              }
+          }
+          
+          lastTouchEnd = now;
+          lastTouchTarget = target;
+          isLongPress = false;
+      }, { passive: false });
+
+      // Prevent zoom on page header specifically
+      const pageHeader = document.querySelector('.page-header');
+      if (pageHeader) {
+          pageHeader.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                  e.preventDefault(); // Prevent pinch zoom on header
+              }
+          }, { passive: false });
+          
+          console.log('Mobile: Header zoom prevention enabled');
       }
 
       // Card click handler for toggling flip state
@@ -792,6 +1047,15 @@
 
       // Touch handlers for flipped cards (swipe down to close AND swipe left/right)
       function handleFlippedCardTouchStart(e) {
+          // ✅ CRITICAL: Always prevent multi-touch zoom
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+          }
+          // ✅ CRITICAL: Always stop propagation to isolate flipped card events
+          e.stopPropagation();
+          
           flippedCardTouchStartX = e.touches[0].clientX;
           flippedCardTouchStartY = e.touches[0].clientY;
           touchStartTime = Date.now();
@@ -810,6 +1074,15 @@
       }
 
       function handleFlippedCardTouchMove(e) {
+          // ✅ CRITICAL: Always prevent multi-touch zoom
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+          }
+          // ✅ CRITICAL: Always stop propagation to isolate flipped card events
+          e.stopPropagation();
+          
           if (!isTouchActive) return;
 
           // Get current touch position
@@ -850,6 +1123,9 @@
       }
 
       function handleFlippedCardTouchEnd(e) {
+          // ✅ CRITICAL: Always stop propagation to isolate flipped card events
+          e.stopPropagation();
+          
           if (!isTouchActive) return;
           isTouchActive = false;
 
@@ -1167,8 +1443,7 @@
 
       // Fix vertical positioning for better appearance
       function fixVerticalPositioning() {
-          // Adjust container's vertical padding
-          container.style.paddingTop = '0';
+          // Note: paddingTop now handled by CardSystem for proper centering
           container.style.paddingBottom = '40px';
 
           // Adjust body layout
@@ -1402,6 +1677,25 @@
               const closeButton = document.createElement('div');
               closeButton.className = 'overlay-close';
               closeButton.addEventListener('click', closeOverlay);
+              
+              // ✅ CRITICAL: Add zoom prevention to close button
+              closeButton.addEventListener('touchstart', function(e) {
+                  if (e.touches.length > 1) {
+                      e.preventDefault();
+                  }
+                  e.stopPropagation();
+              }, { passive: false });
+              
+              closeButton.addEventListener('touchmove', function(e) {
+                  if (e.touches.length > 1) {
+                      e.preventDefault();
+                  }
+                  e.stopPropagation();
+              }, { passive: false });
+              
+              closeButton.addEventListener('touchend', function(e) {
+                  e.stopPropagation();
+              }, { passive: false });
 
               // Append elements
               overlayContent.appendChild(closeButton);
@@ -1447,6 +1741,26 @@
           const closeButton = document.createElement('div');
           closeButton.className = 'overlay-close';
           closeButton.addEventListener('click', closeOverlay);
+          
+          // ✅ CRITICAL: Add zoom prevention to close button
+          closeButton.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                  e.preventDefault();
+              }
+              e.stopPropagation();
+          }, { passive: false });
+          
+          closeButton.addEventListener('touchmove', function(e) {
+              if (e.touches.length > 1) {
+                  e.preventDefault();
+              }
+              e.stopPropagation();
+          }, { passive: false });
+          
+          closeButton.addEventListener('touchend', function(e) {
+              e.stopPropagation();
+          }, { passive: false });
+          
           overlayContent.appendChild(closeButton);
 
           // Create a content wrapper to hold the card content
@@ -1455,10 +1769,12 @@
           contentWrapper.style.width = '100%';
           contentWrapper.style.height = 'auto';
           contentWrapper.style.position = 'relative';
+          
 
           // Clone and append the content
           const contentClone = cardBack.cloneNode(true);
           contentClone.style.transform = 'none'; // Remove rotation
+          
           contentClone.style.position = 'relative';
           contentClone.style.top = '0';
           contentClone.style.left = '0';
@@ -1474,6 +1790,43 @@
 
           // Also reset the clone's scroll position
           contentClone.scrollTop = 0;
+          
+          // ✅ CRITICAL: Add zoom prevention to all interactive elements in the cloned content
+          const interactiveElements = contentClone.querySelectorAll('a, button, input, textarea, select');
+          interactiveElements.forEach(element => {
+              element.addEventListener('touchstart', function(e) {
+                  if (e.touches.length > 1) {
+                      e.preventDefault();
+                  }
+                  e.stopPropagation();
+              }, { passive: false });
+              
+              element.addEventListener('touchmove', function(e) {
+                  if (e.touches.length > 1) {
+                      e.preventDefault();
+                  }
+                  e.stopPropagation();
+              }, { passive: false });
+              
+              element.addEventListener('touchend', function(e) {
+                  e.stopPropagation();
+              }, { passive: false });
+          });
+          
+          // ✅ CRITICAL: Also add zoom prevention to the contentClone itself
+          contentClone.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              }
+          }, { passive: false });
+          
+          contentClone.addEventListener('touchmove', function(e) {
+              if (e.touches.length > 1) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              }
+          }, { passive: false });
 
           contentWrapper.appendChild(contentClone);
 
@@ -1550,6 +1903,7 @@
               cardOverlay.addEventListener('touchstart', handleOverlayTouchStart, { passive: false });
               cardOverlay.addEventListener('touchmove', handleOverlayTouchMove, { passive: false });
               cardOverlay.addEventListener('touchend', handleOverlayTouchEnd, { passive: false });
+              // Add touch event listeners for the overlay
               overlayContent.addEventListener('touchstart', handleOverlayTouchStart, { passive: false });
               overlayContent.addEventListener('touchmove', handleOverlayTouchMove, { passive: false });
               overlayContent.addEventListener('touchend', handleOverlayTouchEnd, { passive: false });
@@ -1633,28 +1987,83 @@
       // Touch handlers for overlay swipe navigation
       let overlayTouchStartX = 0;
       let overlayTouchStartY = 0;
+      let overlayTouchStartTime = 0;
+      let activeOverlayTouchId = null; // Track which finger initiated the gesture
+
+      // Utility function to invalidate current overlay gesture
+      function invalidateOverlayGesture() {
+          activeOverlayTouchId = null;
+          console.log('🚫 Overlay: Gesture invalidated');
+      }
+
+      // Utility function to validate if a touch should be processed
+      function isValidOverlayTouch(touch) {
+          if (activeOverlayTouchId === null) {
+              console.log('🚫 Overlay: Gesture was invalidated (multi-touch detected), ignoring swipe');
+              return false;
+          }
+          
+          if (touch.identifier !== activeOverlayTouchId) {
+              console.log('🚫 Overlay: Ignoring touchend from second finger (id:', touch.identifier, 'expected:', activeOverlayTouchId, ')');
+              return false;
+          }
+          
+          return true;
+      }
 
       function handleOverlayTouchStart(e) {
-          overlayTouchStartX = e.touches[0].clientX;
-          overlayTouchStartY = e.touches[0].clientY;
-          touchStartTime = Date.now();
+          // ALWAYS prevent zoom
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              invalidateOverlayGesture();
+              return;
+          }
+          
+          e.stopPropagation();
+          
+          // Store the first touch identifier
+          const touch = e.touches[0];
+          activeOverlayTouchId = touch.identifier;
+          overlayTouchStartX = touch.clientX;
+          overlayTouchStartY = touch.clientY;
+          overlayTouchStartTime = Date.now();
       }
 
       function handleOverlayTouchMove(e) {
-          // Just track movement, don't prevent default to allow scrolling
+          // ALWAYS prevent multi-touch zoom
+          if (e.touches.length > 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              invalidateOverlayGesture();
+              return;
+          }
+          
+          e.stopPropagation();
       }
 
       function handleOverlayTouchEnd(e) {
-          const touchEndX = e.changedTouches[0].clientX;
-          const touchEndY = e.changedTouches[0].clientY;
-          const touchDuration = Date.now() - touchStartTime;
+          e.stopPropagation();
+          
+          const touch = e.changedTouches[0];
+          
+          // Validate this touch should be processed
+          if (!isValidOverlayTouch(touch)) {
+              return;
+          }
+          
+          const touchEndX = touch.clientX;
+          const touchEndY = touch.clientY;
+          const touchDuration = Date.now() - overlayTouchStartTime;
 
           // Calculate distances
           const xDistance = touchEndX - overlayTouchStartX;
-          const touchDistance = touchEndX - touchStartX;
           const absXDistance = Math.abs(xDistance);
           const yDistance = touchEndY - overlayTouchStartY;
           const absYDistance = Math.abs(yDistance);
+
+          // Clear active touch now that we've processed it
+          activeOverlayTouchId = null;
 
           // Only handle horizontal swipes - ignore vertical swipes
           if (absXDistance > absYDistance &&
@@ -1668,6 +2077,8 @@
                   CardSystem.findPrevVisibleIndex(currentIndex);
 
               if (targetIndex !== currentIndex) {
+                  console.log(`✅ Overlay: Valid swipe detected, navigating to ${targetIndex} (direction: ${xDistance < 0 ? 'left' : 'right'})`);
+                  
                   // Close current overlay first
                   closeOverlay();
 
