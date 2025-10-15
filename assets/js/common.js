@@ -710,6 +710,15 @@ if (!window.location.pathname.includes('about.html')) {
                 return;
             }
 
+            // Set initial activeCardIndex to first visible card (skip null card if it's first)
+            for (let i = 0; i < this.flipCards.length; i++) {
+                if (!this.flipCards[i].classList.contains('null-card')) {
+                    this.activeCardIndex = i;
+                    console.log('CardSystem: Initial activeCardIndex set to first regular card:', i);
+                    break;
+                }
+            }
+
             const isMobile = this.isMobileDevice();
             console.log('CardSystem: Device detection - Mobile:', isMobile, 'Width:', window.innerWidth);
 
@@ -800,31 +809,61 @@ if (!window.location.pathname.includes('about.html')) {
                     return;
                 }
 
-                // Force layout calculation
-                header.offsetHeight; // Trigger layout
-                cardIndicator.offsetHeight; // Trigger layout
-                
-                const headerRect = header.getBoundingClientRect();
-                const indicatorRect = cardIndicator.getBoundingClientRect();
-                
-                const availableSpace = indicatorRect.top - headerRect.bottom;
-                
-                if (availableSpace <= 100) {
-                    reject(new Error('Insufficient space detected: ' + availableSpace + 'px'));
-                    return;
-                }
-                
-                const gapRatio = 1/16;
-                const calculatedCardHeight = availableSpace * (1 - (2 * gapRatio));
-                
-                console.log('CARD HEIGHT CALCULATED FROM COMPLETE UI (ONE PERFECT CALCULATION):', {
-                    'Header bottom': headerRect.bottom.toFixed(3) + 'px',
-                    'Indicator top': indicatorRect.top.toFixed(3) + 'px',
-                    'Available space': availableSpace.toFixed(3) + 'px',
-                    'Calculated height': calculatedCardHeight.toFixed(3) + 'px'
+                // CRITICAL FIX: Wait for dot indicator to be fully rendered before measuring
+                // Use multiple animation frames to ensure Safari mobile has settled
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Force layout calculation after settling
+                        header.offsetHeight; // Trigger layout
+                        cardIndicator.offsetHeight; // Trigger layout
+                        
+                        const headerRect = header.getBoundingClientRect();
+                        const indicatorRect = cardIndicator.getBoundingClientRect();
+                        
+                        const availableSpace = indicatorRect.top - headerRect.bottom;
+                        
+                        // SAFETY: Validate measurements are reasonable
+                        if (availableSpace <= 100) {
+                            console.warn('Mobile: Insufficient space detected:', availableSpace, 'px. Retrying measurement...');
+                            // Retry once after a small delay
+                            setTimeout(() => {
+                                const retryHeaderRect = header.getBoundingClientRect();
+                                const retryIndicatorRect = cardIndicator.getBoundingClientRect();
+                                const retryAvailableSpace = retryIndicatorRect.top - retryHeaderRect.bottom;
+                                
+                                if (retryAvailableSpace <= 100) {
+                                    reject(new Error('Insufficient space detected after retry: ' + retryAvailableSpace + 'px'));
+                                    return;
+                                }
+                                
+                                const gapRatio = 1/16;
+                                const calculatedCardHeight = retryAvailableSpace * (1 - (2 * gapRatio));
+                                
+                                console.log('CARD HEIGHT CALCULATED FROM COMPLETE UI (RETRY SUCCESSFUL):', {
+                                    'Header bottom': retryHeaderRect.bottom.toFixed(3) + 'px',
+                                    'Indicator top': retryIndicatorRect.top.toFixed(3) + 'px',
+                                    'Available space': retryAvailableSpace.toFixed(3) + 'px',
+                                    'Calculated height': calculatedCardHeight.toFixed(3) + 'px'
+                                });
+                                
+                                resolve(calculatedCardHeight);
+                            }, 100);
+                            return;
+                        }
+                        
+                        const gapRatio = 1/16;
+                        const calculatedCardHeight = availableSpace * (1 - (2 * gapRatio));
+                        
+                        console.log('CARD HEIGHT CALCULATED FROM COMPLETE UI (ONE PERFECT CALCULATION):', {
+                            'Header bottom': headerRect.bottom.toFixed(3) + 'px',
+                            'Indicator top': indicatorRect.top.toFixed(3) + 'px',
+                            'Available space': availableSpace.toFixed(3) + 'px',
+                            'Calculated height': calculatedCardHeight.toFixed(3) + 'px'
+                        });
+                        
+                        resolve(calculatedCardHeight);
+                    });
                 });
-                
-                resolve(calculatedCardHeight);
             });
         },
 

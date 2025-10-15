@@ -196,28 +196,45 @@ function applyFiltersQuietly(callback) {
 
   const hasFilters = !!excludes || !!includes || hasOptimismFilter;
 
+  // CRITICAL FIX: Skip positioning during initial load (callback present means it's during init)
+  // positionAndDispatchPageReady will handle positioning after filters are applied
+  const skipPositioning = !!callback;
+
   if (!hasFilters) {
-    showAllCardsQuietly();
+    showAllCardsQuietly(skipPositioning);
   } else {
-    filterCardsQuietly(excludes, includes);
+    filterCardsQuietly(excludes, includes, skipPositioning);
   }
 
-  console.log("Filters: Quiet filtering complete.");
+  console.log("Filters: Quiet filtering complete. Skip positioning:", skipPositioning);
   
-  // Always call callback regardless of filtering results
-  if (callback) {
-    console.log("Filters: Calling completion callback");
-    callback();
-  } else {
-    console.warn("Filters: No callback provided to applyFiltersQuietly");
-  }
+  // CRITICAL FIX: Delay callback to ensure layout has settled after filter application
+  // This prevents race conditions where positioning happens before layout reflow
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      // Always call callback regardless of filtering results
+      if (callback) {
+        console.log("Filters: Calling completion callback after layout settle");
+        callback();
+      } else {
+        console.warn("Filters: No callback provided to applyFiltersQuietly");
+      }
+    });
+  });
 }
 
 // Optimized filtering function using cached card data
 function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter) {
   let firstVisibleIndex = -1;
+  let visibleRegularCardsCount = 0;
+  const nullCard = document.querySelector('.flip-card.null-card');
 
   CardSystem.flipCards.forEach((card, index) => {
+    // Skip the null card - it's handled separately
+    if (card.classList.contains('null-card')) {
+      return;
+    }
+
     const cardData = CardSystem.cardData[index];
     let summary, optimismScore;
 
@@ -225,10 +242,25 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
       summary = cardData.summary;
       optimismScore = cardData.optimismScore;
     } else {
-      // Fallback for missing cached data
-      const summaryElement = card.querySelector('.flip-card-back p:first-of-type');
+      // CRITICAL FIX: Fallback for missing cached data - actually read from DOM
+      const back = card.querySelector('.flip-card-back');
+      const summaryElement = back ? back.querySelector('p:first-of-type') : null;
+      const scoreElement = back ? back.querySelector('p:nth-of-type(2)') : null;
+      
       summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-      optimismScore = null;
+      
+      // Parse optimism score from DOM if available
+      if (scoreElement) {
+        const scoreMatch = scoreElement.textContent.match(/(\d+)\/100/);
+        if (scoreMatch) {
+          optimismScore = parseInt(scoreMatch[1]);
+          console.log(`Filters: Reading uncached optimism score for card ${index}: ${optimismScore}`);
+        } else {
+          optimismScore = null;
+        }
+      } else {
+        optimismScore = null;
+      }
     }
 
     let shouldHide = false;
@@ -248,22 +280,48 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
       if (optimismScore !== null) {
         shouldHide = optimismScore < optimismMin || optimismScore > optimismMax;
       } else {
-        shouldHide = true; // Hide cards without optimism scores when filter is active
+        // CRITICAL FIX: Only hide if we're sure there's no score
+        // Don't hide cards that should have scores but haven't been cached yet
+        console.warn(`Filters: Card ${index} has no optimism score - hiding due to active filter`);
+        shouldHide = true;
       }
     }
 
     card.classList.toggle('filtered', shouldHide);
 
-    if (!shouldHide && firstVisibleIndex === -1) {
-      firstVisibleIndex = index;
+    if (!shouldHide) {
+      visibleRegularCardsCount++;
+      if (firstVisibleIndex === -1) {
+        firstVisibleIndex = index;
+      }
     }
   });
+
+  // Binary system: Show null card if and only if no regular cards are visible
+  if (nullCard) {
+    if (visibleRegularCardsCount === 0) {
+      // State 0: No regular cards visible - show null card
+      nullCard.style.display = '';
+      nullCard.classList.remove('filtered');
+      console.log('Filters: No regular cards visible, showing null card');
+      // Set first visible index to null card's index (should be 0)
+      if (firstVisibleIndex === -1) {
+        const nullCardIndex = Array.from(CardSystem.flipCards).indexOf(nullCard);
+        firstVisibleIndex = nullCardIndex >= 0 ? nullCardIndex : 0;
+      }
+    } else {
+      // State 1: At least one regular card visible - hide null card
+      nullCard.style.display = 'none';
+      nullCard.classList.add('filtered');
+      console.log('Filters: Regular cards visible, hiding null card');
+    }
+  }
 
   return firstVisibleIndex;
 }
 
 // Quiet versions that don't trigger full repositioning
-function filterCardsQuietly(excludes, includes) {
+function filterCardsQuietly(excludes, includes, skipPositioning = false) {
   let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
 
@@ -287,55 +345,109 @@ function filterCardsQuietly(excludes, includes) {
   // Use optimized filtering function
   const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter);
 
-  // Update the active index and center the first visible card
+  // CRITICAL FIX: Force layout reflow BEFORE updating UI
+  // This ensures the browser has processed the .filtered class changes
+  if (CardSystem.flipCards && CardSystem.flipCards.length > 0) {
+    void CardSystem.flipCards[0].offsetHeight;
+  }
+
+  // Update the active index
   if (firstVisibleIndex !== -1) {
     CardSystem.activeCardIndex = firstVisibleIndex;
     if (typeof CardSystem.updateUI === 'function') {
       CardSystem.updateUI();
     }
 
-    // Let the platform-specific scripts handle positioning with error handling
-    if (typeof CardSystem.moveToCard === 'function') {
-      try {
-        CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
-      } catch (error) {
-        console.warn('Filters: moveToCard failed during quiet filtering:', error);
-      }
-    } else if (typeof CardSystem.scrollToCard === 'function') {
-      try {
-        CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
-      } catch (error) {
-        console.warn('Filters: scrollToCard failed during quiet filtering:', error);
-      }
+    // CRITICAL FIX: Only position if not skipping (i.e., not during initial load)
+    // During initial load, positionAndDispatchPageReady will handle positioning
+    if (!skipPositioning) {
+      console.log('Filters: Positioning to first visible card:', firstVisibleIndex);
+      // Use requestAnimationFrame to ensure layout is settled before positioning
+      requestAnimationFrame(() => {
+        // Let the platform-specific scripts handle positioning with error handling
+        if (typeof CardSystem.moveToCard === 'function') {
+          try {
+            CardSystem.moveToCard(firstVisibleIndex, false); // false for instant move
+          } catch (error) {
+            console.warn('Filters: moveToCard failed during quiet filtering:', error);
+          }
+        } else if (typeof CardSystem.scrollToCard === 'function') {
+          try {
+            CardSystem.scrollToCard(firstVisibleIndex, false); // false for instant move
+          } catch (error) {
+            console.warn('Filters: scrollToCard failed during quiet filtering:', error);
+          }
+        }
+      });
+    } else {
+      console.log('Filters: Skipping positioning (will be handled by positionAndDispatchPageReady)');
+    }
+  } else {
+    // Handle case where all cards are filtered out (should not happen with null card)
+    console.warn('Filters: No visible cards after filtering (unexpected - null card should be visible)');
+    CardSystem.activeCardIndex = 0; // Fallback to first card
+    if (typeof CardSystem.updateUI === 'function') {
+      CardSystem.updateUI();
     }
   }
 }
 
-function showAllCardsQuietly() {
+function showAllCardsQuietly(skipPositioning = false) {
   console.log('Filters: No filters active, showing all cards quietly.');
 
-  // Remove .filtered class from all cards
-  CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
+  const nullCard = document.querySelector('.flip-card.null-card');
+  let firstRegularCardIndex = -1;
 
-  // Update UI and center the first card
-  CardSystem.activeCardIndex = 0;
+  // Remove .filtered class from all cards except null card
+  CardSystem.flipCards.forEach((card, index) => {
+    if (!card.classList.contains('null-card')) {
+      card.classList.remove('filtered');
+      if (firstRegularCardIndex === -1) {
+        firstRegularCardIndex = index;
+      }
+    }
+  });
+
+  // Hide null card when showing all cards (State 1: regular cards visible)
+  if (nullCard) {
+    nullCard.style.display = 'none';
+    nullCard.classList.add('filtered');
+    console.log('Filters: Hiding null card (showing all regular cards)');
+  }
+
+  // CRITICAL FIX: Force layout reflow BEFORE updating UI
+  if (CardSystem.flipCards && CardSystem.flipCards.length > 0) {
+    void CardSystem.flipCards[0].offsetHeight;
+  }
+
+  // Update UI and center the first regular card
+  CardSystem.activeCardIndex = firstRegularCardIndex >= 0 ? firstRegularCardIndex : 0;
   if (typeof CardSystem.updateUI === 'function') {
     CardSystem.updateUI();
   }
 
-  // Let the platform-specific scripts handle positioning with error handling
-  if (typeof CardSystem.moveToCard === 'function') {
-    try {
-      CardSystem.moveToCard(0, false); // false for instant move
-    } catch (error) {
-      console.warn('Filters: moveToCard failed during quiet show all:', error);
-    }
-  } else if (typeof CardSystem.scrollToCard === 'function') {
-    try {
-      CardSystem.scrollToCard(0, false); // false for instant move
-    } catch (error) {
-      console.warn('Filters: scrollToCard failed during quiet show all:', error);
-    }
+  // CRITICAL FIX: Only position if not skipping (i.e., not during initial load)
+  if (!skipPositioning) {
+    console.log('Filters: Positioning to first regular card');
+    // Use requestAnimationFrame to ensure layout is settled before positioning
+    requestAnimationFrame(() => {
+      // Let the platform-specific scripts handle positioning with error handling
+      if (typeof CardSystem.moveToCard === 'function') {
+        try {
+          CardSystem.moveToCard(CardSystem.activeCardIndex, false); // false for instant move
+        } catch (error) {
+          console.warn('Filters: moveToCard failed during quiet show all:', error);
+        }
+      } else if (typeof CardSystem.scrollToCard === 'function') {
+        try {
+          CardSystem.scrollToCard(CardSystem.activeCardIndex, false); // false for instant move
+        } catch (error) {
+          console.warn('Filters: scrollToCard failed during quiet show all:', error);
+        }
+      }
+    });
+  } else {
+    console.log('Filters: Skipping positioning (will be handled by positionAndDispatchPageReady)');
   }
 }
 
@@ -1430,11 +1542,28 @@ function filterCards(excludes, includes) {
 function showAllCards() {
   console.log('Filters: No filters active, showing all cards.');
 
-  // Remove .filtered class from all cards
-  CardSystem.flipCards.forEach(card => card.classList.remove('filtered'));
+  const nullCard = document.querySelector('.flip-card.null-card');
+  let firstRegularCardIndex = -1;
 
-  // Reposition the view back to the very first card.
-  repositionViewAfterFilter(0);
+  // Remove .filtered class from all cards except null card
+  CardSystem.flipCards.forEach((card, index) => {
+    if (!card.classList.contains('null-card')) {
+      card.classList.remove('filtered');
+      if (firstRegularCardIndex === -1) {
+        firstRegularCardIndex = index;
+      }
+    }
+  });
+
+  // Hide null card when showing all cards (State 1: regular cards visible)
+  if (nullCard) {
+    nullCard.style.display = 'none';
+    nullCard.classList.add('filtered');
+    console.log('Filters: Hiding null card (showing all regular cards)');
+  }
+
+  // Reposition the view to the first regular card
+  repositionViewAfterFilter(firstRegularCardIndex >= 0 ? firstRegularCardIndex : 0);
 }
 
 // The filtersCompleteInitialization function is defined above at line 125
@@ -1451,15 +1580,16 @@ function repositionViewAfterFilter(newActiveIndex) {
   CardSystem.filteringPhase = 'repositioning';
   CardSystem.pendingStateChange = true;
 
-  // Step 1: Handle the "all cards filtered" edge case.
+  // Step 1: Handle the "all cards filtered" edge case (should not happen with null card system)
   if (newActiveIndex === -1) {
-    console.warn("Filters: All cards have been filtered out.");
-    CardSystem.activeCardIndex = -1;
+    // This should not happen anymore since null card is always available
+    console.warn("Filters: All cards filtered out (unexpected - null card should be visible)");
+    CardSystem.activeCardIndex = 0; // Fallback to first card
     CardSystem.pendingStateChange = false;
     CardSystem.filteringPhase = 'idle';
 
     if (typeof CardSystem.updateUI === 'function') {
-      CardSystem.updateUI(); // This will clear the dots.
+      CardSystem.updateUI();
     }
     return;
   }

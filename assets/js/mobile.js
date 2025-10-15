@@ -1608,8 +1608,15 @@
                           resolve();
                           return;
                       }
-                      const firstCard = flipCards[0];
-                      if (!firstCard || firstCard.offsetWidth === 0) {
+                      // Find first visible card (skip null card if hidden)
+                      let firstVisibleCard = null;
+                      for (let i = 0; i < flipCards.length; i++) {
+                          if (flipCards[i].offsetWidth > 0) {
+                              firstVisibleCard = flipCards[i];
+                              break;
+                          }
+                      }
+                      if (!firstVisibleCard) {
                           setTimeout(checkMeasurements, 30);
                           return;
                       }
@@ -1655,11 +1662,11 @@
           initializeSequence();
       }
 
-      // Single, reliable initialization trigger
+      // Single, reliable initialization trigger - use { once: true } to prevent multiple calls
       document.addEventListener('scriptsLoaded', () => {
           console.log("Mobile: Received scriptsLoaded event.");
           initialize();
-      });
+      }, { once: true });
 
       // Function to create the overlay
       function createOverlay() {

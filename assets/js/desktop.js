@@ -1354,14 +1354,21 @@
     function initDesktop() {
         console.log("Desktop: Initializing desktop specific logic...");
 
-        // Check layout stability first
-        const firstCard = flipCards[0];
-        if (!firstCard || !container) {
+        // Check layout stability first - skip null card if it's first
+        let firstVisibleCard = flipCards[0];
+        for (let i = 0; i < flipCards.length; i++) {
+            if (flipCards[i].offsetWidth > 0) {
+                firstVisibleCard = flipCards[i];
+                break;
+            }
+        }
+        
+        if (!firstVisibleCard || !container) {
             console.error('Desktop: Essential elements not found');
             return;
         }
 
-        if (firstCard.offsetWidth > 0 && container.offsetWidth > 0) {
+        if (firstVisibleCard.offsetWidth > 0 && container.offsetWidth > 0) {
             console.log("Desktop: Core initialization steps completed.");
 
             // --- EXPOSE DESKTOP METHODS TO CARDSYSTEM ---
@@ -1388,9 +1395,9 @@
         }
     }
 
-    // Single, reliable initialization trigger
+    // Single, reliable initialization trigger - use { once: true } to prevent multiple calls
     document.addEventListener('scriptsLoaded', () => {
         console.log("Desktop: Received scriptsLoaded event.");
         initDesktop();
-    });
+    }, { once: true });
 })();
