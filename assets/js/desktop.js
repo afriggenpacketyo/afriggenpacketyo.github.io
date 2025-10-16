@@ -1178,8 +1178,10 @@
     function updateDotIndicatorsDirectly(activeIndex) {
         const dots = document.querySelectorAll('.indicator-dot');
 
-        dots.forEach((dot, index) => {
-            if (index === activeIndex) {
+        dots.forEach((dot) => {
+            // Use the stored card index from dataset, not the dot's position
+            const cardIndex = parseInt(dot.dataset.index, 10);
+            if (cardIndex === activeIndex) {
                 dot.classList.add('active');
             } else {
                 dot.classList.remove('active');

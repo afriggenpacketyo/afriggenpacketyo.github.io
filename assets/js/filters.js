@@ -298,22 +298,42 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
   });
 
   // Binary system: Show null card if and only if no regular cards are visible
+  const nullDot = document.querySelector('.indicator-dot.null-dot');
+  console.log('DEBUG: Null dot element found?', !!nullDot, 'Visible regular count:', visibleRegularCardsCount);
+  
   if (nullCard) {
     if (visibleRegularCardsCount === 0) {
-      // State 0: No regular cards visible - show null card
+      // State 0: No regular cards visible - show null card and its dot
       nullCard.style.display = '';
       nullCard.classList.remove('filtered');
-      console.log('Filters: No regular cards visible, showing null card');
+      if (nullDot) {
+        console.log('DEBUG: Showing null dot - before classes:', nullDot.className);
+        nullDot.classList.remove('filtered');
+        nullDot.classList.add('active');
+        nullDot.classList.add('visible'); // Required for display:flex
+        nullDot.classList.add('size-active'); // Style it like an active dot
+        console.log('DEBUG: Showing null dot - after classes:', nullDot.className);
+        console.log('DEBUG: Null dot computed display:', window.getComputedStyle(nullDot).display);
+      } else {
+        console.error('DEBUG: NULL DOT NOT FOUND IN DOM!');
+      }
+      console.log('Filters: No regular cards visible, showing null card and dot 0');
       // Set first visible index to null card's index (should be 0)
       if (firstVisibleIndex === -1) {
         const nullCardIndex = Array.from(CardSystem.flipCards).indexOf(nullCard);
         firstVisibleIndex = nullCardIndex >= 0 ? nullCardIndex : 0;
       }
     } else {
-      // State 1: At least one regular card visible - hide null card
+      // State 1: At least one regular card visible - hide null card and its dot
       nullCard.style.display = 'none';
       nullCard.classList.add('filtered');
-      console.log('Filters: Regular cards visible, hiding null card');
+      if (nullDot) {
+        nullDot.classList.add('filtered');
+        nullDot.classList.remove('active');
+        nullDot.classList.remove('visible'); // Hide it
+        nullDot.classList.remove('size-active');
+      }
+      console.log('Filters: Regular cards visible, hiding null card and dot');
     }
   }
 
@@ -396,6 +416,7 @@ function showAllCardsQuietly(skipPositioning = false) {
   console.log('Filters: No filters active, showing all cards quietly.');
 
   const nullCard = document.querySelector('.flip-card.null-card');
+  const nullDot = document.querySelector('.indicator-dot.null-dot');
   let firstRegularCardIndex = -1;
 
   // Remove .filtered class from all cards except null card
@@ -408,11 +429,17 @@ function showAllCardsQuietly(skipPositioning = false) {
     }
   });
 
-  // Hide null card when showing all cards (State 1: regular cards visible)
+  // Hide null card and its dot when showing all cards (State 1: regular cards visible)
   if (nullCard) {
     nullCard.style.display = 'none';
     nullCard.classList.add('filtered');
     console.log('Filters: Hiding null card (showing all regular cards)');
+  }
+  if (nullDot) {
+    nullDot.classList.add('filtered');
+    nullDot.classList.remove('active');
+    nullDot.classList.remove('visible');
+    nullDot.classList.remove('size-active');
   }
 
   // CRITICAL FIX: Force layout reflow BEFORE updating UI
@@ -1543,6 +1570,7 @@ function showAllCards() {
   console.log('Filters: No filters active, showing all cards.');
 
   const nullCard = document.querySelector('.flip-card.null-card');
+  const nullDot = document.querySelector('.indicator-dot.null-dot');
   let firstRegularCardIndex = -1;
 
   // Remove .filtered class from all cards except null card
@@ -1555,11 +1583,17 @@ function showAllCards() {
     }
   });
 
-  // Hide null card when showing all cards (State 1: regular cards visible)
+  // Hide null card and its dot when showing all cards (State 1: regular cards visible)
   if (nullCard) {
     nullCard.style.display = 'none';
     nullCard.classList.add('filtered');
     console.log('Filters: Hiding null card (showing all regular cards)');
+  }
+  if (nullDot) {
+    nullDot.classList.add('filtered');
+    nullDot.classList.remove('active');
+    nullDot.classList.remove('visible');
+    nullDot.classList.remove('size-active');
   }
 
   // Reposition the view to the first regular card

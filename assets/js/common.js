@@ -199,11 +199,18 @@ if (!window.location.pathname.includes('about.html')) {
 
             // Update dot active/filtered classes and text content
             let visibleDotCounter = 1;
-            document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
-                const card = this.flipCards[i];
+            document.querySelectorAll('.indicator-dot').forEach((dot) => {
+                // Skip null dot - its visibility is managed by filtering logic
+                if (dot.dataset.isNullDot === 'true') {
+                    return;
+                }
+                
+                // Use the stored card index from dataset, not the dot's position
+                const cardIndex = parseInt(dot.dataset.index, 10);
+                const card = this.flipCards[cardIndex];
                 const isFiltered = card && card.classList.contains('filtered');
 
-                dot.classList.toggle('active', i === this.activeCardIndex);
+                dot.classList.toggle('active', cardIndex === this.activeCardIndex);
                 dot.classList.toggle('filtered', isFiltered);
 
                 if (!isFiltered) {
@@ -351,11 +358,19 @@ if (!window.location.pathname.includes('about.html')) {
          */
         updateInstagramStyleDots: function (masterActiveIndex) {
             const allDots = document.querySelectorAll('.indicator-dot');
-            const visibleDots = Array.from(allDots).filter(dot => !dot.classList.contains('filtered'));
+            // Filter out null dot and filtered dots for Instagram-style animation
+            const visibleDots = Array.from(allDots).filter(dot => 
+                dot.dataset.isNullDot !== 'true' && !dot.classList.contains('filtered')
+            );
             const totalVisibleDots = visibleDots.length;
 
             if (totalVisibleDots === 0 || masterActiveIndex < 0) {
+                // CRITICAL: When no regular dots are visible, clear size classes but preserve null dot's visible state
                 allDots.forEach(dot => {
+                    // Skip null dot - its visibility is managed by filter logic
+                    if (dot.dataset.isNullDot === 'true') {
+                        return;
+                    }
                     dot.className = dot.className.replace(/size-\w+|visible/g, '').trim();
                     dot.style.transition = '';
                 });
@@ -363,17 +378,19 @@ if (!window.location.pathname.includes('about.html')) {
                 return;
             }
 
-            let activeDotMaster = allDots[masterActiveIndex];
-            let visibleActiveIndex = visibleDots.indexOf(activeDotMaster);
+            // Find the dot that corresponds to the masterActiveIndex card using dataset.index
+            let activeDotMaster = Array.from(allDots).find(dot => parseInt(dot.dataset.index, 10) === masterActiveIndex);
+            let visibleActiveIndex = activeDotMaster ? visibleDots.indexOf(activeDotMaster) : -1;
 
-            // Adjust if masterActiveIndex points to a filtered card
-            if (visibleActiveIndex === -1) {
+            // Adjust if masterActiveIndex points to a filtered card or null card (no dot exists)
+            if (visibleActiveIndex === -1 || !activeDotMaster) {
                 let newMasterActiveIndex = -1;
-                // Try to find the closest visible card if the current one is filtered
-                if (this.isFiltering || (activeDotMaster && activeDotMaster.classList.contains('filtered'))) {
-                    // Search forward
-                    for (let i = masterActiveIndex; i < allDots.length; i++) {
-                        if (!allDots[i].classList.contains('filtered')) {
+                // Try to find the closest visible card if the current one is filtered or has no dot
+                if (this.isFiltering || (activeDotMaster && activeDotMaster.classList.contains('filtered')) || !activeDotMaster) {
+                    // Search forward from masterActiveIndex through cards
+                    for (let i = masterActiveIndex; i < this.flipCards.length; i++) {
+                        const dotForCard = Array.from(allDots).find(dot => parseInt(dot.dataset.index, 10) === i);
+                        if (dotForCard && !dotForCard.classList.contains('filtered')) {
                             newMasterActiveIndex = i;
                             break;
                         }
@@ -381,7 +398,8 @@ if (!window.location.pathname.includes('about.html')) {
                     // If not found, search backward
                     if (newMasterActiveIndex === -1) {
                         for (let i = masterActiveIndex - 1; i >= 0; i--) {
-                            if (!allDots[i].classList.contains('filtered')) {
+                            const dotForCard = Array.from(allDots).find(dot => parseInt(dot.dataset.index, 10) === i);
+                            if (dotForCard && !dotForCard.classList.contains('filtered')) {
                                 newMasterActiveIndex = i;
                                 break;
                             }
@@ -391,8 +409,8 @@ if (!window.location.pathname.includes('about.html')) {
 
                 if (newMasterActiveIndex !== -1) {
                     masterActiveIndex = newMasterActiveIndex; // Update masterActiveIndex to the new visible one
-                    activeDotMaster = allDots[masterActiveIndex];
-                    visibleActiveIndex = visibleDots.indexOf(activeDotMaster);
+                    activeDotMaster = Array.from(allDots).find(dot => parseInt(dot.dataset.index, 10) === masterActiveIndex);
+                    visibleActiveIndex = activeDotMaster ? visibleDots.indexOf(activeDotMaster) : -1;
                 } else {
                     // No visible dot can be made active, clear all and return
                     allDots.forEach(dot => { dot.className = dot.className.replace(/size-\w+|visible/g, '').trim(); dot.style.transition = ''; });
@@ -690,16 +708,32 @@ if (!window.location.pathname.includes('about.html')) {
             cardIndicator = document.createElement('div');
             cardIndicator.className = 'card-indicator';
 
-            this.flipCards.forEach((_, index) => {
+            // CRITICAL: Refresh flipCards to ensure we have the latest DOM state including null card
+            const currentFlipCards = document.querySelectorAll('.flip-card');
+            console.log(`Setting up ${currentFlipCards.length} indicator dots (including null card if present)`);
+            
+            currentFlipCards.forEach((card, index) => {
                 const dot = document.createElement('div');
-                dot.className = 'indicator-dot' + (index === 0 ? ' active' : '');
-                dot.dataset.index = index;
-                dot.textContent = (index + 1).toString();
+                
+                if (card.classList.contains('null-card')) {
+                    // Create a special dot for the null card, hidden by default
+                    dot.className = 'indicator-dot null-dot filtered';
+                    dot.dataset.index = index;
+                    dot.dataset.isNullDot = 'true';
+                    dot.textContent = '0';
+                    console.log(`Created null dot at index ${index}`);
+                } else {
+                    // Regular card dot
+                    dot.className = 'indicator-dot' + (index === this.activeCardIndex ? ' active' : '');
+                    dot.dataset.index = index;
+                    dot.textContent = '';
+                }
+                
                 cardIndicator.appendChild(dot);
             });
 
             document.body.appendChild(cardIndicator);
-            console.log('Card indicator created for the first time');
+            console.log('Card indicator created for the first time (includes null card dot)');
             return cardIndicator;
         },
 
@@ -709,6 +743,10 @@ if (!window.location.pathname.includes('about.html')) {
             if (!this.container) {
                 return;
             }
+
+            // CRITICAL: Refresh flipCards to ensure we capture the null card from HTML
+            this.flipCards = document.querySelectorAll('.flip-card');
+            console.log(`CardSystem.init: Found ${this.flipCards.length} flip cards in DOM`);
 
             // Set initial activeCardIndex to first visible card (skip null card if it's first)
             for (let i = 0; i < this.flipCards.length; i++) {
