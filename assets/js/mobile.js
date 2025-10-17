@@ -2380,13 +2380,9 @@
       window.CardSystem.resetCardHighlights = resetCardHighlights;
       // --- END EXPOSE PUBLIC METHODS ---
 
-      // Signal that mobile platform is ready
-      console.log('Mobile: Platform initialization complete, signaling readiness');
-      if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
-          window.CardSystem.registerPlatformReady('mobile');
-      } else {
-          console.warn('Mobile: CardSystem.registerPlatformReady not available');
-      }
+      // NOTE: Platform readiness is signaled after scriptsLoaded event triggers initialize()
+      // See lines 1643-1648 for the proper readiness signal
+      console.log('Mobile: Setup functions exposed, waiting for scriptsLoaded to signal readiness');
   })();
 
   // Browser detection for Safari vs Chrome positioning

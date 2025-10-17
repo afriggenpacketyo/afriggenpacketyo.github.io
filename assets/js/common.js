@@ -50,14 +50,14 @@ if (!window.location.pathname.includes('about.html')) {
         SWIPE_DISTANCE_THRESHOLD: 30,
         POSITION_THRESHOLD: 0.4,
 
-        // Spacing system constants and calculations
+        // Spacing system constants and calculations (EXPERIMENTAL - NOT CURRENTLY USED)
         // a = distance from header bottom to logo center
         // b = distance from logo bottom/center to active card top
         // c = distance from header bottom to active card top (also bottom to dots)
         // Rules: a = b, c = a + b
         calculateSystematicSpacing: function() {
             const header = document.querySelector('.page-header');
-            const logo = document.querySelector('.newsway-logo');
+            const logo = document.querySelector('.logo-container');
             const cardIndicator = document.querySelector('.card-indicator');
             
             if (!header || !logo || !cardIndicator) {
@@ -721,7 +721,9 @@ if (!window.location.pathname.includes('about.html')) {
                     dot.dataset.index = index;
                     dot.dataset.isNullDot = 'true';
                     dot.textContent = '0';
-                    console.log(`Created null dot at index ${index}`);
+                    // CRITICAL: Mark the null card itself as filtered so navigation skips it
+                    card.classList.add('filtered');
+                    console.log(`Created null dot at index ${index} and marked null card as filtered`);
                 } else {
                     // Regular card dot
                     dot.className = 'indicator-dot' + (index === this.activeCardIndex ? ' active' : '');
@@ -1002,10 +1004,11 @@ if (!window.location.pathname.includes('about.html')) {
                         this.updateMobileVerticalCentering();
                     }
                 } else {
-                    // Desktop: Apply systematic spacing
-                    setTimeout(() => {
-                        this.applySystematicSpacing();
-                    }, 100);
+                    // Desktop: Systematic spacing disabled - uses natural CSS layout
+                    // The applySystematicSpacing() function is experimental and not currently used
+                    // setTimeout(() => {
+                    //     this.applySystematicSpacing();
+                    // }, 100);
                 }
 
                 // Add event listeners for responsive centering
