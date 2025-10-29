@@ -762,18 +762,17 @@ if (!window.location.pathname.includes('about.html')) {
             const isMobile = this.isMobileDevice();
             console.log('CardSystem: Device detection - Mobile:', isMobile, 'Width:', window.innerWidth);
 
-            // CRITICAL: Create cardIndicator IMMEDIATELY so mobile.js can attach events
+            // CRITICAL: Create cardIndicator FIRST before any measurements
+            // The dots MUST exist in the DOM before we calculate available space for cards
             this.container.classList.add('with-coverflow');
-            this.setupCardIndicator(); // This must happen synchronously!
+            this.setupCardIndicator(); // Creates dots synchronously - MUST happen before card height calculations!
             
-            // Dispatch event to notify mobile.js that cardIndicator is ready for event attachment
-            document.dispatchEvent(new CustomEvent('cardIndicatorReady'));
-            console.log('CardSystem: Card indicator created and cardIndicatorReady event dispatched');
+            console.log('CardSystem: Dot indicators created FIRST - now cards can measure available space');
 
             if (isMobile) {
-                // BULLETPROOF SEQUENCING: Wait for complete resource loading before calculations
+                // BULLETPROOF SEQUENCING: Wait for complete resource loading, then measure space (dots now exist)
                 this.waitForCompleteResourceLoading()
-                    .then(() => this.calculateCardHeightFromCompleteUI())
+                    .then(() => this.calculateCardHeightFromCompleteUI()) // Measures space between header and EXISTING dots
                     .then((cardHeight) => this.processCardsWithGuaranteedHeight(cardHeight))
                     .then(() => this.finalizeAndShow())
                     .catch((error) => {
@@ -948,6 +947,10 @@ if (!window.location.pathname.includes('about.html')) {
                 
                 // Setup responsive centering (no longer needs to handle touch events)
                 this.setupResponsiveCentering();
+                
+                // Dispatch event to notify mobile.js that everything is ready for event attachment
+                document.dispatchEvent(new CustomEvent('cardIndicatorReady'));
+                console.log('CardSystem: cardIndicatorReady event dispatched - mobile.js can now attach events');
                 
                 console.log('MOBILE INITIALIZATION COMPLETE - Event-based coordination active');
                 resolve();
