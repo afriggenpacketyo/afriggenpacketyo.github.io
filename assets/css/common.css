@@ -138,6 +138,9 @@
     min-width: 0;
     min-height: 0;
   }
+
+  /* RACE CONDITION FIX: No longer needed - dots are in HTML with cards */
+  /* Container is visible immediately since dots and cards render together */
   /* Fix for logo/header layout jumping */
   .logo-container, .header-logo-container {
     /* contain: layout paint; */

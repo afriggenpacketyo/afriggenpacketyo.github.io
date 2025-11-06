@@ -696,36 +696,41 @@ if (!window.location.pathname.includes('about.html')) {
 
         // Setup card indicator
         setupCardIndicator: function () {
-            // CRITICAL: Don't recreate if it already exists (preserves event listeners)
+            // Dots are now pre-rendered in HTML, so just find and return them
             let cardIndicator = document.querySelector('.card-indicator');
             
             if (cardIndicator) {
-                console.log('Card indicator already exists - preserving existing element and event listeners');
+                console.log('Card indicator found in HTML (no race condition possible - dots and cards render together)');
+                
+                // Mark the null card as filtered so navigation skips it
+                const nullCard = document.querySelector('.flip-card.null-card');
+                if (nullCard) {
+                    nullCard.classList.add('filtered');
+                    console.log('Null card marked as filtered');
+                }
+                
                 return cardIndicator;
             }
             
-            // Only create if it doesn't exist
+            // FALLBACK: If dots don't exist in HTML for some reason, create them dynamically
+            console.warn('Card indicator not found in HTML - creating dynamically as fallback');
             cardIndicator = document.createElement('div');
             cardIndicator.className = 'card-indicator';
 
-            // CRITICAL: Refresh flipCards to ensure we have the latest DOM state including null card
             const currentFlipCards = document.querySelectorAll('.flip-card');
-            console.log(`Setting up ${currentFlipCards.length} indicator dots (including null card if present)`);
+            console.log(`Creating ${currentFlipCards.length} indicator dots dynamically (fallback mode)`);
             
             currentFlipCards.forEach((card, index) => {
                 const dot = document.createElement('div');
                 
                 if (card.classList.contains('null-card')) {
-                    // Create a special dot for the null card, hidden by default
                     dot.className = 'indicator-dot null-dot filtered';
                     dot.dataset.index = index;
                     dot.dataset.isNullDot = 'true';
                     dot.textContent = '0';
-                    // CRITICAL: Mark the null card itself as filtered so navigation skips it
                     card.classList.add('filtered');
                     console.log(`Created null dot at index ${index} and marked null card as filtered`);
                 } else {
-                    // Regular card dot
                     dot.className = 'indicator-dot' + (index === this.activeCardIndex ? ' active' : '');
                     dot.dataset.index = index;
                     dot.textContent = '';
@@ -735,7 +740,8 @@ if (!window.location.pathname.includes('about.html')) {
             });
 
             document.body.appendChild(cardIndicator);
-            console.log('Card indicator created for the first time (includes null card dot)');
+            console.log('Card indicator created dynamically (fallback)');
+            
             return cardIndicator;
         },
 
@@ -1057,9 +1063,9 @@ if (!window.location.pathname.includes('about.html')) {
 
         // Add initialization for dots
         initializeDots: function () {
-            // Setup card indicator click handlers
+            // Setup card indicator click handlers (DESKTOP ONLY - mobile uses touch events)
             const cardIndicator = document.querySelector('.card-indicator');
-            if (cardIndicator) {
+            if (cardIndicator && !this.isMobileDevice()) {
                 cardIndicator.querySelectorAll('.indicator-dot').forEach((dot) => {
                     dot.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -1068,6 +1074,9 @@ if (!window.location.pathname.includes('about.html')) {
                         this.updateUI();
                     });
                 });
+                console.log('Desktop: Click listeners attached to dots');
+            } else if (cardIndicator) {
+                console.log('Mobile: Skipping click listeners (using touch events instead)');
             }
 
             // Initialize dots

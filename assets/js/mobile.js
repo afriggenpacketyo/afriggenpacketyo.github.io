@@ -648,11 +648,19 @@
       container.addEventListener('touchend', container._touchendHandler, { passive: false });
 
       // --- DOT INDICATOR TOUCH EVENT SETUP ---
+      let dotEventsAttached = false; // Flag to prevent double-attachment
+      
       function setupDotIndicatorEvents() {
           const cardIndicator = document.querySelector('.card-indicator');
           
           if (!cardIndicator) {
               console.warn('Mobile: cardIndicator not found, skipping touch event setup');
+              return;
+          }
+
+          // CRITICAL: Prevent duplicate event listener attachment
+          if (dotEventsAttached) {
+              console.log('Mobile: Dot touch events already attached, skipping duplicate setup');
               return;
           }
 
@@ -867,6 +875,7 @@
           cardIndicator.addEventListener('touchend', handleDotTouchEnd, { passive: false });
           cardIndicator.addEventListener('touchcancel', handleDotTouchEnd, { passive: false });
           
+          dotEventsAttached = true; // Mark as attached to prevent duplicates
           console.log('Mobile: Dot indicator touch events successfully attached');
       }
 
