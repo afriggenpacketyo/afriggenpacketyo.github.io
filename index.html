@@ -38,8 +38,10 @@
   // --- Critical CSS and Deferred Loading Block ---
     (function() {
     const isMobile = 'ontouchstart' in window;
-    const mobileCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
-    const pcCriticalCSS = `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
+    // LAYOUT GATE: Hide container until JS confirms CSS is fully applied (prevents nudge/glitch)
+    const layoutGateCSS = `body:not(.layout-stable) .container{opacity:0!important;visibility:hidden!important;}body.layout-stable .container{opacity:1;visibility:visible;transition:opacity 0.15s ease-out;}`;
+    const mobileCriticalCSS = layoutGateCSS + `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	width: 90vw;	/* Initial large size */	max-width: 500px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	transition: transform .6s cubic-bezier(0.42, 0, 0.58, 1.0), opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Default/Mobile animation - to the header logo position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Current values seem fine for mobile where final logo is ~60px and header is at top */	transform: translateY(-45vh) scale(0.18);	/* Example if final mobile logo is 60px and splash logo original image height is X:       Desired final scaled height: (let's say the original aspect ratio implies 60px height too)       scale = 60px / (OriginalImageActualHeightAt90vw)       You'll need to fine-tune 0.18 based on your actual logo image aspect ratio       and desired final visual size compared to the actual header-logo.    */}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Mobile bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Mobile draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Mobile draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Mobile pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18);	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Mobile spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Mobile: end at header logo position */		transform: translateY(-45vh) scale(0.18) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
+    const pcCriticalCSS = layoutGateCSS + `/* Splash overlay and logo animation are fully isolated from main logo styles */.splash-overlay {	position: fixed;	top: 0;	left: 0;	right: 0;	bottom: 0;	width: 100vw;	height: 100vh;	background: var(--background-main, #f5f5f7);	z-index: 99999;	display: flex;	align-items: center;	justify-content: center;	pointer-events: all;	transition: transform 0.5s cubic-bezier(0.42, .3, 0.58, 1.0);}/* Ensure splash respects dark mode */html.dark-mode .splash-overlay {	background: var(--background-main, #181c20);}.splash-logo {	/* width: 90vw; Initial large size */	max-width: 1000px;	/* Add a max-width for very large screens */	height: auto;	transform: scale(1);	/* Transition for both mobile and desktop - values will be set by the active class */	transition: transform .6s cubic-bezier(.7, .6, .3, 1) 0.1s, opacity 0.6s ease-out;	opacity: 0;	z-index: 100000;	will-change: transform, opacity;	display: block;	transform-origin: center center;	object-fit: contain;}/* Desktop animation - targets the .logo-container position */.splash-logo.is-visible {	opacity: 1;}.splash-logo.splash-animate {	/* Override the mobile animation for desktop */	/*      Target: final width var(--logo-max-width, 80px)      Target: top edge at var(--logo-top, 80px)      Initial width: 90vw (can also use max-width: 500px as a cap if image gets too big on 90vw)      Initial center: 50vh from top    */	/*      Scale calculation:       Let finalWidth = 80px (from --logo-max-width)      Let initialWidthPx = min(0.90 * window.innerWidth, 500px) if using max-width      Scale = finalWidth / initialWidthPx      This must be calculated in JS and applied as a CSS variable or direct style.    */	/*      TranslateY calculation:      FinalLogoCenterY = var(--logo-top, 80px) + (finalWidth / 2) (assuming 1:1 aspect for simplicity, otherwise finalHeight/2)                      = 80px + 40px = 120px from top of viewport.      InitialLogoCenterY = 50vh from top.      TranslateY_px = FinalLogoCenterY_px - (0.5 * window.innerHeight)      transform: translateY(TranslateY_px) scale(Scale_calculated_above);      This also must be calculated in JS and applied.    */	/* Placeholder CSS - JS will override these with calculated values */	transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));}.splash-overlay.splash-hide {	opacity: 0;	pointer-events: none;}/* Prevent scroll while splash is active */body.splash-active {	overflow: hidden !important;	height: 100vh !important;}/* --- Additional Splash Animations --- *//* 1. Bounce In & Pulse */.splash-logo.splash-bounce {	animation: splash-bounce-in 1.5s cubic-bezier(.33, 1.2, .5, 1) forwards;}/* Desktop bounce animation */@keyframes splash-bounce-in {	0% {		opacity: 0;		transform: scale(0.85) translateY(-50vh);	}	40% {		opacity: 1;		transform: scale(1.03) translateY(-10vh);	}	60% {		transform: scale(0.97) translateY(-3vh);	}	80% {		transform: scale(1.01) translateY(-1vh);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 2. Draw-on (SVG Path Animation) */.splash-logo.splash-draw {	/* For SVG logo: animate stroke */	animation: splash-draw-on 1.2s linear forwards;}/* Desktop draw animation */@keyframes splash-draw-on {	0% {		opacity: 0.2;		filter: grayscale(1);		stroke-dasharray: 1000;		stroke-dashoffset: 1000;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		stroke-dashoffset: 0;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		stroke-dashoffset: 0;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* If not SVG, fallback to fade-in and outline glow */.splash-logo.splash-draw:not(svg) {	box-shadow: 0 0 0px 0px #fff, 0 0 40px 0px #2196f3;	animation: splash-draw-fallback 1.2s linear forwards;}/* Desktop draw fallback animation */@keyframes splash-draw-fallback {	0% {		opacity: 0.2;		filter: grayscale(1);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		transform: scale(1.3) translateY(-30vh);	}	60% {		opacity: 1;		filter: grayscale(0.4);		box-shadow: 0 0 10px 2px #fff, 0 0 30px 8px #2196f3;		transform: scale(1.08) translateY(-10vh);	}	100% {		opacity: 1;		filter: grayscale(0);		box-shadow: 0 0 0px 0px #fff, 0 0 0px 0px #2196f3;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 3. Pixelation/Depixelation */.splash-logo.splash-pixel {	animation: splash-pixelate 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards;	image-rendering: pixelated;	will-change: filter, transform;}/* Remove pixelation after animation ends */.splash-logo.pixel-cleanup {	image-rendering: auto !important;}/* Desktop pixel animation */@keyframes splash-pixelate {	0% {		filter: blur(8px) brightness(1.2);		opacity: 0.1;		transform: scale(3) translateY(-30vh);	}	40% {		filter: blur(4px) brightness(1.08);		opacity: 0.7;		transform: scale(1.7) translateY(-10vh);	}	80% {		filter: blur(1.2px) brightness(1);		opacity: 1;		transform: scale(1.1);	}	100% {		filter: none;		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08));	}}/* 4. Spin & Color Cycle */.splash-logo.splash-spin {	animation: splash-spin-in 1.1s cubic-bezier(.55, 1.5, .3, 1) forwards, splash-spin-color 1.1s linear;}/* Desktop spin animation */@keyframes splash-spin-in {	0% {		opacity: 0;		transform: scale(0.5) rotate(-360deg);		filter: hue-rotate(0deg) brightness(1.5);	}	60% {		opacity: 1;		transform: scale(1.12) rotate(15deg);		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		opacity: 1;		/* Desktop: use calculated values */		transform: translateY(var(--splash-logo-desktop-translate-y, -35vh)) scale(var(--splash-logo-desktop-scale, 0.08)) rotate(0deg);		filter: hue-rotate(0deg) brightness(1);	}}@keyframes splash-spin-color {	0% {		filter: hue-rotate(0deg) brightness(1.5);	}	50% {		filter: hue-rotate(180deg) brightness(1.1);	}	100% {		filter: hue-rotate(0deg) brightness(1);	}}`;
     const styleElement = document.createElement('style');
     styleElement.id = 'critical-splash-styles';
     styleElement.innerHTML = isMobile ? mobileCriticalCSS : pcCriticalCSS;
@@ -93,14 +95,14 @@
       <div class="header-hamburger" tabindex="0" aria-label="Open menu"><span></span><span></span><span></span></div>
       <div class="header-desktop-content">
         <h1>Newsway Summary</h1>
-        <div class="last-updated">Updated: <span id="update-timestamp">12/22/25 06:01 AM EST (New news: 06:10 AM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+        <div class="last-updated">Updated: <span id="update-timestamp">12/22/25 06:32 AM EST (New news: 06:41 AM)<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
       </div>
       <div class="header-logo-container"><img src="assets/images/newsway_logo.jpg" alt="Newsway Logo" class="header-logo"></div>
       <div class="header-toggle-switch"><label class="switch"><input type="checkbox" id="header-slider-toggle"><span class="slider round"></span></label></div>
     </div>
     <div class="header-mobile-content">
       <h1>Newsway Summary</h1>
-      <div class="last-updated">Updated: <span id="update-timestamp-mobile">12/22/25 06:01 AM EST<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
+      <div class="last-updated">Updated: <span id="update-timestamp-mobile">12/22/25 06:32 AM EST<br><a href="goodnews.html">Click here for Optimistically Reported News 😇</a></span></div>
     </div>
   </header>
   <div id="menu-overlay" class="menu-overlay">
@@ -130,38 +132,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China-Japan flights suspended impacting holiday travel</h2>
-          <div class="timestamp">2025-12-22 05:41:15 EST</div>
+          <h2>Gold Price Reaches New Record High Amid Economic Uncertainty</h2>
+          <div class="timestamp">2025-12-22 06:15:55 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Numerous flight cancellations between China and Japan are disrupting holiday travel, affecting 38 airports and 46 routes for the next two weeks. This overlap with China's New Year holiday period means many travelers will be unable to reach their destinations. Major Japanese cities like Osaka and Nagoya are particularly impacted, with flights from smaller Chinese cities also canceled. The cancellations are attributed to ongoing tensions between the two neighboring countries, highlighting the fragility of bilateral relations.</p>
-          <p>35/100</p>
-          <a href="https://www.scmp.com/news/china/diplomacy/article/3337360/holiday-travellers-hit-amid-china-japan-tension-flights-cancelled-46-routes?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Russian general killed in Moscow car bombing</h2>
-          <div class="timestamp">2025-12-22 05:35:57 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A Russian general, Lt Gen Fanil Sarvarov, has been killed in a car bombing in Moscow. The device was reportedly planted under his vehicle, leading to his death from injuries sustained in the explosion. Russian authorities are investigating the possibility of Ukrainian intelligence involvement, though Ukraine has not commented. This incident follows a pattern of targeted attacks on Russian military officials since the full-scale invasion of Ukraine, with several high-profile figures assassinated in the capital in recent years.</p>
-          <p>15/100</p>
-          <a href="https://www.bbc.com/news/articles/c8jwn9wznx1o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Gold price surges to record high above $4,400</h2>
-          <div class="timestamp">2025-12-22 05:33:28 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>The price of gold has reached an all-time high, surpassing $4,400 per ounce, driven by expectations of further interest rate cuts by the US central bank. Geopolitical tensions and trade disputes have also fueled demand for gold as a safe-haven asset. This year has seen a significant increase in gold's value, with analysts attributing the surge to various global uncertainties. Other precious metals like silver and platinum have also experienced substantial price increases, indicating broad investor interest in commodities.</p>
-          <p>75/100</p>
+          <p>The price of gold has surged past $4,400 an ounce, marking a new record high for the precious metal, reflecting robust investor demand. This significant increase is primarily driven by market expectations of further interest rate cuts by the US central bank in the coming year, alongside heightened geopolitical tensions and the impact of Trump's tariffs. These factors collectively boost investor demand for safe-haven assets like gold and other commodities, with silver and platinum also experiencing substantial gains, outperforming gold. Central banks globally are actively expanding their physical gold holdings to counter economic turbulence and diversify portfolios, further contributing to this upward trend in the precious metals market. (not investment advice)</p>
+          <p>70/100</p>
           <a href="https://www.bbc.com/news/articles/cd74ldr2zryo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -169,25 +145,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Jim Beam to halt Kentucky production for 2026 amid market uncertainty</h2>
-          <div class="timestamp">2025-12-22 05:32:37 EST</div>
+          <h2>Major Incident Declared Following Canal Breach in Shropshire</h2>
+          <div class="timestamp">2025-12-22 06:15:14 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Jim Beam, a prominent bourbon maker, will cease production at its main Kentucky distillery for the entirety of 2026 to undertake site enhancements. The company cited uncertainty surrounding trade tariffs and declining alcohol consumption rates as factors influencing their decision. This pause comes amid a record surplus of bourbon in Kentucky warehouses and significant tax burdens on aging spirits. The company is discussing workforce utilization during the downtime with its union.</p>
-          <p>40/100</p>
-          <a href="https://www.theguardian.com/business/2025/dec/22/bourbon-jim-beam-stops-production-kentucky-tariff-uncertainty" target="_blank"><span class="news-org">The Guardian</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Major incident declared after Shropshire canal landslip</h2>
-          <div class="timestamp">2025-12-22 05:23:50 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A major incident has been declared in Shropshire following a significant landslip that has impacted a canal. Dramatic images show a large hole with narrowboats at the bottom and others precariously perched on the edge. The affected section of the canal has completely drained. Emergency services are on the scene, and while there are no reports of casualties, local residents are being supported by authorities. The cause of the landslip is currently under investigation.</p>
-          <p>50/100</p>
+          <p>A significant canal breach, described by police as a sinkhole, has occurred in the Chemistry area of Whitchurch, Shropshire, leading to a major incident declaration. The structural failure has left two narrowboats submerged and two others precariously balanced at the edge of a steep drop, raising immediate flooding concerns for the surrounding area. Emergency services are actively on scene, with no casualties reported, and efforts are underway to secure the compromised waterway and provide support to affected boaters. Local officials confirmed the incident unfolded around 05:00 GMT, with the fire service implementing flood gates to prevent further widespread inundation of residential areas.</p>
+          <p>30/100</p>
           <a href="https://www.bbc.com/news/articles/c2lvq0yk9dko?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -195,11 +158,180 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>New Salford Red Devils rugby league club granted Championship membership</h2>
+          <h2>Hong Kong Prioritizes Gold Trading in New Commodities Strategy</h2>
+          <div class="timestamp">2025-12-22 06:11:01 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Hong Kong is strategically positioning itself as a global commodities trading hub, with a particular focus on establishing an international gold trading center to drive new growth. The government’s newly formed Commodity Strategy Committee, led by Financial Secretary Paul Chan Mo-po, held its inaugural meeting to advance this ambitious initiative. Plans include creating a gold central clearing system and an industry association next year, alongside strengthening cooperation with the Shanghai Gold Exchange to enhance global gold pricing influence. This move aims to generate new economic growth beyond traditional finance, leveraging Hong Kong's unique position as a free flow of capital and information. (not investment advice)</p>
+          <p>75/100</p>
+          <a href="https://www.scmp.com/business/banking-finance/article/3337366/gold-takes-centre-stage-hong-kong-launches-committee-build-commodities-ecosystem?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>China Imposes Tariffs on EU Dairy Products Citing Domestic Industry Harm</h2>
+          <div class="timestamp">2025-12-22 06:09:21 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>China has announced tariffs of up to 42.7% on various dairy products imported from the European Union, with these measures set to take effect on April 23. This decision follows an anti-subsidy investigation initiated in August 2024, which concluded that EU subsidies had caused “substantial damage” to China's domestic dairy industries. The tariffs, ranging from 21.9% to 42.7% based on cooperation with the investigation, cover items like fresh and processed cheese, milk, and cream. This action is part of escalating trade tensions, which previously saw China adjust pork tariffs and the EU challenge China's brandy tariffs at the World Trade Organisation. (not investment advice)</p>
+          <p>40/100</p>
+          <a href="https://www.cnbc.com/2025/12/22/china-slaps-tariffs-of-up-to-42point7percent-on-eu-dairy-products.html" target="_blank"><span class="news-org">CNBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Japan Moves to Restart World's Largest Nuclear Plant Post-Fukushima</h2>
+          <div class="timestamp">2025-12-22 06:08:00 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Japan is progressing towards restarting the Kashiwazaki-Kariwa nuclear power plant, the world's largest, for the first time since the 2011 Fukushima disaster. The Niigata prefectural assembly approved a bill allowing Tokyo Electric Power Company (TEPCO) to restart one of the plant's seven reactors by January 2026, with another planned around 2030. This strategic move aims to bolster energy security and reduce reliance on imported fossil fuels, strongly supported by Prime Minister Sanae Takaichi. However, significant local opposition and public unease persist regarding TEPCO's safety record and the potential consequences of another major incident, despite governmental assurances.</p>
+          <p>55/100</p>
+          <a href="https://www.dw.com/en/japan-to-restart-world-s-largest-nuclear-power-plant/a-75265382?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>India and New Zealand Finalize Comprehensive Free Trade and Investment Agreement</h2>
+          <div class="timestamp">2025-12-22 06:08:00 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>India and New Zealand have finalized a significant free trade agreement, aiming to eliminate or reduce tariffs on approximately 95% of New Zealand's exports to India and grant India tariff-free access to New Zealand's markets. New Zealand has also committed to investing a further $20 billion in India over the next 15 years, with the deal expected to be signed in the first half of 2026. While the pact benefits various sectors like wood, coal, and pharmaceuticals, India will maintain import barriers on many New Zealand dairy and agricultural products to protect domestic producers. This “historic milestone” enhances trade relations, despite potential challenges in New Zealand's parliamentary approval process. (not investment advice)</p>
+          <p>80/100</p>
+          <a href="https://www.dw.com/en/new-zealand-india-finalize-free-trade-deal-investment-plan/a-75265364?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Defense Attorney Considers Insanity Plea in Nick Reiner Murder Case</h2>
+          <div class="timestamp">2025-12-22 06:00:59 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Nick Reiner's defense attorney, Alan Jackson, is reportedly weighing an insanity plea as the murder case, involving the alleged killing of his parents, enters its discovery phase. Legal expert Matt Murphy suggests Jackson needs to thoroughly review evidence to determine whether to plead not guilty or guilty by reason of insanity, noting Reiner's documented history of addiction and mental health struggles. The defense will likely seek to stabilize Reiner and gather mitigating factors, such as substance abuse and family dynamics, for potential death penalty considerations. California's strict McNaughton Rule on legal sanity poses a significant challenge for the defense, emphasizing understanding of acts despite mental state.</p>
+          <p>15/100</p>
+          <a href="https://www.foxnews.com/entertainment/nick-reiners-defense-attorney-weighs-insanity-plea-murder-case-enters-discovery-phase-legal-expert-says" target="_blank"><span class="news-org">Fox News</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Academic Threatens Legal Action Against University of Bristol Over Free Speech Disruption</h2>
+          <div class="timestamp">2025-12-22 06:00:41 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Professor Alice Sullivan, a leading academic, is threatening legal action against the University of Bristol and has contacted the Office for Students (OfS), alleging the university failed to protect her freedom of speech during a disrupted talk. Her presentation, concerning sex and gender data collection, faced a trans rights protest, which she described as a "zombie apocalypse" with loudhailers and fire alarms. Sullivan claims the university restricted attendance, limited advertising, chose a vulnerable venue, and did not adequately prevent disruption, influenced by complaints from the LGBTQ+ staff network. The university refutes these claims, asserting its strong commitment to free speech while condemning the "unacceptable disruption" by protesters.</p>
+          <p>35/100</p>
+          <a href="https://www.bbc.com/news/articles/cwyx3y84ln9o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>US Farmers Deem Trump's $12 Billion Aid Insufficient Amid Tariff Damage</h2>
+          <div class="timestamp">2025-12-22 06:00:26 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>US farmers report that President Trump's $12 billion aid package is inadequate to counteract the severe financial strain caused by his trade tariffs, with thousands of farms still facing bankruptcy. Grain farmers, particularly soybean producers, have been hit hardest by disruptions from the trade war with China, a major buyer of US soybeans. While the aid provides short-term relief, it falls far short of the $34.6 billion in losses crop farmers have incurred this year, according to the American Farm Bureau. Industry leaders and economists express pessimism for 2026, noting that farmers are planting less profitable crops due to rising costs and lower prices, despite the administration's promises to boost domestic production. (not investment advice)</p>
+          <p>25/100</p>
+          <a href="https://www.theguardian.com/business/2025/dec/22/trump-aid-package-us-farmers" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Trump Administration Accused of 'Climate Lysenkoism' with Closure of Atmospheric Research Center</h2>
+          <div class="timestamp">2025-12-22 06:00:25 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>The Trump administration is facing strong criticism for its decision to dismantle the National Center for Atmospheric Research (NCAR) in Boulder, Colorado, after over 50 years of climate science leadership. Critics, including Michael Mann and Bob Ward, label this move as "climate Lysenkoism," comparing it to Soviet dictator Joseph Stalin's suppression of scientific dissent. They argue it's part of a broader purge of climate researchers aimed at promoting fossil fuel interests, with OMB director Russell Vought, a key architect, describing NCAR as a source of "climate alarmism." This action, despite congressional resistance to budget cuts, is seen as hindering understanding of climate change and potentially leading to severe long-term global consequences.</p>
+          <p>10/100</p>
+          <a href="https://www.theguardian.com/commentisfree/2025/dec/22/trump-stalin-national-center-atmospheric-research" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Persistent Earthquake Swarms in California Raise Concerns About Major Quake</h2>
+          <div class="timestamp">2025-12-22 06:00:00 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>California's Bay Area has experienced over 80 earthquakes of magnitude 2 or greater since November 9, centered in San Ramon, raising public anxiety about the potential for a larger seismic event. While seismologists acknowledge that some major quakes are preceded by smaller tremors, they caution that these swarms alone don't reliably predict a large earthquake's timing or exact location. Experts emphasize the constant 60-72% chance of a magnitude 6.7 or greater quake in California by 2043, urging continuous preparedness regardless of current activity. The recent swarms are consistent with historical patterns on the Calaveras fault, which has not ruptured in modern history.</p>
+          <p>45/100</p>
+          <a href="https://www.latimes.com/california/story/2025-12-22/earthquake-swarms-rattle-california-what-it-means-for-big-one" target="_blank"><span class="news-org">LA Times</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Texas Doctor Uses Vinyl Records to Provide Palliative Care and Patient Relief</h2>
+          <div class="timestamp">2025-12-22 06:00:00 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Dr. Tyler Jorgensen, an emergency medicine physician in Austin, Texas, initiated the ATX-VINyL program to bring music therapy to hospital patients dealing with serious conditions. Volunteers wheel record players and curated vinyl collections to patients' bedsides, offering a unique and personal touch compared to streaming digital music. This innovative approach aims to create positive shared experiences and mentally transport patients from the hospital environment, fostering vulnerability and connection with their past. The program has seen remarkable success in lifting spirits, with patients requesting genres from country to classic rock, demonstrating music's powerful role in healing and palliative care. This article highlights the profound impact of personalized care.</p>
+          <p>90/100</p>
+          <a href="https://www.npr.org/2025/12/22/nx-s1-5647793/music-therapy-vinyl-healing-palliative-care" target="_blank"><span class="news-org">NPR</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>TV Presenter Ruth Dodsworth Shares Ordeal of Domestic Abuse During Christmas</h2>
+          <div class="timestamp">2025-12-22 05:55:48 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>TV weather presenter Ruth Dodsworth has bravely shared her personal experience of domestic abuse, revealing she "dreaded" Christmas Day with her ex-husband, Jonathan Wignall. Wignall was jailed in 2021 for a nine-year campaign of harassment and stalking, with his abusive behavior often exacerbated by alcohol during the festive season. Dodsworth described Christmas as amplifying problems for those in abusive relationships, finding brief relief only when her ex-husband "passed out drunk." She emphasized the immense "mum guilt" but urged others to seek help, crediting leaving the relationship with saving her life and encouraging others to do the same for their safety.</p>
+          <p>20/100</p>
+          <a href="https://www.bbc.com/news/articles/c62l13pp36qo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>China-Japan Tensions Lead to Widespread Flight Cancellations Affecting Holiday Travel</h2>
+          <div class="timestamp">2025-12-22 05:41:15 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Escalating tensions between China and Japan have resulted in the cancellation of flights on 46 air routes for the next two weeks, significantly impacting holiday travelers. The widespread cancellations, overlapping with China's New Year public holiday, affect 38 airports in both countries, with Osaka and Nagoya being heavily impacted Japanese destinations. Many affected routes link China’s second- and third-tier cities, such as Shenyang and Wuhan, to major Japanese tourism hubs, along with direct flights between Shanghai and smaller Japanese cities. This disruption underscores the broader diplomatic strain and its tangible consequences on cross-border movement, tourism, and economic activity.</p>
+          <p>40/100</p>
+          <a href="https://www.scmp.com/news/china/diplomacy/article/3337360/holiday-travellers-hit-amid-china-japan-tension-flights-cancelled-46-routes?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Jim Beam Halts Production at Kentucky Distillery for 2026 Amid Industry Challenges</h2>
+          <div class="timestamp">2025-12-22 05:32:37 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>Jim Beam, the renowned bourbon whiskey maker, will cease production at its primary Kentucky distillery for the entirety of 2026 to facilitate "site enhancements." This strategic decision comes as the US whiskey industry grapples with significant uncertainty from Donald Trump’s trade tariffs and a general decline in alcohol consumption. The Kentucky Distillers’ Association reported a record 16 million barrels of bourbon in warehouses, alongside a "crushing" $75 million in inventory taxes. While production pauses, other Kentucky operations, including bottling and warehousing, will remain open, with the company actively engaging in talks with its workforce union regarding future roles. (not investment advice)</p>
+          <p>35/100</p>
+          <a href="https://www.theguardian.com/business/2025/dec/22/bourbon-jim-beam-stops-production-kentucky-tariff-uncertainty" target="_blank"><span class="news-org">The Guardian</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Salford Rugby League Club Granted Championship Membership After Old Club's Dissolution</h2>
           <div class="timestamp">2025-12-22 05:21:42 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>A new Salford rugby league team has been granted membership in the Championship for 2026, following the winding up of the previous club. A consortium led by former player Mason Caton-Brown was selected from multiple proposals, demonstrating a commitment to stability and financial responsibility. The new club faces a tight timeline to prepare for its season opener in January. This development offers a fresh start for rugby league in Salford after the historic club's demise.</p>
+          <p>A new Salford rugby league team has been granted Championship membership for the 2026 season by the Rugby Football League (RFL), just three weeks after the old club was wound up. A consortium led by former Red Devils player Mason Caton-Brown successfully presented one of three "high-quality" proposals, demonstrating a clear commitment to sustainable governance and financial stability. The RFL expressed hope that other unsuccessful parties would collaborate with Caton-Brown's group. The new club now faces a race against time to prepare for its scheduled season-opener on January 16, following a turbulent year for the former Salford Red Devils, which had lost its Super League status.</p>
           <p>70/100</p>
           <a href="https://www.bbc.com/sport/rugby-league/articles/clyd8n213pmo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -208,11 +340,11 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Australian cricket legend urges England to change mentality for future Ashes tours</h2>
+          <h2>Glenn McGrath Urges England to Adopt New Mentality for Ashes Success in Australia</h2>
           <div class="timestamp">2025-12-22 05:18:56 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Former Australian cricketer Glenn McGrath believes England's long winless streak in the Ashes down under is due to mentality rather than player quality. He suggests England players view tours of Australia as overly difficult, unlike Australians who see tours of England as the pinnacle. McGrath emphasizes the importance of a never-give-up mindset and embracing the challenge of playing in Australia. He hopes England can overcome these mental blocks before the next Ashes series in 2029-30.</p>
+          <p>Australian cricket legend Glenn McGrath contends that England's prolonged Ashes struggles in Australia stem from a negative mindset rather than a lack of player ability. With England 0-3 down in the current series and 18 Tests without a win Down Under, McGrath criticizes their focus on the difficulties of touring Australia, from hostile crowds to local conditions. He argues that Australian teams relish English tours despite challenges, embodying a never-give-up attitude that enables them to win from any position. McGrath believes England must embrace the challenge and cultivate hope to break their winless streak and avoid a potential 5-0 series whitewash in the remaining two Tests.</p>
           <p>60/100</p>
           <a href="https://www.bbc.com/sport/cricket/articles/cdj80d04zmpo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
@@ -221,12 +353,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>West Ham United appoints Rita Guarino as new Women's Super League manager</h2>
+          <h2>West Ham Appoints Rita Guarino as New Women's Super League Manager</h2>
           <div class="timestamp">2025-12-22 05:12:33 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Women's Super League club West Ham has appointed Rita Guarino as their new manager, replacing Rehanne Skinner. Guarino, who previously managed Inter Milan and led Juventus to multiple Serie A titles, has signed an 18-month contract. The club made the move after Skinner's dismissal due to a poor start to the season. Guarino expressed excitement about the project and the opportunity to develop the team's talent.</p>
-          <p>65/100</p>
+          <p>West Ham's Women's Super League team has announced the appointment of Rita Guarino as their new manager, signing an 18-month contract. Guarino, formerly in charge of Inter Milan and a four-time Serie A winner with Juventus, takes on her first management role outside Italy. Her appointment follows the sacking of previous manager Rehanne Skinner after a challenging season with only one WSL win from eleven matches. Guarino expressed excitement about the project, highlighting the team's existing talent and her goal to foster both individual and collective development within the squad, aiming to improve the team's overall performance and standing in the league.</p>
+          <p>75/100</p>
           <a href="https://www.bbc.com/sport/football/articles/cr5zjpmmd4lo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -234,12 +366,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>UK government plans ban on hen cages and pig farrowing crates</h2>
+          <h2>England to Ban Hen Cages and Pig Farrowing Crates Under New Animal Welfare Reforms</h2>
           <div class="timestamp">2025-12-22 05:11:24 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>The UK government has unveiled ambitious plans to improve animal welfare standards, including a ban on hen cages and pig farrowing crates. These proposals aim to end 'confinement systems' in farming and also address concerns about fast-growing chicken breeds. While welcomed by animal welfare groups, the National Farmers' Union has urged that imported food must meet similar standards to prevent unfair competition for British farmers. The government is also consulting on banning trail hunting and puppy farming.</p>
-          <p>70/100</p>
+          <p>The UK government has pledged to ban hen cages and pig farrowing crates in England as part of its "most ambitious animal welfare strategy in a generation." These reforms aim to significantly improve farming standards, with additional considerations for outlawing controversial "Frankenchickens" and banning snare traps. While animal welfare groups like Compassion in World Farming and the RSPCA commend the move, the National Farmers' Union urges the government to ensure imported food meets the same high standards to prevent unfair competition. The Countryside Alliance, however, criticizes the focus on trail hunting and snares as an "attack on rural Britain" and its cultural practices.</p>
+          <p>65/100</p>
           <a href="https://www.bbc.com/news/articles/c93wxd27dvko?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -247,25 +379,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Former inmate praises President Trump for clemency and calls for supervised release reform</h2>
-          <div class="timestamp">2025-12-22 05:00:53 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A former inmate expresses profound gratitude to President Trump for granting him clemency, which allowed him to be released from a life sentence for a nonviolent drug offense. He highlights the struggles faced by individuals on supervised release, detailing how strict rules hindered his ability to reconnect with family and rebuild his life. The article advocates for the Safer Supervision Act, aiming to reform the system to better support rehabilitation and second chances. The author emphasizes the importance of redemption and the positive impact of Trump's compassionate decision.</p>
-          <p>80/100</p>
-          <a href="https://www.foxnews.com/opinion/from-prison-pardon-how-president-trump-gave-me-back-my-life" target="_blank"><span class="news-org">Fox News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Newly released Epstein files detail Ghislaine Maxwell's grooming tactics</h2>
+          <h2>Newly Released Files Detail Ghislaine Maxwell's Grooming Tactics in Epstein Case</h2>
           <div class="timestamp">2025-12-22 05:00:23 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Newly released grand jury documents from the Jeffrey Epstein case offer insights into Ghislaine Maxwell's methods of grooming vulnerable teenage girls. The documents describe how Maxwell acted as a 'cool, older sister,' normalizing Epstein's abusive behavior and creating a sense of family and gratitude among victims. Testimonies detail Maxwell's involvement in sexual encounters and her casual demeanor during these events. These revelations shed further light on the intricate psychological manipulation employed to ensnare victims.</p>
-          <p>20/100</p>
+          <p>Newly released grand jury documents from Ghislaine Maxwell's sex-trafficking case reveal intricate details of her psychological tactics to lure vulnerable teen girls into Jeffrey Epstein's abusive orbit. The files show Maxwell doted on victims, normalized "grownup" sexual activity, and fostered a "cool, older sister" persona, making victims feel loved and grateful. Testimony describes Maxwell directing girls during massages for Epstein and teasing them, creating an environment where victims felt pressured to comply. The revelations underscore her deep involvement in Epstein's network and her manipulative grooming process, as she continues to seek a reprieve from her sex-trafficking conviction and 20-year prison sentence.</p>
+          <p>5/100</p>
           <a href="https://www.theguardian.com/us-news/2025/dec/22/ghislaine-maxwell-jeffrey-epstein-files" target="_blank"><span class="news-org">The Guardian</span></a>
         </div>
       </div>
@@ -273,12 +392,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>White Christmas forecast: Northern US most likely to see snow on December 25</h2>
+          <h2>Forecast Details Likelihood of a White Christmas Across the US</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>The likelihood of a white Christmas this year is highest in the northern United States, particularly in parts of Wisconsin, Minnesota, North Dakota, and the Great Lakes region. Meteorologists define a white Christmas as having at least one inch of snow on the ground on Christmas morning. While southern and western areas have a low chance of snow, a significant high-pressure ridge is expected to bring above-normal temperatures across much of the country. Historical data indicates that northern states and parts of the East Coast have the strongest probability of experiencing snow on Christmas Day.</p>
-          <p>80/100</p>
+          <p>The likelihood of a "white Christmas" across the US varies significantly by region, with the best chances in the northern halves of Wisconsin, Minnesota, North Dakota, and northern New England, according to meteorologists. A white Christmas is officially defined by at least one inch of snow on the ground on the morning of December 25. Despite a substantial ridge of high pressure expected to bring well-above-normal temperatures to many areas, existing snowpack in the upper Midwest is likely to persist, making a melt-off difficult. Historically, northern states near Canada and parts of the East have the highest probabilities, while southern and western regions have much lower chances.</p>
+          <p>70/100</p>
           <a href="https://www.cbsnews.com/news/white-christmas-forecast-2025-snow-us-map-noaa/" target="_blank"><span class="news-org">CBS News</span></a>
         </div>
       </div>
@@ -286,38 +405,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>President Trump's policies reshape US capitalism towards state intervention</h2>
+          <h2>Immigration Court 'No-Shows' Skyrocket Amid Fears of ICE Arrests</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>President Trump's policies are significantly reshaping US capitalism, blurring the lines between business and government, leading commentators to use terms like 'state capitalism' and 'crony capitalism.' Evidence shows direct presidential influence on private companies, including demands for ownership stakes and revenue sharing. This approach, while defended by the administration as targeted intervention, is criticized for potentially damaging market competition and long-term economic competitiveness. The trend appears to favor tech giants with close ties to the administration, while other businesses express frustration over uncertainty and policy shifts.</p>
-          <p>45/100</p>
-          <a href="https://www.npr.org/2025/12/22/nx-s1-5639916/trump-crony-capitalism-free-market" target="_blank"><span class="news-org">NPR</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>President Trump expresses support for importing Japanese kei cars to the US</h2>
-          <div class="timestamp">2025-12-22 05:00:00 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>President Trump has voiced support for allowing the production and import of Japanese kei cars into the United States, noting their small size and 'cute' appearance. While not illegal to build small cars, US safety standards prevent the import of foreign-market models unless they are at least 25 years old. Automakers have historically been hesitant to produce small cars for the US market due to consumer preference for larger vehicles and profitability concerns. Enthusiasts appreciate Trump's endorsement but acknowledge the significant hurdles to widespread adoption.</p>
-          <p>65/100</p>
-          <a href="https://www.npr.org/2025/12/22/nx-s1-5644937/kei-cars-tiny-vehicles" target="_blank"><span class="news-org">NPR</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>NPR analysis reveals surge in immigration court 'no-shows' leading to deportations</h2>
-          <div class="timestamp">2025-12-22 05:00:00 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>An NPR analysis of immigration court data shows a significant increase in 'no-show' appearances, leading to a sharp rise in in absentia removal orders. This trend is attributed to fear among immigrants of being arrested by ICE directly from courtrooms to meet quotas. Attorneys report that word of these arrests has spread, making individuals hesitant to attend hearings. Logistical barriers, such as missed notices and incorrect addresses, also contribute to the problem, complicating due process for many. The situation underscores the challenges within the immigration court system.</p>
-          <p>30/100</p>
+          <p>An NPR analysis reveals a skyrocketing number of "no-shows" in immigration courts nationwide, with over 50,000 immigrants ordered removed "in absentia" in fiscal year 2025. This dramatic surge is primarily attributed to widespread fear among immigrants of being arrested by ICE officers directly from federal or immigration courtrooms, a practice intensified by Trump administration quotas. Immigration attorneys note that while logistical barriers like lost notices also contribute, the fear of detention is a major deterrent for court appearances. This trend, particularly evident in major cities, results in immediate deportation orders for individuals who opt not to attend their hearings, often without legal representation.</p>
+          <p>15/100</p>
           <a href="https://www.npr.org/2025/12/22/nx-s1-5583971/trump-ice-immigration-arrests-deportation-no-shows" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -325,12 +418,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Navigating challenges in accessing HIV prevention drugs like PrEP</h2>
+          <h2>Patients Encounter Significant Barriers to Accessing HIV Prevention Drugs</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Accessing HIV prevention drugs like PrEP can present significant hurdles for individuals, including a lack of provider knowledge, complex billing issues, and insurance navigation difficulties. Many patients find themselves educating their healthcare providers and spending considerable time contesting incorrect bills, as most insurance plans are mandated to cover PrEP and related services. The article offers practical tips for patients, such as thorough research, ensuring lab work is in-network, exploring cost-saving options, and considering telehealth for more accessible and affirming care. It highlights disparities in access and the importance of knowledgeable healthcare professionals.</p>
-          <p>60/100</p>
+          <p>Many patients seeking HIV prevention drugs, known as PrEP, face substantial hurdles including a lack of provider awareness, persistent insurance billing errors, and high out-of-pocket costs. Matthew Hurley's experience in California highlights these issues, encountering a doctor unfamiliar with PrEP and receiving numerous incorrect, expensive bills for covered preventive services. Despite federal mandates for insurance coverage, patients often spend hours appealing denials, leading to frustration and inconsistent care. Experts recommend patients educate themselves, ensure in-network lab work, and explore assistance programs or telehealth options to navigate these systemic barriers and access life-saving medication more effectively. This article provides crucial information for individuals seeking PrEP.</p>
+          <p>40/100</p>
           <a href="https://www.npr.org/2025/12/22/nx-s1-5645054/hiv-prevention-drug-prep-billing" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -338,12 +431,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Trump administration's focus on 'DOGE' and government efficiency continues into 2025</h2>
+          <h2>Trump Administration Continues 'DOGE' Principles of Bureaucracy Reduction and Spending Cuts</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>The Trump administration's agenda, heavily influenced by the 'DOGE' initiative, continues to prioritize government efficiency and reduced spending into 2025. Despite initial ambitious promises not fully materializing, the administration is pursuing incremental changes to federal agencies. Efforts include shrinking the federal workforce and focusing on cutting 'Democrat priorities.' The administration's reliance on data sharing for immigration enforcement and the creation of new initiatives like the 'National Design Studio' highlight ongoing restructuring efforts, though federal spending and the national debt remain concerns.</p>
-          <p>50/100</p>
+          <p>Despite Elon Musk's departure from his advisory role, the "DOGE" mindset, focused on slashing wasteful spending and streamlining bureaucracy, remains central to the Trump administration's agenda as 2025 concludes. While initial promises of efficiency and deficit reduction were not fully realized, the administration has achieved significant federal workforce reductions, with 317,000 employees out of government. Efforts include targeting "Democrat priorities" for funding cuts and consolidating sensitive personal data across agencies, which has faced legal challenges and wrongly flagged US citizens. However, the national debt continues to grow, indicating that financial goals have not been fully met despite these operational shifts. (not investment advice)</p>
+          <p>30/100</p>
           <a href="https://www.npr.org/2025/12/22/nx-s1-5647415/2025-trump-doge-musk" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -351,25 +444,38 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>NPR's impactful journalism in 2025 highlighted economic issues and policy effects</h2>
+          <h2>President Trump's Policies Redefine US Capitalism in 2025</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>NPR's reporting in 2025 significantly impacted public understanding and policy by focusing on economic issues like tariffs and the cost of living, connecting them to everyday Americans. Investigations into government practices led to reinstated scientists, congressional inquiries, and legislative changes. The news organization also provided in-depth coverage of global conflicts and human experiences, fostering donations and encouraging reconsideration of assumptions. The report emphasizes the practical and validating nature of their journalism, showcasing its ability to drive action and illuminate hidden systems.</p>
-          <p>75/100</p>
-          <a href="https://www.npr.org/2025/12/22/g-s1-99098/impact-journalism" target="_blank"><span class="news-org">NPR</span></a>
+          <p>President Trump's policies in 2025 have significantly reshaped US free-market capitalism, blurring the lines between business and government, a trend commentators describe as "state capitalism" or "crony capitalism." Evidence includes Trump actively favoring certain companies, such as Intel and Nvidia, through direct influence, equity stakes, or revenue-sharing deals, while threatening others. Business law experts warn this "schmoozing" approach could harm innovation and competitiveness, despite some tech leaders benefiting from direct access to the White House. Many CEOs express frustration with the uncertainty and political interference, highlighting a shift away from traditional rules-based capitalism, with potential long-term risks for the broader economy. (not investment advice)</p>
+          <p>20/100</p>
+          <a href="https://www.npr.org/2025/12/22/nx-s1-5639916/trump-crony-capitalism-free-market" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Ohio's mental health system struggles, turning state hospitals into de facto prisons</h2>
+          <h2>Trump's Endorsement Sparks Debate on Kei Cars' Potential in the US Market</h2>
           <div class="timestamp">2025-12-22 05:00:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Systemic failures in Ohio's mental health system are leading to state psychiatric hospitals becoming overcrowded facilities for individuals with criminal charges, rather than treatment centers. A significant increase in patients with criminal cases has resulted in longer wait times for beds and a decline in overall patient capacity. This situation exacerbates the struggles of individuals with severe mental illness, often leading them into the criminal justice system due to lack of adequate care. Families express fear for their loved ones' safety and well-being within this strained system.</p>
-          <p>25/100</p>
+          <p>President Trump's recent endorsement of Japan's tiny, "cute" kei cars has reignited discussions about their potential in the US market, despite current import restrictions and American preferences for larger vehicles. Kei cars, popular in Japan for their affordability and practicality, cannot be imported new due to differing US safety standards, only entering the US as 25-year-old antiques. While enthusiasts praise their fun handling, low cost, and utility, industry experts like Jessica Caldwell of Edmunds remain skeptical, noting the shrinking subcompact car market in the US. The article highlights a cultural divide in automotive preferences, questioning if Americans will ever embrace small, slow vehicles for widespread adoption.</p>
+          <p>60/100</p>
+          <a href="https://www.npr.org/2025/12/22/nx-s1-5644937/kei-cars-tiny-vehicles" target="_blank"><span class="news-org">NPR</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <h2>Systemic Failures Transform State Mental Hospitals into De Facto Prisons</h2>
+          <div class="timestamp">2025-12-22 05:00:00 EST</div>
+        </div>
+        <div class="flip-card-back">
+          <p>State psychiatric hospitals nationwide are increasingly functioning as de facto prisons due to systemic failures, with a dramatic rise in criminally charged patients and a decline in overall capacity. In Ohio, nearly 90% of state hospital patients now have criminal charges, up from 50% in 2002, leading to long wait times and inadequate treatment for many. This crisis is exacerbated by local hospital psychiatric unit closures and cuts to Medicaid funding under the Trump administration's One Big Beautiful Bill Act. Patients like Quincy Jackson III cycle through jails and emergency rooms, highlighting a system that criminalizes mental illness rather than providing timely, therapeutic care.</p>
+          <p>10/100</p>
           <a href="https://www.npr.org/sections/shots-health-news/2025/12/22/nx-s1-5644745/serious-mental-illness-psychosis-psychiatric-hospital-schizophrenia-crime-prison-ohio" target="_blank"><span class="news-org">NPR</span></a>
         </div>
       </div>
@@ -377,25 +483,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China imposes tariffs up to 42.7% on EU dairy products</h2>
-          <div class="timestamp">2025-12-22 04:57:30 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>China has announced new tariffs on dairy products imported from the European Union, with rates ranging from 21.9% to 42.7%. This action follows an anti-subsidy investigation that concluded EU subsidies caused 'substantial damage' to China's domestic dairy industry. The tariffs, effective April 23, apply to products including cheese, milk, and cream. This move escalates trade tensions, following recent tariff adjustments on EU pork and the EU's challenge to China's tariffs on brandy at the WTO.</p>
-          <p>30/100</p>
-          <a href="https://www.cnbc.com/2025/12/22/china-slaps-tariffs-of-up-to-42point7percent-on-eu-dairy-products.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>US Coast Guard pursuing sanctioned vessel evading Venezuela sanctions</h2>
+          <h2>US Coast Guard Actively Pursuing Sanctioned 'Dark Fleet' Vessel Off Venezuela</h2>
           <div class="timestamp">2025-12-22 04:54:12 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>The U.S. Coast Guard is actively pursuing a sanctioned vessel from Venezuela that is allegedly involved in sanctions evasion. The vessel is reportedly flying a false flag and is under a judicial seizure order. This action follows recent seizures of oil tankers linked to Venezuela's illicit oil trade. U.S. officials have vowed to intercept and stop the movement of sanctioned oil used to fund illicit activities in the region. President Trump had previously threatened a total blockade of sanctioned oil tankers traveling to and from Venezuela.</p>
-          <p>40/100</p>
+          <p>The US Coast Guard is actively pursuing a "sanctioned dark fleet vessel" off the coast of Venezuela, flying a false flag and operating under a judicial seizure order, according to a US official. This action follows the recent seizure of another sanctioned oil tanker and a non-sanctioned tanker, underscoring the US commitment to disrupting illicit oil movements funding "narco terrorism" in the region. President Trump previously threatened a "total and complete blockade" of sanctioned oil tankers to and from Venezuela, a move Venezuelan President Nicholas Maduro condemned as an attempt at regime change. The US has significantly increased its military presence in the Caribbean to enforce these sanctions.</p>
+          <p>45/100</p>
           <a href="https://abcnews.go.com/US/us-coast-guard-actively-pursuing-sanctioned-vessel-official/story?id=128601028" target="_blank"><span class="news-org">ABC News</span></a>
         </div>
       </div>
@@ -403,25 +496,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Comedian Mike Albo champions the benefits of last-minute holiday shopping</h2>
-          <div class="timestamp">2025-12-22 04:46:19 EST</div>
+          <h2>David Walliams Removed from Waterstones Children's Book Festival Amid Allegations</h2>
+          <div class="timestamp">2025-12-22 04:43:35 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Author and comedian Mike Albo discusses the advantages of being a last-minute holiday shopper, suggesting it can be a more enjoyable and less stressful approach to gift-buying. The interview explores the mindset and strategies behind procrastinating on holiday purchases. Albo's perspective offers a humorous and unconventional take on a common holiday tradition, potentially offering a new way to view the festive season's demands.</p>
-          <p>70/100</p>
-          <a href="https://www.npr.org/2025/12/22/nx-s1-5648420/why-comedian-mike-albo-says-its-better-to-be-a-last-minute-holiday-shopper" target="_blank"><span class="news-org">NPR</span></a>
+          <p>Author and comedian David Walliams has been removed from the Waterstones Children's Book Festival next year, following allegations of inappropriate behavior towards young women. This decision comes shortly after his publisher, HarperCollins, severed ties with him. Walliams, one of the UK's most successful children's authors with over 60 million books sold worldwide, strongly denies the allegations and is actively seeking legal advice to address the claims. The BBC also confirmed no future projects directly involving Walliams, although his previously scheduled festive TV appearances will proceed as planned, reflecting a significant shift in his professional standing.</p>
+          <p>25/100</p>
+          <a href="https://www.bbc.com/news/articles/cr7lke07gx2o?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Bondi shooters meticulously planned attack, throwing explosives at crowd</h2>
+          <h2>Police Allege Bondi Attackers Meticulously Planned Hanukkah Massacre for Months</h2>
           <div class="timestamp">2025-12-22 04:41:19 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>New court documents reveal that the two gunmen responsible for the Bondi Beach attack meticulously planned their assault for months, even conducting firearms training weeks prior. The pair allegedly threw explosives, including a 'tennis ball bomb,' at the crowd during the attack, though they failed to detonate. Police allege the gunmen conducted reconnaissance at the scene two days before the shooting. The documents detail evidence found on the attackers' phones, including statements of motivation and footage of firearms training.</p>
-          <p>10/100</p>
+          <p>New court documents reveal that the gunmen in the Bondi Beach attack, Naveed Akram and his father Sajid Akram, meticulously planned the Hanukkah celebration massacre for months, conducting reconnaissance and firearms training. Police allege the pair, motivated by "religiously motivated violent extremism," threw unexploded pipe bombs and a "tennis ball bomb" at the crowd before opening fire, killing 15 people. Videos on Naveed Akram's phone show them with an Islamic State flag and reciting Quranic passages. Naveed, now charged with 59 offenses including murder and terror, was transferred to prison after being injured in the attack where his father was killed by police.</p>
+          <p>5/100</p>
           <a href="https://www.bbc.com/news/articles/ce86l95gx5po?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -429,25 +522,25 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China's rare earth magnet exports to EU surge after export license approvals</h2>
+          <h2>China's Rare Earth Magnet Exports to EU Surge Following License Approvals</h2>
           <div class="timestamp">2025-12-22 04:30:21 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>China's exports of rare earth magnets to the European Union saw a significant increase of nearly 60% in November, following the issuance of general export licenses. This surge in shipments to Europe contrasts with a slight decrease in exports to the United States. The overall global export volume of permanent magnets also rose substantially. The data indicates a shift in trade patterns for critical minerals, potentially influenced by regulatory changes and geopolitical considerations.</p>
+          <p>China's exports of rare earth permanent magnets to the European Union saw a significant increase last month, jumping nearly 60% year-on-year to 2,568.8 tonnes. This surge, valued at $106.85 million, is attributed to the issuance of the first batch of general rare earth export licenses, which facilitate repeated shipments over a designated period. In contrast, exports of these magnets to the United States decreased by 8.84% in volume, indicating a notable shift in trade dynamics. This data highlights a strengthening of China's economic ties with the EU in critical mineral supply chains, while US exports show a decline. (not investment advice)</p>
           <p>65/100</p>
-          <a href="https://www.scmp.com/economy/economic-indicators/article/3337346/chinas-rare-earth-magnet-exports-eu-jump-nearly-60-approvals-take-effect" target="_blank"><span class="news-org">South China Morning Post</span></a>
+          <a href="https://www.scmp.com/economy/economic-indicators/article/3337346/chinas-rare-earth-magnet-exports-eu-jump-nearly-60-approvals-take-effect?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
       </div>
     </div>
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Women process alcohol faster and experience stronger brain effects than men</h2>
+          <h2>Scientific Research Explains Biological Differences in Alcohol Processing Between Sexes</h2>
           <div class="timestamp">2025-12-22 04:27:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Scientific research indicates that women process alcohol differently from men, often experiencing its effects more rapidly and intensely. This is attributed to biological factors including lower levels of alcohol dehydrogenase (ADH) in the stomach, a higher body fat to water ratio, and hormonal influences that amplify alcohol's effects on the brain's reward system. These differences contribute to a faster progression from alcohol use to dependence in women. The findings suggest that societal notions of equal drinking capacity may not align with biological realities.</p>
-          <p>60/100</p>
+          <p>Scientific research confirms that women generally get drunk faster and experience alcohol's effects more intensely than men, primarily due to biological differences rather than tolerance. Studies show women's bodies filter less alcohol early on, resulting in higher blood alcohol levels, partly because they typically have more body fat and less water than men. Additionally, women's brains respond more strongly to alcohol's rewarding effects, and hormones like estradiol can amplify dopamine release, increasing the likelihood of heavier drinking. Experts emphasize that this understanding is crucial for promoting awareness and responsible consumption, challenging previous assumptions about drinking equality based solely on volume.</p>
+          <p>70/100</p>
           <a href="https://www.dw.com/en/why-women-get-drunk-faster-than-men-it-s-our-biology-not-tolerance/a-75223854?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -455,25 +548,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Bondi shooters threw unexploded pipe bombs, trained with firearms: Police</h2>
-          <div class="timestamp">2025-12-22 04:27:00 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Newly released court documents reveal that the Bondi Beach shooters threw unexploded pipe bombs and a 'tennis ball bomb' at the crowd during the attack, which police deemed 'viable.' The surviving suspect and his father allegedly conducted firearms training in rural Australia and were filmed with an Islamic State flag, making statements about their motivations. Prime Minister Anthony Albanese has apologized to Australia's Jewish community amidst rising antisemitism. New South Wales is pushing for stricter gun laws following the attack.</p>
-          <p>15/100</p>
-          <a href="https://www.dw.com/en/bondi-shooters-threw-unexploded-pipe-bombs-at-crowd-police/a-75262016?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Doctors in England return to work after five-day strike, hospitals focus on Christmas discharges</h2>
+          <h2>England's Hospitals Recovering After Five-Day Resident Doctor Strike</h2>
           <div class="timestamp">2025-12-22 04:25:33 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Resident doctors in England have returned to work following a five-day strike over pay disputes, with hospitals now prioritizing patient discharges for Christmas. The walkout led to the cancellation of thousands of appointments, and the full impact on patient care is still being assessed. The BMA rejected a government offer and is seeking further negotiations for 2026, aiming to address pay restoration and job security. Health experts warn the strike's effects will linger into the new year, while similar strikes are planned in Scotland.</p>
-          <p>45/100</p>
+          <p>Hospitals in England are now focused on discharging patients for Christmas and recovering from the disruption caused by a five-day strike by resident doctors over ongoing pay disputes. Thousands of elective and outpatient appointments were canceled as senior doctors were redeployed to emergency and urgent care, with the full impact still being assessed amid surging flu cases. The British Medical Association (BMA) rejected a government offer, arguing resident doctors' pay remains significantly lower than in 2008 due to inflation. Both the BMA and Health Secretary Wes Streeting express a desire to resolve the dispute in the new year, despite current disagreements over pay demands.</p>
+          <p>40/100</p>
           <a href="https://www.bbc.com/news/articles/c36zdpng7gro?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
         </div>
       </div>
@@ -481,12 +561,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Trump administration backs Bayer in Roundup cancer litigation</h2>
+          <h2>Trump Administration Sides with Bayer in Roundup Cancer Lawsuits</h2>
           <div class="timestamp">2025-12-22 04:17:00 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>The Trump administration has reversed its stance on Bayer's Roundup weedkiller litigation, now siding with the company and urging limits on cancer claims. This contrasts with the previous administration's position that consumers should be allowed to pursue damages. Bayer has already paid billions to settle claims and is seeking Supreme Court review to limit ongoing lawsuits. Critics argue this move prioritizes corporate interests over public health and justice for claimants, while Bayer maintains Roundup is safe and essential for agriculture.</p>
-          <p>40/100</p>
+          <p>The Trump administration has reversed previous US Justice Department policy, now siding with Bayer in its ongoing legal battle over the Roundup weedkiller, urging limits on tens of thousands of cancer claims. This significant shift, following a Supreme Court request, supports Bayer's argument that federal pesticide law should preempt state-court lawsuits, potentially saving the company billions but severely limiting consumer claims. Critics view this as prioritizing corporate agendas over public health, weakening state authority, and ignoring allegations of non-Hodgkin lymphoma from glyphosate exposure. Bayer, which acquired Roundup with Monsanto, has paid billions in settlements and threatens to stop US sales if lawsuits persist. (not investment advice)</p>
+          <p>15/100</p>
           <a href="https://www.dw.com/en/why-trump-is-backing-bayer-in-weedkiller-cancer-battle/a-75188139?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
         </div>
       </div>
@@ -494,12 +574,12 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>Uber and Lyft to trial Baidu's robotaxis in London starting 2026</h2>
+          <h2>Baidu Partners with Uber and Lyft to Launch Robotaxi Trials in London</h2>
           <div class="timestamp">2025-12-22 04:04:22 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>Chinese tech giant Baidu, in partnership with Uber and Lyft, plans to launch its Apollo Go robotaxis in London starting in 2026, pending regulatory approval. This collaboration aims to accelerate the adoption of autonomous vehicle technology in the UK, which is emerging as a key market for driverless taxis. The move aligns with London's 'Vision Zero' goal to eliminate traffic fatalities by 2041. Baidu's expansion into London follows similar pilot programs in other cities globally, positioning it in competition with other autonomous vehicle developers.</p>
-          <p>70/100</p>
+          <p>Chinese tech giant Baidu is set to introduce its Apollo Go robotaxis to London next year through strategic partnerships with Uber and Lyft, making the UK a key battleground for autonomous vehicle technology. Lyft plans to begin testing dozens of Baidu's vehicles in 2026, aiming to scale to hundreds, while Uber expects its pilot to start in the first half of the year. This expansion aligns with the UK government's accelerated plans to permit autonomous vehicles on public roads by spring 2026 and London's "Vision Zero" goal for transportation safety. Baidu's move adds to its growing global footprint, competing with rivals like Waymo in the burgeoning robotaxi market.</p>
+          <p>85/100</p>
           <a href="https://www.cnbc.com/2025/12/22/uber-lyft-set-to-trial-robotaxis-uk-in-partnership-chinas-baidu.html" target="_blank"><span class="news-org">CNBC</span></a>
         </div>
       </div>
@@ -507,175 +587,19 @@
     <div class="flip-card">
       <div class="flip-card-inner">
         <div class="flip-card-front">
-          <h2>China's military newspaper accuses Japan of distorting history</h2>
+          <h2>China's PLA Daily Accuses Japan of Distorting Wartime History</h2>
           <div class="timestamp">2025-12-22 04:01:24 EST</div>
         </div>
         <div class="flip-card-back">
-          <p>China's official military newspaper, PLA Daily, has accused Japan of distorting its history of wartime aggression and showing a lack of respect for the past. The newspaper criticized the use of memorial halls for 'tampering with history' and warned against repeating past tragedies. China consistently urges Japan to confront its history honestly to foster trust and stability. The article specifically criticizes Japan's narrative framing of the 'Sino-Japanese war' and its emphasis on a 'victim' perspective.</p>
+          <p>China's official military newspaper, PLA Daily, has strongly accused Japan of distorting its wartime aggression, asserting a lack of "respect for history" that risks repeating past tragedies. The article claims Japan's right-wing forces manipulate memorial halls to tamper with history, rebranding aggression as a "Sino-Japanese war" and centering a "victim" narrative through events like the Osaka air raids. Beijing has long urged Japan to confront its historical actions honestly to foster trust and stability, as unresolved disputes continue to strain diplomacy and shape public opinion between the two nations. This criticism underscores ongoing geopolitical tensions rooted in differing historical interpretations.</p>
           <p>30/100</p>
           <a href="https://www.scmp.com/news/china/politics/article/3337336/chinas-military-newspaper-pla-daily-accuses-japan-showing-no-respect-history?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
         </div>
       </div>
     </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>TV presenter Ruth Dodsworth shares experience of Christmas during domestic abuse</h2>
-          <div class="timestamp">2025-12-22 03:57:09 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>TV weather presenter Ruth Dodsworth has spoken out about the dread she experienced on Christmas Day during her marriage to an abusive ex-husband, Jonathan Wignall. She described how the festive season amplified domestic violence, particularly when alcohol was involved. Dodsworth revealed that her ex-husband's passing out drunk was a brief respite, allowing her a few hours of relief with her children. She highlighted the increased pressure and alcohol consumption during holidays can worsen situations for those experiencing domestic abuse.</p>
-          <p>25/100</p>
-          <a href="https://www.bbc.com/news/articles/c62l13pp36qo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>David Walliams dropped from Waterstones Children's Book Festival amid allegations</h2>
-          <div class="timestamp">2025-12-22 03:57:09 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Author and comedian David Walliams has been removed from the Waterstones Children's Book Festival lineup following allegations of inappropriate behavior towards young women. His publisher, HarperCollins, has also severed ties with the author, who denies the allegations. Waterstones confirmed Walliams's cancellation from festival appearances. This development comes as the author faces scrutiny over his conduct, impacting his public engagements and professional relationships.</p>
-          <p>20/100</p>
-          <a href="https://www.bbc.com/news/articles/c62l13pp36qo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>India and New Zealand sign free trade agreement, majority of goods to be duty-free</h2>
-          <div class="timestamp">2025-12-22 03:53:08 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>India and New Zealand have announced a free trade agreement that will eliminate or reduce tariffs on 95% of New Zealand's exports to India, making the majority of goods trade duty-free. The pact, set to be signed in early 2026, includes provisions for New Zealand's investment in India and mobility of professionals. India will gain duty-free access for exports like textiles and automobiles, though certain sectors like dairy and sugar are excluded to protect domestic industries. This deal marks India's third FTA this year, aiming to diversify exports amidst U.S. tariffs.</p>
-          <p>75/100</p>
-          <a href="https://www.cnbc.com/2025/12/22/india-new-zealand-fta-trade-deal.html" target="_blank"><span class="news-org">CNBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Flooding in Redding causes at least one death; nine rescued from Cisco Grove home</h2>
-          <div class="timestamp">2025-12-22 03:34:00 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Severe flooding in Redding has resulted in at least one fatality, with emergency crews conducting water rescues. A flash flood warning is in effect for south/central Shasta County, including downtown Redding and major roadways. Separately, an evacuation warning has been issued for the Cisco Grove area in Placer County due to rising river levels, where nine people were rescued from a home. Residents are urged to monitor alerts and prepare for potential further flooding, emphasizing the danger of driving through floodwaters.</p>
-          <p>20/100</p>
-          <a href="https://www.cbsnews.com/news/truckee-firefighters-rescue-south-yuba-river-donner-summit/" target="_blank"><span class="news-org">CBS News</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>China drafts national law to regulate childcare and boost birth rates</h2>
-          <div class="timestamp">2025-12-22 03:30:14 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>China has submitted draft legislation to standardize childcare services and reduce costs, aiming to combat demographic decline. The Childcare Services Law focuses on children under three and seeks to create a national framework for institutions and carers. Policymakers believe this will lower child-rearing expenses and improve population quality, making China more 'fertility-friendly.' Experts suggest that while legislation is crucial, broader incentives like subsidies and expanded parental leave are also necessary to effectively boost birth rates.</p>
-          <p>65/100</p>
-          <a href="https://www.scmp.com/economy/china-economy/article/3337317/china-eyes-childcare-overhaul-law-boost-births-fix-demographic-crisis?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Archaeologists discover well-preserved 2,200-year-old four-lane highway in China</h2>
-          <div class="timestamp">2025-12-22 03:30:12 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Chinese archaeologists have unearthed a well-preserved 13km section of the Qin Straight Road, an ancient four-lane highway dating back 2,200 years. This discovery provides significant evidence of the sophisticated infrastructure project that once spanned nearly 900km across northern China. Excavations revealed advanced construction techniques, including compacted roadbeds and reinforced slopes, highlighting the engineering capabilities of the Qin Dynasty. The road's impressive width allowed for multiple lanes of traffic.</p>
-          <p>80/100</p>
-          <a href="https://www.scmp.com/news/china/science/article/3337302/chinese-archaeologists-discover-well-preserved-section-2200-year-old-4-lane-highway?utm_source=rss_feed" target="_blank"><span class="news-org">South China Morning Post</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Trump photo in Epstein files reinstated after review, DOJ clarifies</h2>
-          <div class="timestamp">2025-12-22 03:09:08 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A photograph featuring Donald Trump from the released Jeffrey Epstein files was temporarily removed from the Department of Justice website but has since been reinstated. The DOJ stated the image was taken down out of caution after concerns were raised by victims, but a subsequent review found no evidence of victims depicted in the photo. Deputy Attorney General Todd Blanche dismissed suggestions that the removal was politically motivated, emphasizing that numerous images of Trump with Epstein are publicly available. The incident highlights the DOJ's process for handling sensitive documents and addressing victim concerns.</p>
-          <p>55/100</p>
-          <a href="https://www.bbc.com/news/articles/c208y2wxxeno?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Swiss court to hear climate case against cement giant Holcim</h2>
-          <div class="timestamp">2025-12-22 03:04:00 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>A Swiss court will hear a climate case against cement giant Holcim, brought by four residents of the Indonesian island of Pari who allege rising sea levels are destroying their home. The plaintiffs accuse Holcim of failing to cut carbon emissions and are demanding significant reductions, compensation, and funding for flood protection. Holcim, which plans to appeal, maintains that climate change challenges should be addressed by lawmakers, not courts. Cement production is a significant contributor to global CO2 emissions.</p>
-          <p>35/100</p>
-          <a href="https://www.dw.com/en/indonesians-set-to-face-cement-giant-holcim-in-swiss-court/a-75262039?maca=en-rss-en-top-1022-xml-mrss" target="_blank"><span class="news-org">Deutsche Welle</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Rowing's Beach Sprints format added to LA 2028 Olympics, offering a dynamic new discipline</h2>
-          <div class="timestamp">2025-12-22 03:00:22 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Rowing's Beach Sprints format has been added to the LA 2028 Olympic Games, introducing a dynamic and spectator-friendly discipline. This new format involves athletes sprinting down a beach, launching into boats, racing around a buoy, and returning to shore for a final sprint. It requires extreme fitness and psychological toughness, offering a more unpredictable and entertaining spectacle than traditional rowing. The inclusion of Beach Sprints aims to revitalize the sport and engage new audiences, with coastal rowing academies developing across Britain.</p>
-          <p>85/100</p>
-          <a href="https://www.theguardian.com/sport/2025/dec/22/rowings-answer-to-snowcross-bmx-and-beach-volleyball-is-coming-to-la" target="_blank"><span class="news-org">The Guardian</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Trump's 'Donroe Doctrine' reshapes Latin America through reward and punishment</h2>
-          <div class="timestamp">2025-12-22 03:00:22 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Donald Trump's second term has seen a significant shift in US foreign policy towards Latin America, characterized by a 'Donroe Doctrine' that openly uses reward and punishment to exert control. This transactional approach, marked by inconsistent interventions and expanded exceptions to normal rules, has redefined US power in the hemisphere. Leaders who align with Washington are rewarded, while others face punitive measures. This strategy, combined with the left's ideological exhaustion in the region, has created a new normal where US violations of norms face little resistance.</p>
-          <p>30/100</p>
-          <a href="https://www.theguardian.com/commentisfree/2025/dec/22/donald-trump-latin-america-us-imperialism" target="_blank"><span class="news-org">The Guardian</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>England fans travel to Australia for final Ashes Tests despite series loss</h2>
-          <div class="timestamp">2025-12-22 02:51:12 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Despite England's Ashes series loss in Australia, a significant number of England fans are still traveling for the final two Tests in Sydney and Melbourne. Many fans, like the Ryding siblings, had booked their trips months in advance, hoping to witness a series victory. While disappointed the series is already decided, they are determined to enjoy their Christmas and New Year's holiday down under. The fans are hoping for a competitive showing from the team, even if it's just 'a bit of fight' to avoid a whitewash.</p>
-          <p>50/100</p>
-          <a href="https://www.bbc.com/sport/cricket/articles/cly3rqznd3go?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <h2>Actor Owen Cooper discusses nerves and impact of Netflix drama 'Adolescence'</h2>
-          <div class="timestamp">2025-12-22 02:41:07 EST</div>
-        </div>
-        <div class="flip-card-back">
-          <p>Actor Owen Cooper, the youngest male Emmy winner for his role in the Netflix drama 'Adolescence,' expressed nervousness about the show's reaction due to its sensitive subject matter. The four-part series explores online safety and misogyny, sparking national discussion. Cooper, who won his Emmy at 16, noted the show's immediate and significant impact after its release. He shared his experience returning to school after the show's success and his aspirations to continue acting, balancing his studies with his burgeoning career.</p>
-          <p>75/100</p>
-          <a href="https://www.bbc.com/news/articles/c3w7yy7ndgeo?at_medium=RSS&at_campaign=rss" target="_blank"><span class="news-org">BBC</span></a>
-        </div>
-      </div>
-    </div>
 
   </div>
-  
+
   <!-- Dot Indicators (pre-rendered in HTML to prevent race condition) -->
   <!-- Must be direct child of body to match JavaScript behavior -->
   <div class="card-indicator">
@@ -716,12 +640,6 @@
     <div class="indicator-dot" data-index="34">34</div>
     <div class="indicator-dot" data-index="35">35</div>
     <div class="indicator-dot" data-index="36">36</div>
-    <div class="indicator-dot" data-index="37">37</div>
-    <div class="indicator-dot" data-index="38">38</div>
-    <div class="indicator-dot" data-index="39">39</div>
-    <div class="indicator-dot" data-index="40">40</div>
-    <div class="indicator-dot" data-index="41">41</div>
-    <div class="indicator-dot" data-index="42">42</div>
   </div>
   <script src="assets/js/splash.js"></script>
   <script src="assets/js/script.js"></script>
