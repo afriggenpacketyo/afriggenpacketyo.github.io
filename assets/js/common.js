@@ -797,6 +797,8 @@ if (!window.location.pathname.includes('about.html')) {
             return new Promise((resolve) => {
                 // Infrastructure already set up in init(), just resolve
                 console.log("Desktop: UI infrastructure ready");
+                // Desktop doesn't need bulletproof calculation - mark layout stable immediately
+                document.body.classList.add('layout-stable');
                 requestAnimationFrame(() => resolve());
             });
         },
@@ -1566,8 +1568,8 @@ if (!window.location.pathname.includes('about.html')) {
                 return;
             }
 
-            // CRITICAL: If bulletproof calculation hasn't completed yet, defer pageReady
-            if (!this._bulletproofCalculationComplete) {
+            // CRITICAL: If bulletproof calculation hasn't completed yet, defer pageReady (MOBILE ONLY)
+            if (this.isMobile && !this._bulletproofCalculationComplete) {
                 console.log('CardSystem: pageReady DEFERRED - bulletproof calculation not yet complete (splash will extend)');
                 this._pageReadyWaiting = true;
                 return;
