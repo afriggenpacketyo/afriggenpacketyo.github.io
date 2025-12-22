@@ -10,6 +10,41 @@
   }
 
   /**
+   * PAGE VISIBILITY GATE: Ensures splash NEVER runs until page is actually visible.
+   * This prevents Chrome autocomplete preloading from "stealing" the splash animation.
+   * Returns a Promise that resolves only when the page becomes visible.
+   */
+  function waitForPageVisibility() {
+    return new Promise((resolve) => {
+      // If page is already visible, resolve immediately
+      if (document.visibilityState === 'visible') {
+        console.log('Splash: Page is visible, proceeding immediately');
+        resolve();
+        return;
+      }
+
+      // Page is hidden (prerendered/preloaded) - wait for it to become visible
+      console.log('Splash: Page is HIDDEN (prerendered/preloaded) - waiting for visibility...');
+      console.log('Splash: Current visibilityState:', document.visibilityState);
+
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          console.log('Splash: Page became VISIBLE - starting splash sequence now');
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          // Small delay to let browser fully transition
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+        }
+      };
+
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    });
+  }
+
+  /**
    * REVISED: This function now focuses ONLY on the visual splash animation
    * and delegates all layout/positioning responsibilities to other scripts.
    */
@@ -41,7 +76,7 @@
         console.warn('Splash: Cards with active class:', document.querySelectorAll('.flip-card.active').length);
         return;
       }
-      
+
       // Verify the card has proper dimensions (not collapsed)
       const rect = activeCard.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) {
@@ -58,7 +93,7 @@
           return;
         }
       }
-      
+
       // Verify CardSystem is fully initialized
       if (!window.CardSystem || !window.CardSystem.isLayoutReady) {
         console.warn('Splash: CardSystem not ready, cannot start animation');
@@ -200,8 +235,14 @@
   // --- Main Execution Logic ---
   // Body already has splash-active class from HTML to prevent initial scrollbar
 
-  // First preload the logo image, then start the animation
-  preloadSplashLogo().then(() => {
+  // CRITICAL: Wait for page visibility FIRST before doing ANYTHING
+  // This ensures Chrome autocomplete preloading can't steal the splash
+  waitForPageVisibility().then(() => {
+    console.log('Splash: Visibility confirmed - now preloading logo');
+
+    // First preload the logo image, then start the animation
+    return preloadSplashLogo();
+  }).then(() => {
     // Logo is preloaded, start the shimmer animation.
     if (splashLogoWrapper) splashLogoWrapper.classList.add('is-loading');
     console.log("Splash: Logo preloaded. Shimmering started.");
@@ -214,7 +255,7 @@
     const appReadyPromise = new Promise((resolve, reject) => {
       // Check if we're on a CardSystem page (has .container)
       const hasCardSystem = document.querySelector('.container');
-      
+
       if (hasCardSystem) {
         // For CardSystem pages, wait for pageReady event which guarantees everything is positioned
         let timeoutId;
@@ -229,7 +270,7 @@
           resolve('pageReady');
         } else {
           document.addEventListener('pageReady', onPageReady, { once: true });
-          
+
           // Safety timeout - if pageReady doesn't fire within 5 seconds, proceed anyway
           timeoutId = setTimeout(() => {
             console.warn('Splash: pageReady timeout - proceeding with animation anyway');
@@ -256,7 +297,7 @@
             console.log('Splash: AppReady resolved via allCSSLoaded event.');
             resolve('allCSSLoaded');
           };
-          
+
           if (window.__allCSSLoadedFired || document.readyState === 'complete') {
             onAllCSS();
           } else {

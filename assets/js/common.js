@@ -803,19 +803,38 @@ if (!window.location.pathname.includes('about.html')) {
             });
         },
 
-        // CHROME iOS VIEWPORT FLAGS
+        // VIEWPORT STABILITY FLAGS
         _bulletproofCalculationComplete: false,
         _pageReadyWaiting: false,
         _measuredWithSuspiciousViewport: false,
         _postDisplayViewportHeight: null,
         _postDisplayMonitorActive: false,
         _viewportAtMeasurement: null,  // Track what viewport we actually measured with
+        _isExternalNavigation: false,  // Backlink from another domain
 
         getViewportHeight: function() {
             return window.visualViewport ? window.visualViewport.height : window.innerHeight;
         },
 
-        // NEW: Wait for complete resource loading with Chrome iOS preload detection
+        // Detect external navigation (backlink from another domain)
+        detectExternalNavigation: function() {
+            try {
+                const referrer = document.referrer;
+                if (!referrer) return false;
+                const referrerHost = new URL(referrer).hostname;
+                const currentHost = window.location.hostname;
+                // Any different host is external (including local IPs for testing)
+                const isExternal = referrerHost !== currentHost;
+                if (isExternal) {
+                    console.log('CardSystem: BACKLINK DETECTED from:', referrerHost);
+                }
+                return isExternal;
+            } catch (e) {
+                return false;
+            }
+        },
+
+        // Wait for complete resource loading with viewport stabilization for backlinks
         waitForCompleteResourceLoading: function() {
             return new Promise((resolve) => {
                 const promises = [];
@@ -843,74 +862,96 @@ if (!window.location.pathname.includes('about.html')) {
                 }
 
                 Promise.all(promises).then(() => {
-                    const isChromeiOS = /CriOS/i.test(navigator.userAgent) ||
-                                        (/Chrome/i.test(navigator.userAgent) && /iPhone|iPad/i.test(navigator.userAgent));
-
-                    const proceedWithMeasurement = () => {
-                        console.log('CardSystem: Proceeding with measurement, viewport:', this.getViewportHeight() + 'px');
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                    console.log('COMPLETE RESOURCE LOADING FINISHED - viewport:', this.getViewportHeight() + 'px');
-                                    resolve();
-                                });
-                            });
-                        });
-                    };
-
                     const initialViewport = this.getViewportHeight();
-                    // DEVICE-AGNOSTIC: Compare viewport to screen height
-                    // If viewport is very close to screen height, address bar is likely hidden (preloaded state)
-                    const screenHeight = window.screen.height;
-                    const viewportToScreenRatio = initialViewport / screenHeight;
-                    // If viewport is >85% of screen height on Chrome iOS, address bar is probably hidden
-                    const viewportSeemsWrong = isChromeiOS && viewportToScreenRatio > 0.85;
 
-                    console.log('CardSystem: Detection -', { isChromeiOS, initialViewport, viewportSeemsWrong });
+                    // Debug: Log referrer info
+                    console.log('CardSystem: document.referrer =', document.referrer || '(empty)');
+                    console.log('CardSystem: Initial viewport:', initialViewport + 'px');
 
-                    if (viewportSeemsWrong) {
-                        console.log('CardSystem: PAGE MAY BE PRELOADED - waiting for activation/visibility...');
+                    // SIMPLE FIX: Always add 500ms delay on mobile
+                    // This ensures viewport has time to settle regardless of navigation type
+                    console.log('CardSystem: Adding 500ms delay for viewport to settle (mobile always waits)');
 
-                        let resolved = false;
-                        const resolveOnce = () => {
-                            if (resolved) return;
-                            resolved = true;
-                            console.log('CardSystem: Page activated/visible, viewport now:', this.getViewportHeight() + 'px');
-                            setTimeout(() => {
-                                console.log('CardSystem: Final viewport after settle:', this.getViewportHeight() + 'px');
-                                proceedWithMeasurement();
-                            }, 200);
-                        };
+                    setTimeout(() => {
+                        const settledViewport = this.getViewportHeight();
+                        console.log('CardSystem: After 500ms delay, viewport:', settledViewport + 'px');
 
-                        const checkViewport = () => {
-                            const currentViewport = this.getViewportHeight();
-                            if (currentViewport < initialViewport - 50) {
-                                console.log('CardSystem: Viewport shrunk (address bar appeared):', currentViewport + 'px');
-                                resolveOnce();
-                            } else if (!resolved) {
-                                requestAnimationFrame(checkViewport);
-                            }
-                        };
-                        requestAnimationFrame(checkViewport);
+                        if (settledViewport !== initialViewport) {
+                            console.log('CardSystem: VIEWPORT CHANGED during delay! Was', initialViewport + 'px, now', settledViewport + 'px');
+                        }
 
-                        setTimeout(() => {
-                            if (!resolved) {
-                                const currentViewport = this.getViewportHeight();
-                                console.log('CardSystem: Viewport timeout - proceeding with:', currentViewport + 'px');
-                                // DEVICE-AGNOSTIC: If viewport still seems large relative to screen, mark suspicious
-                                const currentRatio = currentViewport / screenHeight;
-                                if (currentRatio > 0.85) {
-                                    this._measuredWithSuspiciousViewport = true;
-                                    this._viewportAtMeasurement = currentViewport;
-                                    console.log('CardSystem: MARKED AS SUSPICIOUS (ratio:', currentRatio.toFixed(2), ') - pageReady will wait for post-display monitor');
-                                }
-                                resolveOnce();
-                            }
-                        }, 500);
+                        this._viewportAtMeasurement = settledViewport;
+                        this.proceedWithMeasurement(resolve);
+                    }, 500);
+                });
+            });
+        },
+
+        // Wait for viewport to stabilize (for backlinks and preloads)
+        waitForViewportStabilization: function(initialViewport) {
+            return new Promise((resolve) => {
+                const screenHeight = window.screen.height;
+                let resolved = false;
+                let stableCount = 0;
+                let lastViewport = initialViewport;
+                const requiredStableFrames = 10; // Must be stable for 10 frames (~160ms)
+
+                console.log('CardSystem: Waiting for viewport stabilization...');
+                console.log('CardSystem: Initial viewport:', initialViewport + 'px, screen:', screenHeight + 'px');
+
+                const checkStability = () => {
+                    if (resolved) return;
+
+                    const currentViewport = this.getViewportHeight();
+
+                    // Check if viewport changed
+                    if (Math.abs(currentViewport - lastViewport) < 5) {
+                        stableCount++;
                     } else {
-                        console.log('CardSystem: Page appears normal, viewport:', initialViewport + 'px');
-                        proceedWithMeasurement();
+                        console.log('CardSystem: Viewport changed:', lastViewport + 'px ->', currentViewport + 'px');
+                        stableCount = 0;
+                        lastViewport = currentViewport;
                     }
+
+                    // If stable for enough frames, proceed
+                    if (stableCount >= requiredStableFrames) {
+                        resolved = true;
+                        console.log('CardSystem: Viewport STABILIZED at', currentViewport + 'px after', stableCount, 'stable frames');
+                        this._viewportAtMeasurement = currentViewport;
+                        this.proceedWithMeasurement(resolve);
+                        return;
+                    }
+
+                    requestAnimationFrame(checkStability);
+                };
+
+                requestAnimationFrame(checkStability);
+
+                // Safety timeout - but mark as suspicious if we had to use it
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        const finalViewport = this.getViewportHeight();
+                        console.warn('CardSystem: Viewport stabilization TIMEOUT after 800ms');
+                        console.log('CardSystem: Using viewport:', finalViewport + 'px (may be unstable)');
+                        this._measuredWithSuspiciousViewport = true;
+                        this._viewportAtMeasurement = finalViewport;
+                        this.proceedWithMeasurement(resolve);
+                    }
+                }, 800);
+            });
+        },
+
+        // Proceed with measurement after stabilization
+        proceedWithMeasurement: function(resolve) {
+            const viewport = this.getViewportHeight();
+            console.log('CardSystem: Proceeding with measurement, viewport:', viewport + 'px');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        console.log('COMPLETE RESOURCE LOADING FINISHED - viewport:', this.getViewportHeight() + 'px');
+                        resolve();
+                    });
                 });
             });
         },
@@ -1057,28 +1098,18 @@ if (!window.location.pathname.includes('about.html')) {
             });
         },
 
-        // Post-display viewport monitor for Chrome iOS
+        // Post-display viewport monitor - always runs on mobile to catch late viewport changes
         setupPostDisplayViewportMonitor: function() {
-            const isChromeiOS = /CriOS/i.test(navigator.userAgent) ||
-                                (/Chrome/i.test(navigator.userAgent) && /iPhone|iPad/i.test(navigator.userAgent));
-
-            if (!isChromeiOS) {
-                console.log('CardSystem: Not Chrome iOS, skipping post-display monitor');
-                return;
-            }
+            console.log('CardSystem: Starting post-display viewport monitor (mobile always monitors)');
 
             this._postDisplayViewportHeight = this.getViewportHeight();
             this._postDisplayMonitorActive = true;
 
-            console.log('CardSystem: Starting post-display viewport monitor (current:', this._postDisplayViewportHeight + 'px)');
-
             // CRITICAL FIX: Check IMMEDIATELY if viewport already changed
-            // This catches the case where viewport shrunk during measurement/finalization
-            // DEVICE-AGNOSTIC: Compare to measurement viewport, not hardcoded value
             if (this._measuredWithSuspiciousViewport && this._viewportAtMeasurement) {
                 const shrinkage = this._viewportAtMeasurement - this._postDisplayViewportHeight;
                 if (shrinkage > 50) {
-                    console.log('CardSystem: IMMEDIATE RECALC - viewport shrunk by', shrinkage + 'px (from', this._viewportAtMeasurement + 'px to', this._postDisplayViewportHeight + 'px)');
+                    console.log('CardSystem: IMMEDIATE RECALC - viewport shrunk by', shrinkage + 'px');
                     this._postDisplayMonitorActive = false;
                     this.recalculateAfterViewportChange();
                     return;
@@ -1569,7 +1600,7 @@ if (!window.location.pathname.includes('about.html')) {
             }
 
             // CRITICAL: If bulletproof calculation hasn't completed yet, defer pageReady (MOBILE ONLY)
-            if (this.isMobile && !this._bulletproofCalculationComplete) {
+            if (this.isMobileDevice() && !this._bulletproofCalculationComplete) {
                 console.log('CardSystem: pageReady DEFERRED - bulletproof calculation not yet complete (splash will extend)');
                 this._pageReadyWaiting = true;
                 return;
@@ -1596,6 +1627,25 @@ if (!window.location.pathname.includes('about.html')) {
     // Initialize dots when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         CardSystem.initializeDots();
+    });
+
+    // PAGESHOW EVENT HANDLER: Handle bfcache restoration (back button)
+    window.addEventListener('pageshow', function(event) {
+        // Only handle bfcache restoration on mobile
+        if (!event.persisted || !CardSystem.isLayoutReady || !CardSystem.isMobileDevice()) return;
+
+        console.log('CardSystem: bfcache restoration - recalculating layout');
+        // Reset flags to allow recalculation
+        if (CardSystem.container) {
+            CardSystem.container._centeringApplied = false;
+            CardSystem.container._heightSet = false;
+        }
+        CardSystem._bulletproofCalculationComplete = false;
+
+        // Recalculate after a brief delay to let browser settle
+        setTimeout(() => {
+            CardSystem.recalculateAfterViewportChange();
+        }, 100);
     });
 
 } // End of the conditional block for CardSystem initialization
