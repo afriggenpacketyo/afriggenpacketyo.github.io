@@ -41,6 +41,32 @@
     --indicator-dot-active: #2980b9;
     --logo-max-width: 80px;
     --logo-max-width-mobile: 60px;
+    /* Optimism scale colors - light mode (0,5,...,100), tuned for modern card backgrounds */
+    /* 0: archetypal red, 100: archetypal green, 50: straightforward blue */
+    --optimism-0: #ff1744;
+    --optimism-5: #f44336;
+    --optimism-10: #e53935;
+    --optimism-15: #ef5350;
+    --optimism-20: #ff7043;
+    --optimism-25: #cf2a2f;
+    --optimism-30: #e53b3e;
+    --optimism-35: #f1554b;
+    --optimism-40: #f8715a;
+    --optimism-45: #3b8ed8;
+    --optimism-50: #3498db; /* center blue */
+    --optimism-55: #3b8ed8;
+    --optimism-60: #2e7d32;
+    --optimism-65: #388e3c;
+    --optimism-70: #43a047;
+    --optimism-75: #4caf50;
+    --optimism-80: #66bb6a;
+    --optimism-85: #43a047;
+    --optimism-90: #2e7d32;
+    --optimism-95: #1b5e20;
+    --optimism-100: #00c853;
+
+    /* Current card optimism color (used for backgrounds) */
+    --card-optimism-color: #3498db;
     /* Card and transition variables */
     --card-width: 300px;
     --card-height: 400px;
@@ -65,6 +91,33 @@
     --indicator-dot: #5ecbff;
     --indicator-dot-active: #39fffd;
     /* Card and transition variables remain the same */
+
+    /* Optimism scale colors - dark mode, epitome colors at extremes */
+    /* 0: canonical red, 50: epitome blue, 100: canonical green */
+    --optimism-0: #dc143c;      /* Crimson/Classic Red */
+    --optimism-5: #e53935;
+    --optimism-10: #ef5350;
+    --optimism-15: #f44336;
+    --optimism-20: #ff5252;
+    --optimism-25: #ff6b6b;
+    --optimism-30: #ff7878;
+    --optimism-35: #ff8585;
+    --optimism-40: #ff9292;
+    --optimism-45: #42a5f5;
+    --optimism-50: #1976d2;      /* Epitome Blue */
+    --optimism-55: #42a5f5;
+    --optimism-60: #00a86b;
+    --optimism-65: #11b776;
+    --optimism-70: #1fc482;
+    --optimism-75: #2bcc8a;
+    --optimism-80: #26a46f;
+    --optimism-85: #1f855b;
+    --optimism-90: #186647;
+    --optimism-95: #114733;
+    --optimism-100: #2e7d32;     /* Canonical Green */
+
+    /* Dark mode card optimism base color */
+    --card-optimism-color: #1f2a35;
   }
 
   /* =========================
@@ -308,10 +361,11 @@
       scroll-snap-align: center;
       background: transparent !important;
       border-radius: var(--card-radius);
+      position: relative;
     }
     .flip-card.active {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(-4px) scale(1.02);
       z-index: 2;
       background: transparent !important;
       box-shadow: none !important;
@@ -377,13 +431,51 @@
       flex-direction: column;
     }
     .flip-card-front {
-      background: linear-gradient(45deg, var(--primary-blue-dark), var(--primary-blue));
+      background-color: var(--card-optimism-color);
+      /* Stronger 3D lighting overlay */
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.22), transparent 50%),
+        radial-gradient(circle at 75% 85%, rgba(0, 0, 0, 0.32), transparent 55%);
+      background-blend-mode: soft-light;
       color: #fff;
       justify-content: center;
       align-items: center;
       padding: 20px 20px 30px;
-      box-shadow: var(--box-shadow-strong);
+      box-shadow: none;
       position: relative;
+    }
+    .flip-card-front::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.45),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.45),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.25),
+        0 0 0 2px rgba(0, 0, 0, 0.75);
+      pointer-events: none;
+    }
+    .flip-card-front::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      right: 0;
+      width: 10px;
+      border-radius: 0 var(--card-radius) var(--card-radius) 0;
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28));
+      pointer-events: none;
+    }
+    html.dark-mode .flip-card-front::before {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.85),
+        inset 0 -8px 16px rgba(0, 0, 0, 0.55),
+        0 0 0 2px rgba(0, 0, 0, 0.9);
+    }
+    html.dark-mode .flip-card-front::after {
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.75));
     }
     .flip-card-back {
       background: #fff;
@@ -459,9 +551,70 @@
       font-weight: bold;
       color: #fff;
     }
-    .score-high { background: var(--primary-green); }
-    .score-medium { background: var(--primary-orange); }
-    .score-low { background: var(--primary-red); }
+
+    /* 21-step optimism badge and card front colors */
+    .optimism-score.score-bin-0 { background: var(--optimism-0); }
+    .flip-card-front.score-bin-0 { --card-optimism-color: var(--optimism-0); }
+
+    .optimism-score.score-bin-5 { background: var(--optimism-5); }
+    .flip-card-front.score-bin-5 { --card-optimism-color: var(--optimism-5); }
+
+    .optimism-score.score-bin-10 { background: var(--optimism-10); }
+    .flip-card-front.score-bin-10 { --card-optimism-color: var(--optimism-10); }
+
+    .optimism-score.score-bin-15 { background: var(--optimism-15); }
+    .flip-card-front.score-bin-15 { --card-optimism-color: var(--optimism-15); }
+
+    .optimism-score.score-bin-20 { background: var(--optimism-20); }
+    .flip-card-front.score-bin-20 { --card-optimism-color: var(--optimism-20); }
+
+    .optimism-score.score-bin-25 { background: var(--optimism-25); }
+    .flip-card-front.score-bin-25 { --card-optimism-color: var(--optimism-25); }
+
+    .optimism-score.score-bin-30 { background: var(--optimism-30); }
+    .flip-card-front.score-bin-30 { --card-optimism-color: var(--optimism-30); }
+
+    .optimism-score.score-bin-35 { background: var(--optimism-35); }
+    .flip-card-front.score-bin-35 { --card-optimism-color: var(--optimism-35); }
+
+    .optimism-score.score-bin-40 { background: var(--optimism-40); }
+    .flip-card-front.score-bin-40 { --card-optimism-color: var(--optimism-40); }
+
+    .optimism-score.score-bin-45 { background: var(--optimism-45); }
+    .flip-card-front.score-bin-45 { --card-optimism-color: var(--optimism-45); }
+
+    .optimism-score.score-bin-50 { background: var(--optimism-50); }
+    .flip-card-front.score-bin-50 { --card-optimism-color: var(--optimism-50); }
+
+    .optimism-score.score-bin-55 { background: var(--optimism-55); }
+    .flip-card-front.score-bin-55 { --card-optimism-color: var(--optimism-55); }
+
+    .optimism-score.score-bin-60 { background: var(--optimism-60); }
+    .flip-card-front.score-bin-60 { --card-optimism-color: var(--optimism-60); }
+
+    .optimism-score.score-bin-65 { background: var(--optimism-65); }
+    .flip-card-front.score-bin-65 { --card-optimism-color: var(--optimism-65); }
+
+    .optimism-score.score-bin-70 { background: var(--optimism-70); }
+    .flip-card-front.score-bin-70 { --card-optimism-color: var(--optimism-70); }
+
+    .optimism-score.score-bin-75 { background: var(--optimism-75); }
+    .flip-card-front.score-bin-75 { --card-optimism-color: var(--optimism-75); }
+
+    .optimism-score.score-bin-80 { background: var(--optimism-80); }
+    .flip-card-front.score-bin-80 { --card-optimism-color: var(--optimism-80); }
+
+    .optimism-score.score-bin-85 { background: var(--optimism-85); }
+    .flip-card-front.score-bin-85 { --card-optimism-color: var(--optimism-85); }
+
+    .optimism-score.score-bin-90 { background: var(--optimism-90); }
+    .flip-card-front.score-bin-90 { --card-optimism-color: var(--optimism-90); }
+
+    .optimism-score.score-bin-95 { background: var(--optimism-95); }
+    .flip-card-front.score-bin-95 { --card-optimism-color: var(--optimism-95); }
+
+    .optimism-score.score-bin-100 { background: var(--optimism-100); }
+    .flip-card-front.score-bin-100 { --card-optimism-color: var(--optimism-100); }
 
     .card-indicator {
       display: flex;
@@ -795,23 +948,6 @@
     }
 
     html.dark-mode .container {
-      background: #23272e !important;
-      color: #5ecbff !important;
-      transition: background 0.3s, color 0.3s;
-      transition: background 0.3s, color 0.3s, text-shadow 0.3s;
-    }
-    /* Base dark mode styles for card components */
-    html.dark-mode .flip-card-front,
-    html.dark-mode .flip-card-back {
-      background: #23272e !important;
-      color: #5ecbff !important;
-      text-shadow: 0 0 0.8px rgba(94, 203, 255, 0.6);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    /* Remove generic background to avoid conflicts */
-    html.dark-mode .flip-card-inner {
-      /* Always keep inner transparent in dark mode */
-      background: transparent;
       transition: transform 0.6s;
     }
 
@@ -847,7 +983,7 @@
     }
     /* Active card front and inner in dark mode */
     html.dark-mode .flip-card.active .flip-card-front {
-      background: var(--primary-blue) !important;
+      background-color: var(--card-optimism-color) !important;
       border-radius: var(--card-radius);
     }
 

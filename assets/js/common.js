@@ -649,22 +649,28 @@ if (!window.location.pathname.includes('about.html')) {
                 if (scoreText) {
                     back.insertBefore(scoreTitle, scoreText);
 
-                    // Style the score and cache the parsed value
+                    // Style the score, cache the parsed value, and apply score-bin classes
                     const scoreMatch = scoreText.textContent.match(/(\d+)\/100/);
                     if (scoreMatch) {
                         const score = parseInt(scoreMatch[1]);
                         cardData.optimismScore = score; // Cache the parsed score
 
+                        // Map score (0-100) to nearest 5-point bucket and clamp
+                        let bucket = Math.round(score / 5) * 5;
+                        if (bucket < 0) bucket = 0;
+                        if (bucket > 100) bucket = 100;
+
+                        const bucketClass = `score-bin-${bucket}`;
+
                         const scoreSpan = document.createElement('span');
                         scoreSpan.className = 'optimism-score';
                         scoreSpan.textContent = score + '/100';
+                        scoreSpan.classList.add(bucketClass);
 
-                        if (score >= 70) {
-                            scoreSpan.classList.add('score-high');
-                        } else if (score >= 40) {
-                            scoreSpan.classList.add('score-medium');
-                        } else {
-                            scoreSpan.classList.add('score-low');
+                        // Also apply the bucket class to the card front so background matches
+                        const cardFront = card.querySelector('.flip-card-front');
+                        if (cardFront) {
+                            cardFront.classList.add(bucketClass);
                         }
 
                         scoreText.innerHTML = '';

@@ -215,20 +215,20 @@ html.dark-mode .container.with-coverflow .flip-card-inner {
   }
   /* Desktop dark mode: match inactive card color schema to mobile */
   html.dark-mode .container.with-coverflow .flip-card:not(.active):not(.preactivated) .flip-card-front {
-    background: #183a4c !important; /* darker blue for deactivated */
+    background-color: var(--card-optimism-color) !important; /* optimism color for deactivated */
     color: #b0d8f7 !important;
     box-shadow: 0 2px 8px rgba(24, 58, 76, 0.6);
     border: 1px solid #244a6a;
   }
   html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-    background: #2471a3 !important; /* toned-down blue for active */
+    background-color: var(--card-optimism-color) !important; /* optimism color for active */
     color: #eaf6fb !important;
     box-shadow: 0 2px 16px 2px #244a6a;
     border: 1px solid #2980b9;
   }
   /* Desktop dark mode: fix neon box shadow for active card front */
   html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-    background: var(--primary-blue);
+    background-color: var(--card-optimism-color);
     color: #fff;
 
     /* Toned-down box shadow for desktop: less neon, less spread, less intensity */
@@ -284,7 +284,7 @@ html.dark-mode .container.with-coverflow .flip-card-inner {
     border: 1px solid rgba(255,255,255,0.2);
   }
   html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
-    background: var(--primary-blue);
+    background-color: var(--card-optimism-color);
     color: #fff;
 
     /* Neon box shadow to match mobile */

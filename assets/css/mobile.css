@@ -64,9 +64,9 @@ input:checked+.slider:before {
 }
 
 /* Active card front text in mobile dark mode: silver text, no gold, no neon, no border */
-/* Dark mode (mobile): Active card front must be purple (override desktop/global blue) */
+/* Dark mode (mobile): Active card front uses optimism color, retains purple-style border */
 html.dark-mode .flip-card.active .flip-card-front {
-  background: #3a206e !important;
+  background-color: var(--card-optimism-color) !important;
   color: #e0e0e0 !important;
   border: 1.5px solid #7c6fd8;
 }
@@ -136,7 +136,7 @@ html.dark-mode .container .flip-card-inner {
 
 /* Front and back faces in mobile dark mode */
 html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
-  background: #3a206e !important;
+  background-color: var(--card-optimism-color) !important;
   color: #e0e0e0 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -219,29 +219,29 @@ html.dark-mode .flip-card.flipped .flip-card-back::after {
 }
 
 /* Active card in mobile dark mode - increase specificity instead of !important */
-/* Active uses blue; keep preactivated purple highlight if desired */
+/* Preactivated uses optimism color with purple highlight */
 html.dark-mode .container .flip-card.preactivated .flip-card-front {
-  background: #3a206e;
+  background-color: var(--card-optimism-color);
   color: #e0e0e0;
   box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
   border: 1.5px solid #7c6fd8;
   outline: none;
 }
 
-/* Ensure ACTIVE stays purple on mobile dark mode with higher specificity */
+/* Ensure ACTIVE uses optimism color on mobile dark mode with higher specificity */
 html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front,
 html.dark-mode .container .flip-card.active .flip-card-front,
 html.dark-mode .flip-card.active .flip-card-front {
-  background: #3a206e !important;
+  background-color: var(--card-optimism-color) !important;
   color: #e0e0e0 !important;
   border: 1.5px solid #7c6fd8;
 }
 
-/* Keep preactivated highlight purple */
+/* Keep preactivated highlight using optimism color plus purple glow */
 html.dark-mode .container.with-coverflow .flip-card.preactivated .flip-card-front,
 html.dark-mode .container .flip-card.preactivated .flip-card-front,
 html.dark-mode .flip-card.preactivated .flip-card-front {
-  background: #3a206e !important;
+  background-color: var(--card-optimism-color) !important;
   color: #e0e0e0 !important;
   box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
   border: 1.5px solid #7c6fd8;
@@ -249,8 +249,8 @@ html.dark-mode .flip-card.preactivated .flip-card-front {
 }
 
 html.dark-mode .flip-card.card-targeted .flip-card-front {
-  background: #3a206e !important;
-  /* deep indigo purple */
+  background-color: var(--card-optimism-color) !important;
+  /* deep indigo-like glow with optimism color base */
   color: #e0e0e0 !important;
   box-shadow: 0 0 8px 2px #7c6fd8, 0 0 20px 6px #4b378a;
   border: 1.5px solid #7c6fd8;
