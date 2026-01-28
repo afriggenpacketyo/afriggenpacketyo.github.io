@@ -138,13 +138,19 @@ html.dark-mode .container .flip-card-inner {
 html.dark-mode .container .flip-card:not(.active):not(.preactivated) .flip-card-front {
   background-color: var(--card-optimism-color) !important;
   color: #e0e0e0 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(94, 203, 255, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(94, 203, 255, 0.10);
 }
 
 html.dark-mode .container .flip-card .flip-card-back {
   background: rgba(35, 39, 46, 0.95);
   color: #5ecbff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(94, 203, 255, 0.10),
+    0 12px 30px rgba(0, 0, 0, 0.42),
+    0 0 18px rgba(94, 203, 255, 0.08);
   width: 90vw;
   padding: 25px;
   margin: 0;

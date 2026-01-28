@@ -217,13 +217,19 @@ html.dark-mode .container.with-coverflow .flip-card-inner {
   html.dark-mode .container.with-coverflow .flip-card:not(.active):not(.preactivated) .flip-card-front {
     background-color: var(--card-optimism-color) !important; /* optimism color for deactivated */
     color: #b0d8f7 !important;
-    box-shadow: 0 2px 8px rgba(24, 58, 76, 0.6);
+    box-shadow:
+      0 0 0 1px rgba(94, 203, 255, 0.10),
+      0 12px 30px rgba(0, 0, 0, 0.42),
+      0 0 18px rgba(94, 203, 255, 0.08);
     border: 1px solid #244a6a;
   }
   html.dark-mode .container.with-coverflow .flip-card.active .flip-card-front {
     background-color: var(--card-optimism-color) !important; /* optimism color for active */
     color: #eaf6fb !important;
-    box-shadow: 0 2px 16px 2px #244a6a;
+    box-shadow:
+      0 0 0 1px rgba(94, 203, 255, 0.16),
+      0 14px 34px rgba(0, 0, 0, 0.45),
+      0 0 22px rgba(94, 203, 255, 0.12);
     border: 1px solid #2980b9;
   }
   /* Desktop dark mode: fix neon box shadow for active card front */
@@ -232,7 +238,10 @@ html.dark-mode .container.with-coverflow .flip-card-inner {
     color: #fff;
 
     /* Toned-down box shadow for desktop: less neon, less spread, less intensity */
-    box-shadow: 0 0 4px 1px #5ecbff88, 0 0 8px 2px #39fffd55;
+    box-shadow:
+      0 0 0 1px rgba(94, 203, 255, 0.18),
+      0 16px 38px rgba(0, 0, 0, 0.46),
+      0 0 26px rgba(94, 203, 255, 0.14);
     border: 1px solid rgba(94, 203, 255, 0.18);
   }
   .container.with-coverflow .flip-card-inner {
@@ -288,7 +297,10 @@ html.dark-mode .container.with-coverflow .flip-card-inner {
     color: #fff;
 
     /* Neon box shadow to match mobile */
-    box-shadow: 0 0 4px 1px #5ecbff, 0 0 8px 2px #39fffd;
+    box-shadow:
+      0 0 0 1px rgba(94, 203, 255, 0.18),
+      0 16px 38px rgba(0, 0, 0, 0.46),
+      0 0 26px rgba(94, 203, 255, 0.14);
     border: 1px solid rgba(94, 203, 255, 0.2);
   }
 
