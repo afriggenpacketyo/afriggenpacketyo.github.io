@@ -5,7 +5,7 @@ let isInitializing = true;
 document.addEventListener('scriptsLoaded', () => {
   console.log('Filters: Scripts loaded, marking initialization complete');
   isInitializing = false;
-  
+
   // CRITICAL FIX: Ensure filtersCompleteInitialization is available immediately
   // when scriptsLoaded fires, preventing race condition
   if (typeof window.filtersCompleteInitialization !== 'function') {
@@ -31,6 +31,143 @@ function matchWord(term, text) {
   const regex = new RegExp(`\\b${safeTerm}\\b`, 'i');
   return regex.test(text);
 }
+
+ function initializeUrlSubsetState() {
+   const storedPath = (() => {
+     try {
+       return sessionStorage.getItem('urlSubsetPath');
+     } catch (e) {
+       return null;
+     }
+   })();
+
+   const effectivePath = storedPath || window.location.pathname || '';
+   const effectivePathNoQueryHash = (effectivePath.split('?')[0] || '').split('#')[0] || '';
+   const trimmed = effectivePathNoQueryHash.replace(/^\/+/, '').replace(/\/+$/, '');
+
+   let candidate = null;
+   let candidateCameFromPath = false;
+   let candidateCameFromQuery = false;
+   if (trimmed && !trimmed.includes('.') && trimmed !== 'index.html' && trimmed !== 'goodnews.html' && trimmed !== 'about.html') {
+     const firstSegment = trimmed.split('/')[0];
+     if (firstSegment && /\d/.test(firstSegment)) {
+       const hasLetters = /[a-z]/i.test(firstSegment);
+       const looksLikeSubsetPrefix = /(subset|cards|articles)/i.test(firstSegment);
+       if (!hasLetters || looksLikeSubsetPrefix) {
+         candidate = firstSegment;
+         candidateCameFromPath = true;
+       }
+     }
+   }
+
+   const isIndexLikePage = (() => {
+     const currentPath = window.location.pathname || '';
+     if (currentPath.includes('goodnews.html') || currentPath.includes('about.html')) return false;
+     return true;
+   })();
+
+   if (!candidate && isIndexLikePage) {
+     const params = new URLSearchParams(window.location.search || '');
+     let qp = null;
+     for (const [k, v] of params.entries()) {
+       const kl = (k || '').toLowerCase();
+       if (kl === 'subset' || kl === 'cards' || kl === 'articles') {
+         qp = v;
+         break;
+       }
+     }
+
+     if (!qp) {
+       qp = params.get('subset') || params.get('cards') || params.get('articles');
+     }
+
+     if (!qp) {
+       const rawSearch = (window.location.search || '').replace(/^\?/, '');
+       if (rawSearch && !rawSearch.includes('=') && /\d/.test(rawSearch)) {
+         qp = rawSearch;
+       }
+     }
+
+     if (qp && /\d/.test(qp)) {
+       candidate = qp;
+       candidateCameFromQuery = true;
+     }
+   }
+
+   const shouldCanonicalizePath = !!storedPath || candidateCameFromPath || candidateCameFromQuery;
+   if (storedPath) {
+     try {
+       sessionStorage.removeItem('urlSubsetPath');
+     } catch (e) {
+     }
+   }
+
+   window.__urlSubsetToken = candidate;
+
+   if (candidate === null) {
+     window.__urlSubsetAllowedCardIndexes = null;
+     return;
+   }
+
+   const rawNumberStrings = (candidate.match(/\d+/g) || []);
+   const seen = new Set();
+   const requestedNumbers = [];
+   rawNumberStrings.forEach((digits) => {
+     const n = parseInt(digits, 10);
+     if (Number.isInteger(n) && n >= 0 && !seen.has(n)) {
+       seen.add(n);
+       requestedNumbers.push(n);
+     }
+   });
+
+   const regularCardCount = document.querySelectorAll('.flip-card:not(.null-card)').length;
+   const maxArticleIndex = Math.max(-1, regularCardCount - 1);
+   const allowedCardIndexes = new Set();
+   const validNumbers = [];
+   requestedNumbers.forEach((n) => {
+     if (n <= maxArticleIndex) {
+       allowedCardIndexes.add(n + 1);
+       validNumbers.push(n);
+     }
+   });
+
+   if (shouldCanonicalizePath && validNumbers.length > 0) {
+     const canonicalToken = validNumbers.slice().sort((a, b) => a - b).join('_');
+     const canonicalPath = '/' + canonicalToken;
+     try {
+       if (canonicalPath !== window.location.pathname) {
+         history.replaceState(null, '', canonicalPath);
+       }
+     } catch (e) {
+     }
+   }
+
+   window.__urlSubsetAllowedCardIndexes = allowedCardIndexes;
+
+  const ts = document.getElementById('update-timestamp');
+  const tsm = document.getElementById('update-timestamp-mobile');
+  const a1 = ts ? ts.querySelector('a') : null;
+  const a2 = tsm ? tsm.querySelector('a') : null;
+  if (a1) {
+    a1.href = '/index.html';
+    a1.textContent = 'Click here for All News 🍣';
+  }
+  if (a2) {
+    a2.href = '/index.html';
+    a2.textContent = 'Click here for All News 🍣';
+  }
+
+  const originalMenu = document.querySelector('.original-menu');
+  if (originalMenu) {
+    originalMenu.querySelectorAll('a[href]').forEach((a) => {
+      const href = a.getAttribute('href');
+      if (!href) return;
+      if (href === 'index.html') a.setAttribute('href', '/index.html');
+      if (href === 'goodnews.html') a.setAttribute('href', '/goodnews.html');
+      if (href === 'about.html') a.setAttribute('href', '/about.html');
+    });
+  }
+ }
 
 
 // Comprehensive body locking utilities for all browsers
@@ -132,17 +269,18 @@ function unfreezeBody() {
 }
 
 // Complete initialization function called by CardSystem
-window.filtersCompleteInitialization = function(callback) {
+window.filtersCompleteInitialization = (callback) => {
   console.log('Filters: Complete initialization called, callback:', typeof callback);
-  isInitializing = false;
-  
+  isInitializing = true;
+
   // Add safety check to ensure CardSystem is ready
   if (!window.CardSystem || !window.CardSystem.isLayoutReady) {
     console.warn('Filters: CardSystem not ready during initialization - filters will not be applied');
     if (callback) callback();
     return;
   }
-  
+
+  initializeUrlSubsetState();
   autoApplyFiltersOnLoad(callback);
 };
 
@@ -151,6 +289,7 @@ function autoApplyFiltersOnLoad(callback) {
   // Don't auto-apply during initialization
   if (isInitializing) {
     console.log('Filters: Skipping auto-apply during initialization');
+    isInitializing = false;
     if (callback) callback();
     return;
   }
@@ -162,15 +301,31 @@ function autoApplyFiltersOnLoad(callback) {
     return;
   }
 
+  const isSubsetMode = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+  if (isSubsetMode) {
+    console.log('Filters: Skipping auto-apply in subset mode');
+    if (callback) {
+      callback();
+    } else {
+      console.warn('Filters: No callback provided to autoApplyFiltersOnLoad');
+    }
+    return;
+  }
+
   const shouldAutoApply = localStorage.getItem('autoApplyFilters') === 'true';
   const hasExcludes = localStorage.getItem('Excludes');
   const hasIncludes = localStorage.getItem('Includes');
   const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
   const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
 
+  if (typeof window.__urlSubsetAllowedCardIndexes === 'undefined') {
+    initializeUrlSubsetState();
+  }
+  const hasUrlSubset = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+
   console.log('Filters: shouldAutoApply:', shouldAutoApply, 'hasFilters:', hasExcludes || hasIncludes || hasOptimismFilter);
-  
-  if (shouldAutoApply && (hasExcludes || hasIncludes || hasOptimismFilter)) {
+
+  if (hasUrlSubset || (shouldAutoApply && (hasExcludes || hasIncludes || hasOptimismFilter))) {
     console.log('Filters: Auto-applying filters on page load...');
     applyFiltersQuietly(callback);
   } else {
@@ -194,7 +349,9 @@ function applyFiltersQuietly(callback) {
   const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
   const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
 
-  const hasFilters = !!excludes || !!includes || hasOptimismFilter;
+  const subsetAllowedCardIndexes = typeof window.__urlSubsetAllowedCardIndexes === 'undefined' ? null : window.__urlSubsetAllowedCardIndexes;
+  const hasUrlSubset = subsetAllowedCardIndexes !== null && typeof subsetAllowedCardIndexes !== 'undefined';
+  const hasFilters = !!excludes || !!includes || hasOptimismFilter || hasUrlSubset;
 
   // CRITICAL FIX: Skip positioning during initial load (callback present means it's during init)
   // positionAndDispatchPageReady will handle positioning after filters are applied
@@ -203,11 +360,11 @@ function applyFiltersQuietly(callback) {
   if (!hasFilters) {
     showAllCardsQuietly(skipPositioning);
   } else {
-    filterCardsQuietly(excludes, includes, skipPositioning);
+    filterCardsQuietly(excludes, includes, skipPositioning, subsetAllowedCardIndexes);
   }
 
   console.log("Filters: Quiet filtering complete. Skip positioning:", skipPositioning);
-  
+
   // CRITICAL FIX: Delay callback to ensure layout has settled after filter application
   // This prevents race conditions where positioning happens before layout reflow
   requestAnimationFrame(() => {
@@ -224,7 +381,7 @@ function applyFiltersQuietly(callback) {
 }
 
 // Optimized filtering function using cached card data
-function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter) {
+function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter, subsetAllowedCardIndexes) {
   let firstVisibleIndex = -1;
   let visibleRegularCardsCount = 0;
   const nullCard = document.querySelector('.flip-card.null-card');
@@ -246,9 +403,9 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
       const back = card.querySelector('.flip-card-back');
       const summaryElement = back ? back.querySelector('p:first-of-type') : null;
       const scoreElement = back ? back.querySelector('p:nth-of-type(2)') : null;
-      
+
       summary = summaryElement ? summaryElement.textContent.toLowerCase() : '';
-      
+
       // Parse optimism score from DOM if available
       if (scoreElement) {
         const scoreMatch = scoreElement.textContent.match(/(\d+)\/100/);
@@ -265,8 +422,13 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
 
     let shouldHide = false;
 
+    // Subset URL mode: restrict the candidate pool first, then apply all other filters.
+    if (subsetAllowedCardIndexes !== null && typeof subsetAllowedCardIndexes !== 'undefined') {
+      shouldHide = !subsetAllowedCardIndexes.has(index);
+    }
+
     // Step 1: Apply excludes filter (hide if ANY exclude term matches)
-    if (excludeTerms.length > 0) {
+    if (!shouldHide && excludeTerms.length > 0) {
       shouldHide = excludeTerms.some(term => matchWord(term, summary));
     }
 
@@ -300,7 +462,7 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
   // Binary system: Show null card if and only if no regular cards are visible
   const nullDot = document.querySelector('.indicator-dot.null-dot');
   console.log('DEBUG: Null dot element found?', !!nullDot, 'Visible regular count:', visibleRegularCardsCount);
-  
+
   if (nullCard) {
     if (visibleRegularCardsCount === 0) {
       // State 0: No regular cards visible - show null card and its dot
@@ -341,7 +503,7 @@ function filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismM
 }
 
 // Quiet versions that don't trigger full repositioning
-function filterCardsQuietly(excludes, includes, skipPositioning = false) {
+function filterCardsQuietly(excludes, includes, skipPositioning = false, subsetAllowedCardIndexes = null) {
   let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
 
@@ -363,7 +525,7 @@ function filterCardsQuietly(excludes, includes, skipPositioning = false) {
   }
 
   // Use optimized filtering function
-  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter);
+  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter, subsetAllowedCardIndexes);
 
   // CRITICAL FIX: Force layout reflow BEFORE updating UI
   // This ensures the browser has processed the .filtered class changes
@@ -512,6 +674,36 @@ function showFilterContent() {
   const menuContent = document.querySelector('.menu-content');
   let filterContent = menuContent.querySelector('.filter-content');
 
+  function syncAutoApplyUiState() {
+    if (!filterContent) return;
+    const autoApplyCheckbox = filterContent.querySelector('#auto-apply-filters');
+    const autoApplyLabel = filterContent.querySelector('#auto-apply-label');
+    const autoApplyContainer = filterContent.querySelector('.auto-apply-option');
+    const autoApplyTooltip = filterContent.querySelector('.info-tooltip');
+    const isSubsetMode = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+    const autoApplyStorageKey = isSubsetMode ? 'autoApplyFilters_subset' : 'autoApplyFilters';
+
+    if (autoApplyCheckbox) {
+      autoApplyCheckbox.checked = localStorage.getItem(autoApplyStorageKey) === 'true';
+      autoApplyCheckbox.disabled = isSubsetMode;
+      if (isSubsetMode) autoApplyCheckbox.checked = false;
+    }
+
+    if (autoApplyContainer) {
+      autoApplyContainer.style.opacity = isSubsetMode ? '0.55' : '';
+    }
+
+    if (autoApplyLabel) {
+      autoApplyLabel.style.cursor = isSubsetMode ? 'not-allowed' : 'pointer';
+    }
+
+    if (autoApplyTooltip) {
+      const note = ' (note: does not work in subset mode)';
+      const baseText = autoApplyTooltip.textContent.replace(note, '');
+      autoApplyTooltip.textContent = isSubsetMode ? `${baseText}${note}` : baseText;
+    }
+  }
+
   if (!filterContent) {
     filterContent = document.createElement('div');
     filterContent.className = 'filter-content';
@@ -551,17 +743,49 @@ function showFilterContent() {
     // Add event listener for auto-apply checkbox and label
     const autoApplyCheckbox = filterContent.querySelector('#auto-apply-filters');
     const autoApplyLabel = filterContent.querySelector('#auto-apply-label');
+    const autoApplyContainer = filterContent.querySelector('.auto-apply-option');
+    const autoApplyTooltip = filterContent.querySelector('.info-tooltip');
+    const isSubsetMode = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+    const autoApplyStorageKey = isSubsetMode ? 'autoApplyFilters_subset' : 'autoApplyFilters';
+
     if (autoApplyCheckbox) {
-      autoApplyCheckbox.checked = localStorage.getItem('autoApplyFilters') === 'true';
+      autoApplyCheckbox.checked = localStorage.getItem(autoApplyStorageKey) === 'true';
+      if (isSubsetMode) {
+        autoApplyCheckbox.checked = false;
+        autoApplyCheckbox.disabled = true;
+      }
       autoApplyCheckbox.addEventListener('change', function () {
-        localStorage.setItem('autoApplyFilters', this.checked.toString());
+        const currentlySubsetMode = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+        if (currentlySubsetMode) {
+          this.checked = false;
+          return;
+        }
+        const storageKey = currentlySubsetMode ? 'autoApplyFilters_subset' : 'autoApplyFilters';
+        localStorage.setItem(storageKey, this.checked.toString());
       });
     }
     if (autoApplyLabel && autoApplyCheckbox) {
       autoApplyLabel.addEventListener('click', function (e) {
+        const currentlySubsetMode = window.__urlSubsetAllowedCardIndexes !== null && typeof window.__urlSubsetAllowedCardIndexes !== 'undefined';
+        if (currentlySubsetMode) {
+          e.preventDefault();
+          return;
+        }
         autoApplyCheckbox.checked = !autoApplyCheckbox.checked;
         autoApplyCheckbox.dispatchEvent(new Event('change'));
       });
+    }
+
+    if (isSubsetMode) {
+      if (autoApplyContainer) {
+        autoApplyContainer.style.opacity = '0.55';
+      }
+      if (autoApplyLabel) {
+        autoApplyLabel.style.cursor = 'not-allowed';
+      }
+      if (autoApplyTooltip && !autoApplyTooltip.textContent.includes('note: does not work in subset mode')) {
+        autoApplyTooltip.textContent = `${autoApplyTooltip.textContent} (note: does not work in subset mode)`;
+      }
     }
 
     // Add event listener for info button to prevent checkbox toggle
@@ -586,6 +810,7 @@ function showFilterContent() {
   }
 
   filterContent.style.display = 'block';
+  syncAutoApplyUiState();
 
   // Handle the forward transition with JavaScript (like the back transition)
   // Set initial state
@@ -1507,7 +1732,10 @@ function applyFilters() {
   const optimismData = JSON.parse(localStorage.getItem('OptimismScore') || '{"min": 0, "max": 100}');
   const hasOptimismFilter = optimismData.min !== 0 || optimismData.max !== 100;
 
-  const hasFilters = !!excludes || !!includes || hasOptimismFilter;
+  const subsetAllowedCardIndexes = typeof window.__urlSubsetAllowedCardIndexes === 'undefined' ? null : window.__urlSubsetAllowedCardIndexes;
+  const hasUrlSubset = subsetAllowedCardIndexes !== null && typeof subsetAllowedCardIndexes !== 'undefined';
+
+  const hasFilters = !!excludes || !!includes || hasOptimismFilter || hasUrlSubset;
 
   // Store original state for proper restoration
   const originalActiveIndex = CardSystem.activeCardIndex;
@@ -1517,7 +1745,7 @@ function applyFilters() {
     if (!hasFilters) {
       showAllCards();
     } else {
-      filterCards(excludes, includes);
+      filterCards(excludes, includes, subsetAllowedCardIndexes);
     }
   } catch (error) {
     console.error('Filters: Error during filtering:', error);
@@ -1538,7 +1766,7 @@ function applyFilters() {
   }
 }
 
-function filterCards(excludes, includes) {
+function filterCards(excludes, includes, subsetAllowedCardIndexes = null) {
   let excludeTerms = excludes ? excludes.split(',').map(term => term.trim()).filter(Boolean) : [];
   let includeTerms = includes ? includes.split(',').map(term => term.trim()).filter(Boolean) : [];
 
@@ -1560,7 +1788,7 @@ function filterCards(excludes, includes) {
   }
 
   // Use optimized filtering function
-  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter);
+  const firstVisibleIndex = filterCardsOptimized(excludeTerms, includeTerms, optimismMin, optimismMax, hasOptimismFilter, subsetAllowedCardIndexes);
 
   // Now, trigger the repositioning logic with the index of the first available card.
   repositionViewAfterFilter(firstVisibleIndex);

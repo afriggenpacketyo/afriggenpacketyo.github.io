@@ -545,7 +545,7 @@
                 document.documentElement.style.removeProperty('--scroll-duration');
                 container.removeEventListener('scrollend', resetScrollBehavior);
             };
-            
+
             // Use scrollend event if available (modern browsers)
             if ('onscrollend' in container) {
                 container.addEventListener('scrollend', resetScrollBehavior, { once: true });
@@ -1364,7 +1364,7 @@
                 break;
             }
         }
-        
+
         if (!firstVisibleCard || !container) {
             console.error('Desktop: Essential elements not found');
             return;
@@ -1380,9 +1380,17 @@
             // --- SIGNAL READINESS AFTER POSITIONING ---
             // Position to active card first, then signal readiness
             scrollToCard(CardSystem.activeCardIndex, true); // instant positioning
-            
-            // Wait one frame for positioning to complete, then signal readiness
-            requestAnimationFrame(() => {
+
+            // Signal readiness after positioning settles. Use requestAnimationFrame
+            // when the page is visible (smooth, frame-aligned), but fall back to
+            // setTimeout when the page is hidden/prerendering — rAF callbacks are
+            // paused/throttled in hidden contexts (per MDN), which previously
+            // caused the readiness chain to stall and the splash to hang during
+            // Chrome preloading / Speculation Rules prerendering.
+            const scheduleReady = document.visibilityState === 'visible'
+                ? (fn) => requestAnimationFrame(fn)
+                : (fn) => setTimeout(fn, 0);
+            scheduleReady(() => {
                 if (window.CardSystem && typeof window.CardSystem.registerPlatformReady === 'function') {
                     window.CardSystem.registerPlatformReady('desktop');
                     console.log("Desktop: Signaled readiness to CardSystem after positioning.");
@@ -1392,8 +1400,13 @@
             });
             // --- END SIGNAL READINESS ---
         } else {
-            // If layout isn't stable yet, try again
-            requestAnimationFrame(initDesktop);
+            // If layout isn't stable yet, try again. Same rAF/setTimeout split:
+            // rAF is paused in hidden/prerendered pages, so use setTimeout to
+            // keep the retry loop alive during preload.
+            const scheduleRetry = document.visibilityState === 'visible'
+                ? () => requestAnimationFrame(initDesktop)
+                : () => setTimeout(initDesktop, 16);
+            scheduleRetry();
         }
     }
 

@@ -800,12 +800,16 @@ if (!window.location.pathname.includes('about.html')) {
 
         // NEW: Load UI infrastructure for desktop only
         loadUIInfrastructureForDesktop: function() {
-            return new Promise((resolve) => {
-                // Infrastructure already set up in init(), just resolve
+            // Desktop is prerendered too. A prerender started from a window of a
+            // different size lays out against that size, so desktop must wait for
+            // activation before it measures anything, exactly like mobile.
+            return this.whenActivated().then(() => {
                 console.log("Desktop: UI infrastructure ready");
-                // Desktop doesn't need bulletproof calculation - mark layout stable immediately
+                if (window.__wasPrerendered) {
+                    console.log('Desktop: page was PRERENDERED - laying out only now that it is activated');
+                }
                 document.body.classList.add('layout-stable');
-                requestAnimationFrame(() => resolve());
+                return new Promise((resolve) => requestAnimationFrame(() => resolve()));
             });
         },
 
@@ -820,6 +824,65 @@ if (!window.location.pathname.includes('about.html')) {
 
         getViewportHeight: function() {
             return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        },
+
+        /**
+         * Resolves once this document is actually presented to the user.
+         *
+         * While Chrome is prerendering a page (omnibox preloading), the document
+         * lays out against the referring page's viewport, so every measurement we
+         * take is wrong. document.prerendering is the only signal that identifies
+         * this state - visibilityState reports "hidden" for prerenders AND for
+         * ordinary background tabs, so it cannot tell them apart.
+         *   https://developer.chrome.com/docs/web-platform/prerender-pages#detect-prerender-in-javascript
+         *
+         * Intentionally un-timed: an unactivated prerender is never seen, so there
+         * is nothing to rescue by giving up early.
+         */
+        whenActivated: function() {
+            if (window.__whenActivated) return window.__whenActivated;
+            return new Promise((resolve) => {
+                if (document.prerendering) {
+                    document.addEventListener('prerenderingchange', resolve, { once: true });
+                } else {
+                    resolve();
+                }
+            });
+        },
+
+        /**
+         * Resolve once the viewport height stops changing.
+         *
+         * Deterministic replacement for fixed sleeps: it costs a few frames when
+         * the viewport is already stable, and only spends real time when the
+         * viewport is genuinely still in motion.
+         */
+        waitForStableViewport: function(options) {
+            const opts = options || {};
+            const stableFrames = opts.stableFrames || 3;
+            const maxMs = opts.maxMs || 1000;
+            return new Promise((resolve) => {
+                const start = performance.now();
+                let last = this.getViewportHeight();
+                let stable = 0;
+                const tick = () => {
+                    const now = this.getViewportHeight();
+                    if (Math.abs(now - last) < 2) {
+                        stable++;
+                    } else {
+                        stable = 0;
+                        last = now;
+                    }
+                    if (stable >= stableFrames) return resolve(now);
+                    if (performance.now() - start >= maxMs) {
+                        console.warn('CardSystem: viewport still moving after', maxMs + 'ms; measuring at', now + 'px');
+                        this._measuredWithSuspiciousViewport = true;
+                        return resolve(now);
+                    }
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            });
         },
 
         // Detect external navigation (backlink from another domain)
@@ -867,84 +930,33 @@ if (!window.location.pathname.includes('about.html')) {
                     }));
                 }
 
+                // ACTIVATION GATE - must come before ANY viewport measurement.
+                //
+                // If Chrome prerendered this page (omnibox preloading), the document
+                // was laid out using "the creation-time size of the referring page as
+                // the viewport", not the real one:
+                //   https://github.com/WICG/nav-speculation/blob/main/prerendering-same-site.md#rendering-related-behavior
+                // Card heights are written as inline pixel values, and activation does
+                // NOT re-run this code, so measuring early bakes in a wrong layout
+                // permanently. Waiting for activation is the actual fix.
+                promises.push(this.whenActivated());
+
                 Promise.all(promises).then(() => {
-                    const initialViewport = this.getViewportHeight();
-
-                    // Debug: Log referrer info
                     console.log('CardSystem: document.referrer =', document.referrer || '(empty)');
-                    console.log('CardSystem: Initial viewport:', initialViewport + 'px');
+                    if (window.__wasPrerendered) {
+                        console.log('CardSystem: page was PRERENDERED - measuring only now that it is activated');
+                    }
 
-                    // SIMPLE FIX: Always add 500ms delay on mobile
-                    // This ensures viewport has time to settle regardless of navigation type
-                    console.log('CardSystem: Adding 500ms delay for viewport to settle (mobile always waits)');
-
-                    setTimeout(() => {
-                        const settledViewport = this.getViewportHeight();
-                        console.log('CardSystem: After 500ms delay, viewport:', settledViewport + 'px');
-
-                        if (settledViewport !== initialViewport) {
-                            console.log('CardSystem: VIEWPORT CHANGED during delay! Was', initialViewport + 'px, now', settledViewport + 'px');
-                        }
-
+                    // Replaces the old unconditional 500ms sleep. Resolves on the next
+                    // frame when the viewport is already steady (the normal case) and
+                    // only actually waits while it is still moving, e.g. a mobile URL
+                    // bar collapsing right after activation.
+                    this.waitForStableViewport().then((settledViewport) => {
+                        console.log('CardSystem: viewport settled at', settledViewport + 'px');
                         this._viewportAtMeasurement = settledViewport;
                         this.proceedWithMeasurement(resolve);
-                    }, 500);
+                    });
                 });
-            });
-        },
-
-        // Wait for viewport to stabilize (for backlinks and preloads)
-        waitForViewportStabilization: function(initialViewport) {
-            return new Promise((resolve) => {
-                const screenHeight = window.screen.height;
-                let resolved = false;
-                let stableCount = 0;
-                let lastViewport = initialViewport;
-                const requiredStableFrames = 10; // Must be stable for 10 frames (~160ms)
-
-                console.log('CardSystem: Waiting for viewport stabilization...');
-                console.log('CardSystem: Initial viewport:', initialViewport + 'px, screen:', screenHeight + 'px');
-
-                const checkStability = () => {
-                    if (resolved) return;
-
-                    const currentViewport = this.getViewportHeight();
-
-                    // Check if viewport changed
-                    if (Math.abs(currentViewport - lastViewport) < 5) {
-                        stableCount++;
-                    } else {
-                        console.log('CardSystem: Viewport changed:', lastViewport + 'px ->', currentViewport + 'px');
-                        stableCount = 0;
-                        lastViewport = currentViewport;
-                    }
-
-                    // If stable for enough frames, proceed
-                    if (stableCount >= requiredStableFrames) {
-                        resolved = true;
-                        console.log('CardSystem: Viewport STABILIZED at', currentViewport + 'px after', stableCount, 'stable frames');
-                        this._viewportAtMeasurement = currentViewport;
-                        this.proceedWithMeasurement(resolve);
-                        return;
-                    }
-
-                    requestAnimationFrame(checkStability);
-                };
-
-                requestAnimationFrame(checkStability);
-
-                // Safety timeout - but mark as suspicious if we had to use it
-                setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true;
-                        const finalViewport = this.getViewportHeight();
-                        console.warn('CardSystem: Viewport stabilization TIMEOUT after 800ms');
-                        console.log('CardSystem: Using viewport:', finalViewport + 'px (may be unstable)');
-                        this._measuredWithSuspiciousViewport = true;
-                        this._viewportAtMeasurement = finalViewport;
-                        this.proceedWithMeasurement(resolve);
-                    }
-                }, 800);
             });
         },
 
